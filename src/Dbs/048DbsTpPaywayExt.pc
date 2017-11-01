@@ -1,0 +1,133 @@
+/*
+ *  Copyright 2006, Shanghai Huateng Software Systems Co., Ltd.
+ *  All right reserved.
+ *
+ *  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+ *  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+ *  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+ *  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+ *  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+ *
+ *  $Id: 194DbsBthComConfig.sqc,v 1.1.1.1 2016/11/04 07:50:31 ctedev Exp $
+ *
+ *  功能: 交易配置表：HT_TBL_COM_CONFIG 操作函数
+ *
+ *  Edit History:
+ *
+ *    2016/09/04 -phb
+ */
+
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct tp_payway_ext_tab
+{
+	char	channel_code[32];
+	char	channel_name[60];
+	char	external_org_no[32];
+	char	payway_code[32];
+	char	status[2];
+	char	sett_md[2];
+	char	plat_sett_bank[12];
+	char	plat_sett_acct_type[1];
+	char	plat_sett_acct[40];
+	char	plat_sett_acct_nm[80];
+	char	plat_debit_bank[12];
+	char	plat_debit_acct_type[1];
+	char	plat_debit_acct[40];
+	char	plat_debit_acct_nm[80];
+	char	brh_role[2];
+	char	pay_chan[4];
+	char	connect_switch[8];
+	char	sett_type[2];
+	char	compt_fee_flag[2];
+	char	create_time[32];
+	char	service_bean_id[64];
+	char	creater[40];
+	char	update_time[32];
+	char	updater[40];
+	char	brh_no[12];
+	char	brm_nm[30];
+}vtp_payway_ext;
+    short db_ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTpPaywayExt (int nOpr, tp_payway_ext_def *ptp_payway_ext)
+{
+    memset(&vtp_payway_ext, 0x00, sizeof(vtp_payway_ext));
+    memcpy (&vtp_payway_ext, ptp_payway_ext, sizeof (vtp_payway_ext));
+    switch (nOpr)
+    {
+    case DBS_SELECT:
+        EXEC SQL SELECT
+            channel_code,
+            channel_name,
+            external_org_no,
+            payway_code,
+            status,
+            sett_md,
+            plat_sett_bank,
+            plat_sett_acct_type,
+            plat_sett_acct,
+            plat_sett_acct_nm,
+            plat_debit_bank,
+            plat_debit_acct_type,
+            plat_debit_acct,
+            plat_debit_acct_nm,
+            brh_role,
+            pay_chan,
+            connect_switch,
+            sett_type,
+            compt_fee_flag,
+            create_time,
+            service_bean_id,
+            creater,
+            update_time,
+            updater,
+            brh_no,
+            brm_nm
+        into
+            :vtp_payway_ext.channel_code:db_ind,
+            :vtp_payway_ext.channel_name:db_ind,
+            :vtp_payway_ext.external_org_no:db_ind,
+            :vtp_payway_ext.payway_code:db_ind,
+            :vtp_payway_ext.status:db_ind,
+            :vtp_payway_ext.sett_md:db_ind,
+            :vtp_payway_ext.plat_sett_bank:db_ind,
+            :vtp_payway_ext.plat_sett_acct_type:db_ind,
+            :vtp_payway_ext.plat_sett_acct:db_ind,
+            :vtp_payway_ext.plat_sett_acct_nm:db_ind,
+            :vtp_payway_ext.plat_debit_bank:db_ind,
+            :vtp_payway_ext.plat_debit_acct_type:db_ind,
+            :vtp_payway_ext.plat_debit_acct:db_ind,
+            :vtp_payway_ext.plat_debit_acct_nm:db_ind,
+            :vtp_payway_ext.brh_role:db_ind,
+            :vtp_payway_ext.pay_chan:db_ind,
+            :vtp_payway_ext.connect_switch:db_ind,
+            :vtp_payway_ext.sett_type:db_ind,
+            :vtp_payway_ext.compt_fee_flag:db_ind,
+            :vtp_payway_ext.create_time:db_ind,
+            :vtp_payway_ext.service_bean_id:db_ind,
+            :vtp_payway_ext.creater:db_ind,
+            :vtp_payway_ext.update_time:db_ind,
+            :vtp_payway_ext.updater:db_ind,
+            :vtp_payway_ext.brh_no:db_ind,
+            :vtp_payway_ext.brm_nm:db_ind
+        from TP_PAY_CHANNEL@PUBLIC_DATA
+        where 
+            channel_code = :vtp_payway_ext.channel_code;
+        memcpy (ptp_payway_ext, &vtp_payway_ext, sizeof (vtp_payway_ext));
+        return sqlca.sqlcode;
+
+    }
+    return 0;
+}

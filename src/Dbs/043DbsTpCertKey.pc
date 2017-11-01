@@ -1,0 +1,60 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct vtp_cert_key_tab
+{
+      char id[50+1];
+      char payway_code[32+1];
+      char cert_key_type[1+1];
+      char key[128+1];
+      char value[4000+1];
+      char title[256+1];
+      char demo[600+1];
+}vtp_cert_key;
+static int nTotalNum = 0;
+short db_ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTpCertKey(int nvtOpr, tp_cert_key_def * pvtp_cert_key)
+{
+    memset(&vtp_cert_key, 0, sizeof(vtp_cert_key));
+    HtMemcpy(&vtp_cert_key, pvtp_cert_key, sizeof(vtp_cert_key));
+    switch(nvtOpr)
+    {
+        case DBS_SELECT:
+            EXEC SQL
+                select 
+                    id,
+                    payway_code,
+                    cert_key_type,
+                    key,
+                    value,
+                    title,
+                    demo
+                into
+                    :vtp_cert_key.id            :db_ind,
+                    :vtp_cert_key.payway_code   :db_ind,
+                    :vtp_cert_key.cert_key_type :db_ind,
+                    :vtp_cert_key.key           :db_ind,
+                    :vtp_cert_key.value         :db_ind,
+                    :vtp_cert_key.title         :db_ind,
+                    :vtp_cert_key.demo          :db_ind
+                from 
+                    tp_cert_key@PUBLIC_DATA
+               where
+                    key = :vtp_cert_key.key;
+        HtMemcpy(pvtp_cert_key, &vtp_cert_key, sizeof(vtp_cert_key));
+        return sqlca.sqlcode;
+      
+        default:
+            return NO_SWITCH;
+    }
+}

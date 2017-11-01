@@ -1,0 +1,62 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct vtp_bankcards_bin_tab
+{
+    char bank_card_bin[32+1];
+    char bank_card_name[128+1];
+    char card_length[3+1];
+    char bank_code[32+1];
+    char bank_name[128+1]; 
+    char account_type[32+1];
+    char field1[32+1];
+    char field2[32+1];
+    char field3[32+1];
+}vtp_bankcards_bin;
+static int nTotalNum = 0;
+short db_ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTpBankCardsBin(int nvtOpr,tp_bankcards_bin_def * pvtp_bankcards_bin)
+{
+    memset(&vtp_bankcards_bin, 0, sizeof(vtp_bankcards_bin));
+    HtMemcpy(&vtp_bankcards_bin, pvtp_bankcards_bin, sizeof(vtp_bankcards_bin));
+    switch(nvtOpr)
+    {
+        case DBS_SELECT:
+            EXEC SQL
+                select 
+                    bank_card_bin,
+                    bank_card_name,
+                    card_length,
+                    bank_code,
+                    bank_name,
+                    account_type
+                into
+                    :vtp_bankcards_bin.bank_card_bin            :db_ind,
+                    :vtp_bankcards_bin.bank_card_name   :db_ind,
+                    :vtp_bankcards_bin.card_length :db_ind,
+                    :vtp_bankcards_bin.bank_code           :db_ind,
+                    :vtp_bankcards_bin.bank_name         :db_ind,
+                    :vtp_bankcards_bin.account_type         :db_ind
+                from 
+                    tp_bankcards_bin@PUBLIC_DATA
+               where
+                    bank_card_bin = :vtp_bankcards_bin.bank_card_bin
+               and 
+                    card_length = :vtp_bankcards_bin.card_length;
+        HtMemcpy(pvtp_bankcards_bin, &vtp_bankcards_bin, sizeof(vtp_bankcards_bin));
+        return sqlca.sqlcode;
+      
+        default:
+            return NO_SWITCH;
+    }
+}

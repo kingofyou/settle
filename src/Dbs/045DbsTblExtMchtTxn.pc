@@ -1,0 +1,147 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct vtbl_ext_mcht_inf_txn_txn_tab
+{
+char    ext_mch_no[15+1];
+char    ext_mch_nm[30+1];                      
+char    brh_no[12+1];                          
+char    brh_nm[30+1];                           
+char    settle_type     [8+1];                 
+char    ext_mch_acct_type[1+1];                
+char    ext_mch_acct_no[40+1];                 
+char    ext_mch_acct_nm[80+1];                 
+char    ext_mch_acct_bank[12+1];               
+char    ext_mch_acct_banknm[80+1];             
+char    ext_fee_acct_type[1+1];                
+char    ext_fee_acct_no[40+1];                 
+char    ext_fee_acct_nm[80+1];                 
+char    ext_fee_acct_bank[12+1];               
+char    ext_feeacct_banknm[80+1];              
+char    spl_acct_type[1+1];                    
+ char   spl_bank[12+1];                        
+char    spl_acct[40+1];                        
+char    spl_acct_nm[80+1];                     
+char    contact[30+1];                         
+char    comm_mobil[18+1];                      
+char    comm_tel[18+1];                        
+char    email[20+1];                           
+char    manager[10+1];                         
+char    identity_no[20+1];                     
+char    manager_tel[12+1];                     
+char    reg_addr[60+1];                        
+char    rec_upd_usr_id[10+1];                  
+char    rec_upd_ts[14+1];                      
+char    rec_crt_ts[14+1];   
+}vtbl_ext_mcht_inf_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblExtMchtInfTxn(int nvtOpr, ht_tbl_ext_mcht_inf_def * pvtbl_ext_mcht_inf_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_ext_mcht_inf_txn, 0, sizeof(vtbl_ext_mcht_inf_txn));
+    HtMemcpy(&vtbl_ext_mcht_inf_txn, pvtbl_ext_mcht_inf_txn, sizeof(vtbl_ext_mcht_inf_txn));
+    switch(nvtOpr)
+    {
+        case DBS_SELECT:
+            EXEC SQL
+                select 
+                    EXT_MCH_NO,
+                    EXT_MCH_NM,
+                    BRH_NO,
+                    BRH_NM,
+                    SETTLE_TYPE     ,
+                    EXT_MCH_ACCT_TYPE,
+                    EXT_MCH_ACCT_NO,
+                    EXT_MCH_ACCT_NM,
+                    EXT_MCH_ACCT_BANK,
+                    EXT_MCH_ACCT_BANKNM,
+                    EXT_FEE_ACCT_TYPE,
+                    EXT_FEE_ACCT_NO,
+                    EXT_FEE_ACCT_NM,
+                    EXT_FEE_ACCT_BANK,
+                    EXT_FEEACCT_BANKNM,
+                    SPL_ACCT_TYPE,
+                    SPL_BANK,
+                    SPL_ACCT,
+                    SPL_ACCT_NM,
+                    CONTACT,
+                    COMM_MOBIL,
+                    COMM_TEL,
+                    EMAIL,
+                    MANAGER,
+                    IDENTITY_NO,
+                    MANAGER_TEL,
+                    REG_ADDR,
+                    REC_UPD_USR_ID,
+                    REC_UPD_TS,
+                    REC_CRT_TS
+                into
+                    :vtbl_ext_mcht_inf_txn.ext_mch_no     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_mch_nm     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.brh_no     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.brh_nm     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.settle_type          :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_mch_acct_type     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_mch_acct_no     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_mch_acct_nm     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_mch_acct_bank     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_mch_acct_banknm     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_fee_acct_type     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_fee_acct_no     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_fee_acct_nm     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_fee_acct_bank     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.ext_feeacct_banknm     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.spl_acct_type     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.spl_bank     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.spl_acct     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.spl_acct_nm     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.contact     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.comm_mobil     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.comm_tel     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.email     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.manager     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.identity_no     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.manager_tel     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.reg_addr     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.rec_upd_usr_id     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.rec_upd_ts     :db_ind,
+                    :vtbl_ext_mcht_inf_txn.rec_crt_ts :db_ind
+                from 
+                    ht_tbl_ext_mcht_inf@PUBLIC_DATA
+               where
+                    ext_mch_no = :vtbl_ext_mcht_inf_txn.ext_mch_no;
+        HtMemcpy(pvtbl_ext_mcht_inf_txn, &vtbl_ext_mcht_inf_txn, sizeof(vtbl_ext_mcht_inf_txn));
+        return sqlca.sqlcode;
+
+	case DBS_SELECT1:
+            EXEC SQL
+                SELECT EXT_MCH_NO INTO :vtbl_ext_mcht_inf_txn.ext_mch_no     :db_ind
+		from (
+                    SELECT t.*, ROWNUM FROM (
+                        SELECT * from HT_TBL_BRH_FEE_INF@PUBLIC_DATA 
+			WHERE PAYWAY_CODE IN (select CHANNEL_CODE from TP_PAY_CHANNEL@PUBLIC_DATA  where CONNECT_SWITCH='c002') AND
+                              EXT_MCH_NO!='000000' ORDER BY FEE_VALUE) t
+                    WHERE ROWNUM=1);
+            HtMemcpy(pvtbl_ext_mcht_inf_txn->ext_mch_no, &vtbl_ext_mcht_inf_txn.ext_mch_no, sizeof(vtbl_ext_mcht_inf_txn.ext_mch_no));
+       return sqlca.sqlcode;
+
+        default:
+            return NO_SWITCH;
+    }
+}

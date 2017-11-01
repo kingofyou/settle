@@ -1,0 +1,422 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsOprInf.pc                                            */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include "DbsDef.h"
+#include "batch.h"
+
+extern    char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_mcht_inf_tab
+{
+char                  mcht_no	  [15 + 1];
+char                  mcht_nm	  [60 + 1];
+char    up_mcht_no[15+1]; 
+char                  contact	  [30 + 1];
+char              comm_mobil	  [18 + 1];
+char                comm_tel	  [18 + 1];
+char                  manager	  [32 + 1];
+char          artif_certif_tp	  [2 + 1];
+char              identity_no	  [20 + 1];
+char              manager_tel	  [12 + 1];
+char                reg_addr	  [60 + 1];
+char                  oper_no	  [8 + 1];
+char                  oper_nm	  [10 + 1];
+char              mcht_status	  [10 + 1];
+char                  clear_flag	  [1 + 1];
+char                  sett_md	  [2 + 1];
+char          mcht_sett_bank	  [12 + 1];
+char        mcht_sett_bank_nm	  [80 + 1];
+char      mcht_sett_acct_type	  [2 + 1];
+char          mcht_sett_acct	  [40 + 1];
+char        mcht_sett_acct_nm	  [80 + 1];
+char        xingmin_pay_acct	  [40 + 1];
+char        businuss_brh_no	      [12 + 1];
+char          mcht_debit_bank	  [12 + 1];
+char      mcht_debit_bank_nm	  [80 + 1];
+char    mcht_debit_acct_type	  [2 + 1];
+char          mcht_debit_acct	  [40 + 1];
+char      mcht_debit_acct_nm	  [80 + 1];
+char      mcht_role	  [2 + 1];
+char    js_type[2 + 1];
+char    clear_cycle	[3 + 1];
+char    splitting_type[2 + 1];
+char    spl_acct_type1[1 + 1];
+char    spl_acct_no1[40 + 1];
+char    spl_acct_nm1[80 + 1];
+char    spl_acct_bank1[12 + 1];
+char    spl_acct_banknm1[80 + 1];
+char  spl_brh_role1	[12+1];
+char  spl_brh_nm1	[30+1];
+double  spl_acct_rate1;
+char    spl_acct_ret_fee_flag1[1+1];
+char    spl_acct_type2[1 + 1];
+char    spl_acct_no2[40 + 1];
+char    spl_acct_nm2[80 + 1];
+char    spl_acct_bank2[12 + 1];
+char    spl_acct_banknm2[80 + 1];
+char spl_brh_role2	[12+1];
+char spl_brh_nm2	[30+1];
+double  spl_acct_rate2;
+char    spl_acct_ret_fee_flag2[1+1];
+char    spl_acct_type3[1 + 1];
+char    spl_acct_no3[40 + 1];
+char    spl_acct_nm3[80 + 1];
+char    spl_acct_bank3[12 + 1];
+char    spl_acct_banknm3[80 + 1];
+char  spl_brh_role3[12+1];
+char  spl_brh_nm3	[30+1];
+double  spl_acct_rate3;
+char    spl_acct_ret_fee_flag3[1+1];
+char    spl_acct_type4[1 + 1];
+char    spl_acct_no4[40 + 1];
+char    spl_acct_nm4[80 + 1];
+char    spl_acct_bank4[12 + 1];
+char    spl_acct_banknm4[80 + 1]; 
+char spl_brh_role4	[12+1];
+char  spl_brh_nm4	[30+1];
+double  spl_acct_rate4;
+char    spl_acct_ret_fee_flag4[1+1];
+char              crt_opr_id	  [40 + 1];
+char              rec_upd_ts	  [14 + 1];
+char              upd_opr_id	  [40 + 1];
+char  send_bill_flag[3+1];
+char  email[128+1];
+char  ret_fee_flag[1+1];
+char  recharge_flag[1+1];
+}vtbl_mcht_inf;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblMchtInf(int vnOprType, struct ht_tbl_mcht_inf_tab *ptbl_mcht_inf, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_mcht_inf, 0x00, sizeof(vtbl_mcht_inf));
+    memcpy(&vtbl_mcht_inf, ptbl_mcht_inf, sizeof(vtbl_mcht_inf));
+
+    switch(vnOprType)
+    {
+    case DBS_SELECT:
+            EXEC SQL
+                select 
+                    mcht_no,
+                    mcht_nm,
+                    up_mcht_no,
+                    contact,
+                    comm_mobil	,
+                    comm_tel	,
+                    manager,
+                    artif_certif_tp,
+                    identity_no,
+                    manager_tel,
+                    reg_addr	,
+                    oper_no,
+                    oper_nm,
+                    mcht_status,
+                    clear_flag,
+                    sett_md,
+                    mcht_sett_bank	,
+                    mcht_sett_bank_nm,
+                    mcht_sett_acct_type,
+                    mcht_sett_acct	,
+                    mcht_sett_acct_nm,
+                    xingmin_pay_acct,
+                    businuss_brh_no,
+                    mcht_debit_bank,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type	,
+                    mcht_debit_acct,
+                    mcht_debit_acct_nm	,
+                    mcht_role,
+                    js_type            ,
+                    clear_cycle        ,
+                    splitting_type     ,
+                    spl_acct_type1     ,
+                    spl_acct_no1       ,
+                    spl_acct_nm1       ,
+                    spl_acct_bank1     ,
+                    spl_acct_banknm1   ,
+                    spl_brh_role1      ,
+                    spl_acct_rate1     ,
+                    spl_acct_ret_fee_flag1,
+                    spl_acct_type2     ,
+                    spl_acct_no2       ,
+                    spl_acct_nm2       ,
+                    spl_acct_bank2     ,
+                    spl_acct_banknm2   ,
+                    spl_brh_role2      ,
+                    spl_acct_rate2     ,
+                    spl_acct_ret_fee_flag2,
+                    spl_acct_type3     ,
+                    spl_acct_no3       ,
+                    spl_acct_nm3       ,
+                    spl_acct_bank3     ,
+                    spl_acct_banknm3   ,
+                    spl_brh_role3 ,
+                    spl_acct_rate3     ,
+                    spl_acct_ret_fee_flag3,
+                    spl_acct_type4     ,
+                    spl_acct_no4       ,
+                    spl_acct_nm4       ,
+                    spl_acct_bank4     ,
+                    spl_acct_banknm4   ,
+                    spl_brh_role4,
+                    spl_acct_rate4     , 
+                    spl_acct_ret_fee_flag4,                   
+                    crt_opr_id	,
+                    rec_upd_ts	,
+                    upd_opr_id	,
+                    ret_fee_flag,
+		    recharge_flag
+                into
+                    :vtbl_mcht_inf.mcht_no :db_ind,
+                    :vtbl_mcht_inf.mcht_nm :db_ind,
+                    :vtbl_mcht_inf.up_mcht_no :db_ind,
+                    :vtbl_mcht_inf.contact :db_ind,
+                    :vtbl_mcht_inf.comm_mobil	 :db_ind,
+                    :vtbl_mcht_inf.comm_tel	 :db_ind,
+                    :vtbl_mcht_inf.manager :db_ind,
+                    :vtbl_mcht_inf.artif_certif_tp :db_ind,
+                    :vtbl_mcht_inf.identity_no :db_ind,
+                    :vtbl_mcht_inf.manager_tel :db_ind,
+                    :vtbl_mcht_inf.reg_addr	 :db_ind,
+                    :vtbl_mcht_inf.oper_no :db_ind,
+                    :vtbl_mcht_inf.oper_nm :db_ind,
+                    :vtbl_mcht_inf.mcht_status :db_ind,
+                    :vtbl_mcht_inf.clear_flag :db_ind,                    
+                    :vtbl_mcht_inf.sett_md :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_bank	 :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_bank_nm :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_acct_type :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_acct	 :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_acct_nm :db_ind,
+                    :vtbl_mcht_inf.xingmin_pay_acct :db_ind,
+                    :vtbl_mcht_inf.businuss_brh_no :db_ind,                   
+                    :vtbl_mcht_inf.mcht_debit_bank :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_bank_nm	 :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_acct_type	 :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_acct :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_acct_nm :db_ind	,
+                    :vtbl_mcht_inf.mcht_role :db_ind,
+                    :vtbl_mcht_inf.js_type	 :db_ind,    
+                    :vtbl_mcht_inf.clear_cycle :db_ind,            
+                    :vtbl_mcht_inf.splitting_type :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_type1 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_no1 :db_ind,   
+                    :vtbl_mcht_inf.spl_acct_nm1	 :db_ind,       
+                    :vtbl_mcht_inf.spl_acct_bank1 :db_ind,    
+                    :vtbl_mcht_inf.spl_acct_banknm1 :db_ind,
+                    :vtbl_mcht_inf.spl_brh_role1 :db_ind,   
+                    :vtbl_mcht_inf.spl_acct_rate1 :db_ind, 
+                    :vtbl_mcht_inf.spl_acct_ret_fee_flag1 :db_ind,
+                    :vtbl_mcht_inf.spl_acct_type2 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_no2	 :db_ind,       
+                    :vtbl_mcht_inf.spl_acct_nm2 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_bank2 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_banknm2	 :db_ind,  
+                    :vtbl_mcht_inf.spl_brh_role2 :db_ind,  
+                    :vtbl_mcht_inf.spl_acct_rate2 :db_ind,
+                    :vtbl_mcht_inf.spl_acct_ret_fee_flag2 :db_ind,                           
+                    :vtbl_mcht_inf.spl_acct_type3 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_no3 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_nm3 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_bank3	 :db_ind,       
+                    :vtbl_mcht_inf.spl_acct_banknm3	 :db_ind, 
+                    :vtbl_mcht_inf.spl_brh_role3 :db_ind, 
+                    :vtbl_mcht_inf.spl_acct_rate3 :db_ind,
+                    :vtbl_mcht_inf.spl_acct_ret_fee_flag3 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_type4 :db_ind	,       
+                    :vtbl_mcht_inf.spl_acct_no4 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_nm4 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_bank4 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_banknm4	 :db_ind, 
+                    :vtbl_mcht_inf.spl_brh_role4 :db_ind,   
+                    :vtbl_mcht_inf.spl_acct_rate4	 :db_ind,
+                    :vtbl_mcht_inf.spl_acct_ret_fee_flag4 :db_ind, 
+                    :vtbl_mcht_inf.crt_opr_id	 :db_ind,
+                    :vtbl_mcht_inf.rec_upd_ts	 :db_ind,
+                    :vtbl_mcht_inf.upd_opr_id :db_ind,
+                    :vtbl_mcht_inf.ret_fee_flag	:db_ind,
+		    :vtbl_mcht_inf.recharge_flag	:db_ind
+                from 
+                    ht_tbl_mcht_inf@PUBLIC_DATA
+               where
+                    mcht_no = :vtbl_mcht_inf.mcht_no;
+        HtMemcpy(ptbl_mcht_inf, &vtbl_mcht_inf, sizeof(vtbl_mcht_inf));
+        return sqlca.sqlcode;
+           
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_mcht_inf_cur CURSOR FOR
+            SELECT
+                    mcht_no,
+                    mcht_nm,
+                    contact,
+                    comm_mobil	,
+                    comm_tel	,
+                    manager,
+                    artif_certif_tp,
+                    identity_no,
+                    manager_tel,
+                    reg_addr	,
+                    oper_no,
+                    oper_nm,
+                    mcht_status,
+                    clear_flag,
+                    sett_md,
+                    mcht_sett_bank	,
+                    mcht_sett_bank_nm,
+                    mcht_sett_acct_type,
+                    mcht_sett_acct	,
+                    mcht_sett_acct_nm,
+                    xingmin_pay_acct,
+                    businuss_brh_no,
+                    mcht_debit_bank,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type	,
+                    mcht_debit_acct,
+                    mcht_debit_acct_nm	,
+                    mcht_role,
+                    js_type            ,
+                    clear_cycle        ,
+                    splitting_type     ,
+                    spl_acct_type1     ,
+                    spl_acct_no1       ,
+                    spl_acct_nm1       ,
+                    spl_acct_bank1     ,
+                    spl_acct_banknm1   ,
+                    spl_brh_role1      ,
+                    spl_acct_rate1     ,
+                    spl_acct_type2     ,
+                    spl_acct_no2       ,
+                    spl_acct_nm2       ,
+                    spl_acct_bank2     ,
+                    spl_acct_banknm2   ,
+                    spl_brh_role2,
+                    spl_acct_rate2     ,
+                    spl_acct_type3     ,
+                    spl_acct_no3       ,
+                    spl_acct_nm3       ,
+                    spl_acct_bank3     ,
+                    spl_acct_banknm3   ,
+                    spl_brh_role3      ,
+                    spl_acct_rate3     ,
+                    spl_acct_type4     ,
+                    spl_acct_no4       ,
+                    spl_acct_nm4       ,
+                    spl_acct_bank4     ,
+                    spl_acct_banknm4   ,
+                    spl_brh_role4      ,
+                    spl_acct_rate4     ,                    
+                    crt_opr_id	,
+                    rec_upd_ts	,
+                    upd_opr_id,
+                    send_bill_flag,
+                    email	
+            FROM
+                ht_tbl_mcht_inf@PUBLIC_DATA;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            tbl_mcht_inf_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH tbl_mcht_inf_cur
+        INTO
+                    :vtbl_mcht_inf.mcht_no :db_ind,
+                    :vtbl_mcht_inf.mcht_nm :db_ind,
+                    :vtbl_mcht_inf.contact :db_ind,
+                    :vtbl_mcht_inf.comm_mobil	 :db_ind,
+                    :vtbl_mcht_inf.comm_tel	 :db_ind,
+                    :vtbl_mcht_inf.manager :db_ind,
+                    :vtbl_mcht_inf.artif_certif_tp :db_ind,
+                    :vtbl_mcht_inf.identity_no :db_ind,
+                    :vtbl_mcht_inf.manager_tel :db_ind,
+                    :vtbl_mcht_inf.reg_addr	 :db_ind,
+                    :vtbl_mcht_inf.oper_no :db_ind,
+                    :vtbl_mcht_inf.oper_nm :db_ind,
+                    :vtbl_mcht_inf.mcht_status :db_ind,
+                    :vtbl_mcht_inf.clear_flag :db_ind,                    
+                    :vtbl_mcht_inf.sett_md :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_bank	 :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_bank_nm :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_acct_type :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_acct	 :db_ind,
+                    :vtbl_mcht_inf.mcht_sett_acct_nm :db_ind,
+                    :vtbl_mcht_inf.xingmin_pay_acct :db_ind,
+                    :vtbl_mcht_inf.businuss_brh_no :db_ind,                   
+                    :vtbl_mcht_inf.mcht_debit_bank :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_bank_nm	 :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_acct_type	 :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_acct :db_ind,
+                    :vtbl_mcht_inf.mcht_debit_acct_nm :db_ind	,
+                    :vtbl_mcht_inf.mcht_role :db_ind,
+                    :vtbl_mcht_inf.js_type	 :db_ind,               
+                    :vtbl_mcht_inf.clear_cycle :db_ind,            
+                    :vtbl_mcht_inf.splitting_type :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_type1 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_no1 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_nm1	 :db_ind,       
+                    :vtbl_mcht_inf.spl_acct_bank1 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_banknm1 :db_ind,
+                    :vtbl_mcht_inf.spl_brh_role1 :db_ind,        
+                    :vtbl_mcht_inf.spl_acct_rate1 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_type2 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_no2	 :db_ind,       
+                    :vtbl_mcht_inf.spl_acct_nm2 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_bank2 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_banknm2	 :db_ind,  
+                    :vtbl_mcht_inf.spl_brh_role2 :db_ind,  
+                    :vtbl_mcht_inf.spl_acct_rate2 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_type3 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_no3 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_nm3 :db_ind,   
+                    :vtbl_mcht_inf.spl_brh_role3 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_bank3	 :db_ind,       
+                    :vtbl_mcht_inf.spl_acct_banknm3	 :db_ind,   
+                    :vtbl_mcht_inf.spl_acct_rate3 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_type4 :db_ind	,       
+                    :vtbl_mcht_inf.spl_acct_no4 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_nm4 :db_ind,           
+                    :vtbl_mcht_inf.spl_acct_bank4 :db_ind,         
+                    :vtbl_mcht_inf.spl_acct_banknm4	 :db_ind,   
+                    :vtbl_mcht_inf.spl_brh_role4 :db_ind, 
+                    :vtbl_mcht_inf.spl_acct_rate4	 :db_ind, 
+                    :vtbl_mcht_inf.crt_opr_id	 :db_ind,
+                    :vtbl_mcht_inf.rec_upd_ts	 :db_ind,
+                    :vtbl_mcht_inf.upd_opr_id :db_ind,
+                    :vtbl_mcht_inf.send_bill_flag :db_ind,
+                    :vtbl_mcht_inf.email :db_ind	
+        ;
+        memcpy(ptbl_mcht_inf, &vtbl_mcht_inf, sizeof(vtbl_mcht_inf));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            tbl_mcht_inf_cur;
+        return sqlca.sqlcode;
+        
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+}

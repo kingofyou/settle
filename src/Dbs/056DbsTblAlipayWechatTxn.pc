@@ -1,0 +1,446 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct tbl_alipay_wechat_txn
+{
+    char inter_brh_code   [10 + 1];           
+    char sett_date        	   [8 + 1];        
+    char trans_date       	   [8 + 1];       
+    char trans_time        [10 + 1];           
+    char flag_result      	 [1 + 1];         
+    char gener_id         	     [20 + 1];  
+    char thr_mcht_no         	     [32 + 1];        
+    char ext_mcht_no      	     [32 + 1];     
+    char ex_ext_mcht_no      [32 + 1];         
+    char equipment_id            [100 + 1];    
+    char thr_order_no         	     [48 + 1];     
+    char order_no         	   [48 + 1];      
+    char user_id           [30 + 1];          
+    char plat_key          [48 + 1];          
+    char batch_no            [2 + 1];    
+    char bus_tp         	 [8 + 1];       
+    char trans_tp         	 [4 + 1];  
+    char thr_trans_tp         	 [48 + 1];          
+    char trans_state      	   [30 + 1];        
+    char pay_bank                [15 + 1];         
+    char mcht_refund_order     [32 + 1];      
+    char refund_type      	   [10 + 1];       
+    char refund_status    	   [40 + 1];       
+    char goods_name       	   [400 + 1];       
+    char mcht_data        	   [500 + 1];      
+    char wx_fee                 [12 + 1];     
+    char wx_rate            [10 + 1];         
+    char acct_type        [2 + 1];            
+    char pan              [19 + 1];           
+    char ccy              [3 + 1];            
+    char trans_at         [12 + 1];           
+    char trans_at2        [12 + 1];           
+    char trans_at3        [12 + 1];           
+    char trans_at4        [12 + 1];           
+    char trans_at5        [12 + 1]; 
+    char trans_at6        [12 + 1];        
+    int  seq_num;                  
+}vtbl_alipay_wechat_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblAlipayWechatTxn(int nvtOpr, tbl_alipay_wechat_def * ptbl_alipay_wechat_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_alipay_wechat_txn, 0, sizeof(vtbl_alipay_wechat_txn));
+    HtMemcpy(&vtbl_alipay_wechat_txn, ptbl_alipay_wechat_txn, sizeof(vtbl_alipay_wechat_txn));
+    switch(nvtOpr)
+    {
+        case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select ALI_WE_TXN_SEQ_ID_%s.nextval from dual", vtbl_alipay_wechat_txn.inter_brh_code);
+	    HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "sSqlBuf=[%s]", sSqlBuf);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from ALI_WE_TXN_SEQ_ID_%s error, sqlcode=[%d].", vtbl_alipay_wechat_txn.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+        
+            EXEC SQL 
+                insert into tbl_alipay_wechat_txn(
+                    inter_brh_code,
+                    sett_date,
+                    trans_date,
+                    trans_time,
+                    flag_result,
+                    gener_id,
+                    thr_order_no,
+                    ext_mcht_no,
+                    ex_ext_mcht_no,
+                    equipment_id,
+                    order_no,
+                    user_id,
+                    plat_key,
+                    batch_no,
+                    bus_tp,
+                    trans_tp,
+                    thr_trans_tp,
+                    trans_state,
+                    pay_bank,
+                    mcht_refund_order,
+                    refund_type,
+                    refund_status,
+                    goods_name,
+                    mcht_data,
+                    wx_fee,
+                    wx_rate,
+                    acct_type,
+                    pan,
+                    ccy,
+                    trans_at,
+                    trans_at2,
+                    trans_at3,
+                    trans_at4,
+                    trans_at5,
+                    trans_at6,
+                    seq_num   
+                ) values (
+                    :vtbl_alipay_wechat_txn.inter_brh_code,
+                    :vtbl_alipay_wechat_txn.sett_date,
+                    :vtbl_alipay_wechat_txn.trans_date,
+                    :vtbl_alipay_wechat_txn.trans_time,
+                    :vtbl_alipay_wechat_txn.flag_result,
+                    :vtbl_alipay_wechat_txn.gener_id,
+                    :vtbl_alipay_wechat_txn.thr_order_no,
+                    :vtbl_alipay_wechat_txn.ext_mcht_no,
+                    :vtbl_alipay_wechat_txn.ex_ext_mcht_no,
+                    :vtbl_alipay_wechat_txn.equipment_id,
+                    :vtbl_alipay_wechat_txn.order_no,
+                    :vtbl_alipay_wechat_txn.user_id,
+                    :vtbl_alipay_wechat_txn.plat_key,
+                    :vtbl_alipay_wechat_txn.batch_no,
+                    :vtbl_alipay_wechat_txn.bus_tp,
+                    :vtbl_alipay_wechat_txn.trans_tp,
+                    :vtbl_alipay_wechat_txn.thr_trans_tp,
+                    :vtbl_alipay_wechat_txn.trans_state,
+                    :vtbl_alipay_wechat_txn.pay_bank,
+                    :vtbl_alipay_wechat_txn.mcht_refund_order,
+                    :vtbl_alipay_wechat_txn.refund_type,
+                    :vtbl_alipay_wechat_txn.refund_status,
+                    :vtbl_alipay_wechat_txn.goods_name,
+                    :vtbl_alipay_wechat_txn.mcht_data,
+                    :vtbl_alipay_wechat_txn.wx_fee,
+                    :vtbl_alipay_wechat_txn.wx_rate,
+                    :vtbl_alipay_wechat_txn.acct_type,
+                    :vtbl_alipay_wechat_txn.pan,
+                    :vtbl_alipay_wechat_txn.ccy,
+                    :vtbl_alipay_wechat_txn.trans_at,
+                    :vtbl_alipay_wechat_txn.trans_at2,
+                    :vtbl_alipay_wechat_txn.trans_at3,
+                    :vtbl_alipay_wechat_txn.trans_at4,
+                    :vtbl_alipay_wechat_txn.trans_at5,
+                    :vtbl_alipay_wechat_txn.trans_at6,
+                    :nTotalNum
+                );
+            return sqlca.sqlcode;
+
+        case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    NVL(max(seq_num),0)
+                into
+                    :vtbl_alipay_wechat_txn.seq_num
+                from 
+                    tbl_alipay_wechat_txn
+               where
+               inter_brh_code = :vtbl_alipay_wechat_txn.inter_brh_code
+               and  flag_result = :vtbl_alipay_wechat_txn.flag_result
+               and  sett_date <= :vtbl_alipay_wechat_txn.sett_date;
+        HtMemcpy(ptbl_alipay_wechat_txn, &vtbl_alipay_wechat_txn, sizeof(vtbl_alipay_wechat_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT3:
+            EXEC SQL
+                select 
+                    inter_brh_code,
+                    sett_date,
+                    trans_date,
+                    trans_time,
+                    flag_result,
+                    gener_id,
+                    thr_order_no,
+                    ext_mcht_no,
+                    ex_ext_mcht_no,
+                    equipment_id,
+                    order_no,
+                    user_id,
+                    plat_key,
+                    batch_no,
+                    bus_tp,
+                    trans_tp,
+                    trans_state,
+                    pay_bank,
+                    mcht_refund_order,
+                    refund_type,
+                    refund_status,
+                    goods_name,
+                    mcht_data,
+                    wx_fee,
+                    wx_rate,
+                    acct_type,
+                    pan,
+                    ccy,
+                    trans_at,
+                    trans_at2,
+                    trans_at3,
+                    trans_at4,
+                    trans_at5,
+                    trans_at6,
+                    seq_num    
+                into
+                    :vtbl_alipay_wechat_txn.inter_brh_code:db_ind,
+                    :vtbl_alipay_wechat_txn.sett_date:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_date:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_time:db_ind,
+                    :vtbl_alipay_wechat_txn.flag_result:db_ind,
+                    :vtbl_alipay_wechat_txn.gener_id:db_ind,
+                    :vtbl_alipay_wechat_txn.thr_order_no:db_ind,
+                    :vtbl_alipay_wechat_txn.ext_mcht_no:db_ind,
+                    :vtbl_alipay_wechat_txn.ex_ext_mcht_no:db_ind,
+                    :vtbl_alipay_wechat_txn.equipment_id:db_ind,
+                    :vtbl_alipay_wechat_txn.order_no:db_ind,
+                    :vtbl_alipay_wechat_txn.user_id:db_ind,
+                    :vtbl_alipay_wechat_txn.plat_key:db_ind,
+                    :vtbl_alipay_wechat_txn.batch_no:db_ind,
+                    :vtbl_alipay_wechat_txn.bus_tp:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_tp:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_state:db_ind,
+                    :vtbl_alipay_wechat_txn.pay_bank:db_ind,
+                    :vtbl_alipay_wechat_txn.mcht_refund_order:db_ind,
+                    :vtbl_alipay_wechat_txn.refund_type:db_ind,
+                    :vtbl_alipay_wechat_txn.refund_status:db_ind,
+                    :vtbl_alipay_wechat_txn.goods_name:db_ind,
+                    :vtbl_alipay_wechat_txn.mcht_data:db_ind,
+                    :vtbl_alipay_wechat_txn.wx_fee:db_ind,
+                    :vtbl_alipay_wechat_txn.wx_rate:db_ind,
+                    :vtbl_alipay_wechat_txn.acct_type:db_ind,
+                    :vtbl_alipay_wechat_txn.pan:db_ind,
+                    :vtbl_alipay_wechat_txn.ccy:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at2:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at3:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at4:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at5:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at6:db_ind,
+                    :vtbl_alipay_wechat_txn.seq_num:db_ind             
+                from 
+                    tbl_alipay_wechat_txn
+               where
+               inter_brh_code = :vtbl_alipay_wechat_txn.inter_brh_code
+               and  plat_key = :vtbl_alipay_wechat_txn.plat_key
+               and mcht_refund_order is null;
+        HtMemcpy(ptbl_alipay_wechat_txn, &vtbl_alipay_wechat_txn, sizeof(vtbl_alipay_wechat_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT4:
+            EXEC SQL
+                select 
+                    inter_brh_code,
+                    sett_date,
+                    trans_date,
+                    trans_time,
+                    flag_result,
+                    gener_id,
+                    thr_order_no,
+                    ext_mcht_no,
+                    ex_ext_mcht_no,
+                    equipment_id,
+                    order_no,
+                    user_id,
+                    plat_key,
+                    batch_no,
+                    bus_tp,
+                    trans_tp,
+                    trans_state,
+                    pay_bank,
+                    mcht_refund_order,
+                    refund_type,
+                    refund_status,
+                    goods_name,
+                    mcht_data,
+                    wx_fee,
+                    wx_rate,
+                    acct_type,
+                    pan,
+                    ccy,
+                    trans_at,
+                    trans_at2,
+                    trans_at3,
+                    trans_at4,
+                    trans_at5,
+                    trans_at6,
+                    seq_num    
+                into
+                    :vtbl_alipay_wechat_txn.inter_brh_code:db_ind,
+                    :vtbl_alipay_wechat_txn.sett_date:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_date:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_time:db_ind,
+                    :vtbl_alipay_wechat_txn.flag_result:db_ind,
+                    :vtbl_alipay_wechat_txn.gener_id:db_ind,
+                    :vtbl_alipay_wechat_txn.thr_order_no:db_ind,
+                    :vtbl_alipay_wechat_txn.ext_mcht_no:db_ind,
+                    :vtbl_alipay_wechat_txn.ex_ext_mcht_no:db_ind,
+                    :vtbl_alipay_wechat_txn.equipment_id:db_ind,
+                    :vtbl_alipay_wechat_txn.order_no:db_ind,
+                    :vtbl_alipay_wechat_txn.user_id:db_ind,
+                    :vtbl_alipay_wechat_txn.plat_key:db_ind,
+                    :vtbl_alipay_wechat_txn.batch_no:db_ind,
+                    :vtbl_alipay_wechat_txn.bus_tp:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_tp:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_state:db_ind,
+                    :vtbl_alipay_wechat_txn.pay_bank:db_ind,
+                    :vtbl_alipay_wechat_txn.mcht_refund_order:db_ind,
+                    :vtbl_alipay_wechat_txn.refund_type:db_ind,
+                    :vtbl_alipay_wechat_txn.refund_status:db_ind,
+                    :vtbl_alipay_wechat_txn.goods_name:db_ind,
+                    :vtbl_alipay_wechat_txn.mcht_data:db_ind,
+                    :vtbl_alipay_wechat_txn.wx_fee:db_ind,
+                    :vtbl_alipay_wechat_txn.wx_rate:db_ind,
+                    :vtbl_alipay_wechat_txn.acct_type:db_ind,
+                    :vtbl_alipay_wechat_txn.pan:db_ind,
+                    :vtbl_alipay_wechat_txn.ccy:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at2:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at3:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at4:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at5:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at6:db_ind,
+                    :vtbl_alipay_wechat_txn.seq_num:db_ind             
+                from 
+                    tbl_alipay_wechat_txn
+               where
+               inter_brh_code = :vtbl_alipay_wechat_txn.inter_brh_code
+               and  plat_key = :vtbl_alipay_wechat_txn.plat_key 
+               and mcht_refund_order = :vtbl_alipay_wechat_txn.mcht_refund_order;
+        HtMemcpy(ptbl_alipay_wechat_txn, &vtbl_alipay_wechat_txn, sizeof(vtbl_alipay_wechat_txn));
+        return sqlca.sqlcode;
+        case DBS_UPDATE:
+            EXEC SQL
+                update tbl_alipay_wechat_txn
+                    set flag_result= :vtbl_alipay_wechat_txn.flag_result 
+                where
+               sett_date = :vtbl_alipay_wechat_txn.sett_date
+               and seq_num = :vtbl_alipay_wechat_txn.seq_num;
+        return sqlca.sqlcode;  
+
+        case DBS_CURSOR1:
+            EXEC SQL DECLARE tbl_alipay_wechat_txn_CUR1 CURSOR FOR
+                select 
+                    inter_brh_code,
+                    sett_date,
+                    trans_date,
+                    trans_time,
+                    flag_result,
+                    gener_id,
+                    thr_order_no,
+                    ext_mcht_no,
+                    ex_ext_mcht_no,
+                    equipment_id,
+                    order_no,
+                    user_id,
+                    plat_key,
+                    batch_no,
+                    bus_tp,
+                    trans_tp,
+                    trans_state,
+                    pay_bank,
+                    mcht_refund_order,
+                    refund_type,
+                    refund_status,
+                    goods_name,
+                    mcht_data,
+                    wx_fee,
+                    wx_rate,
+                    acct_type,
+                    pan,
+                    ccy,
+                    trans_at,
+                    trans_at2,
+                    trans_at3,
+                    trans_at4,
+                    trans_at5,
+                    trans_at6,
+                    seq_num     
+            from
+                    tbl_alipay_wechat_txn
+            where
+            inter_brh_code = :vtbl_alipay_wechat_txn.inter_brh_code
+            and flag_result = :vtbl_alipay_wechat_txn.flag_result
+            and sett_date <= :vtbl_alipay_wechat_txn.sett_date
+            and seq_num between :ptnBeginOffset and  :ptnEndOffset ;
+            return sqlca.sqlcode;
+        
+        case DBS_OPEN1:
+            EXEC SQL OPEN tbl_alipay_wechat_txn_CUR1;
+             return sqlca.sqlcode;
+             
+        case DBS_FETCH1:
+            EXEC SQL FETCH tbl_alipay_wechat_txn_CUR1
+            into
+                    :vtbl_alipay_wechat_txn.inter_brh_code:db_ind,
+                    :vtbl_alipay_wechat_txn.sett_date:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_date:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_time:db_ind,
+                    :vtbl_alipay_wechat_txn.flag_result:db_ind,
+                    :vtbl_alipay_wechat_txn.gener_id:db_ind,
+                    :vtbl_alipay_wechat_txn.thr_order_no:db_ind,
+                    :vtbl_alipay_wechat_txn.ext_mcht_no:db_ind,
+                    :vtbl_alipay_wechat_txn.ex_ext_mcht_no:db_ind,
+                    :vtbl_alipay_wechat_txn.equipment_id:db_ind,
+                    :vtbl_alipay_wechat_txn.order_no:db_ind,
+                    :vtbl_alipay_wechat_txn.user_id:db_ind,
+                    :vtbl_alipay_wechat_txn.plat_key:db_ind,
+                    :vtbl_alipay_wechat_txn.batch_no:db_ind,
+                    :vtbl_alipay_wechat_txn.bus_tp:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_tp:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_state:db_ind,
+                    :vtbl_alipay_wechat_txn.pay_bank:db_ind,
+                    :vtbl_alipay_wechat_txn.mcht_refund_order:db_ind,
+                    :vtbl_alipay_wechat_txn.refund_type:db_ind,
+                    :vtbl_alipay_wechat_txn.refund_status:db_ind,
+                    :vtbl_alipay_wechat_txn.goods_name:db_ind,
+                    :vtbl_alipay_wechat_txn.mcht_data:db_ind,
+                    :vtbl_alipay_wechat_txn.wx_fee:db_ind,
+                    :vtbl_alipay_wechat_txn.wx_rate:db_ind,
+                    :vtbl_alipay_wechat_txn.acct_type:db_ind,
+                    :vtbl_alipay_wechat_txn.pan:db_ind,
+                    :vtbl_alipay_wechat_txn.ccy:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at2:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at3:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at4:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at5:db_ind,
+                    :vtbl_alipay_wechat_txn.trans_at6:db_ind,
+                    :vtbl_alipay_wechat_txn.seq_num:db_ind;             
+            HtMemcpy(ptbl_alipay_wechat_txn, &vtbl_alipay_wechat_txn, sizeof(vtbl_alipay_wechat_txn));
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE1:
+            EXEC SQL CLOSE tbl_alipay_wechat_txn_CUR1;
+            return sqlca.sqlcode;
+                                   
+        default:
+            return NO_SWITCH;
+    }
+}

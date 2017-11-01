@@ -1,0 +1,150 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_payway_ext_txn_tab
+{
+    char payway_code	[32+1];
+    char payway_name	[64+1];
+    char connect_switch	[8+1];    
+    char sett_type[2+1];
+    char estatus	[8+1];
+    double cost_rate;
+    char open_type   [2+1];
+    char sett_md	[2+1];
+    char plat_sett_bank	[11+1];
+    char plat_sett_acct_type	[1+1];
+    char plat_sett_acct         [40+1];
+    char plat_sett_acct_nm      [80+1]; 
+    char plat_debit_bank    [11+1];
+    char plat_debit_acct_type    [1+1];
+    char plat_debit_acct      [40+1];
+    char plat_debit_acct_nm	[80+1];
+    char brh_role	[1+1];
+    char pay_chan	[4+1];  
+}vtbl_payway_ext_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblPayWayExtTxn(int nvtOpr, ht_tbl_payway_ext_def * pht_tbl_payway_ext_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_payway_ext_txn, 0, sizeof(vtbl_payway_ext_txn));
+    HtMemcpy(&vtbl_payway_ext_txn, pht_tbl_payway_ext_txn, sizeof(vtbl_payway_ext_txn));
+    switch(nvtOpr)
+    {
+        case DBS_SELECT:
+            EXEC SQL
+                select 
+                    payway_code	     ,
+                    payway_name	         ,
+                    connect_switch	         ,
+                    sett_type            ,
+                    estatus            ,
+                    cost_rate	         ,
+                    open_type	         ,
+                    sett_md          ,
+                    plat_sett_bank                  ,
+                    plat_sett_acct_type               ,
+                    plat_sett_acct             ,
+                    plat_sett_acct_nm             ,
+                    plat_debit_bank               ,
+                    plat_debit_acct_type	             ,
+                    plat_debit_acct	         ,
+                    plat_debit_acct_nm	         ,
+                    brh_role	         ,
+                    pay_chan,
+                    sett_type   
+                into
+                    :vtbl_payway_ext_txn.payway_code   :db_ind,
+                    :vtbl_payway_ext_txn.payway_name	       :db_ind,
+                    :vtbl_payway_ext_txn.connect_switch	        :db_ind , 
+                    :vtbl_payway_ext_txn.sett_type         :db_ind  , 
+                    :vtbl_payway_ext_txn.estatus         :db_ind  ,
+                    :vtbl_payway_ext_txn.cost_rate	           :db_ind, 
+                    :vtbl_payway_ext_txn.open_type	          :db_ind , 
+                    :vtbl_payway_ext_txn.sett_md       :db_ind, 
+                    :vtbl_payway_ext_txn.plat_sett_bank               :db_ind , 
+                    :vtbl_payway_ext_txn.plat_sett_acct_type              :db_ind , 
+                    :vtbl_payway_ext_txn.plat_sett_acct           :db_ind  ,
+                    :vtbl_payway_ext_txn.plat_sett_acct_nm          :db_ind ,
+                    :vtbl_payway_ext_txn.plat_debit_bank            :db_ind  ,
+                    :vtbl_payway_ext_txn.plat_debit_acct_type	         :db_ind , 
+                    :vtbl_payway_ext_txn.plat_debit_acct	       :db_ind  ,
+                    :vtbl_payway_ext_txn.plat_debit_acct_nm	   :db_ind , 
+                    :vtbl_payway_ext_txn.brh_role	        :db_ind ,
+                    :vtbl_payway_ext_txn.pay_chan	        :db_ind ,
+                    :vtbl_payway_ext_txn.sett_type             :db_ind
+                from 
+                    tp_payway_ext@PUBLIC_DATA
+               where
+                    pay_chan = :vtbl_payway_ext_txn.pay_chan;
+        HtMemcpy(pht_tbl_payway_ext_txn, &vtbl_payway_ext_txn, sizeof(vtbl_payway_ext_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    payway_code	     ,
+                    payway_name	         ,
+                    connect_switch	         ,
+                    sett_type            ,
+                    estatus            ,
+                    cost_rate	         ,
+                    open_type	         ,
+                    sett_md          ,
+                    plat_sett_bank                  ,
+                    plat_sett_acct_type               ,
+                    plat_sett_acct             ,
+                    plat_sett_acct_nm             ,
+                    plat_debit_bank               ,
+                    plat_debit_acct_type	             ,
+                    plat_debit_acct	         ,
+                    plat_debit_acct_nm	         ,
+                    brh_role	         ,
+                    pay_chan,
+                    sett_type   
+                into
+                    :vtbl_payway_ext_txn.payway_code   :db_ind,
+                    :vtbl_payway_ext_txn.payway_name	       :db_ind,
+                    :vtbl_payway_ext_txn.connect_switch	        :db_ind , 
+                    :vtbl_payway_ext_txn.sett_type         :db_ind  , 
+                    :vtbl_payway_ext_txn.estatus         :db_ind  ,
+                    :vtbl_payway_ext_txn.cost_rate	           :db_ind, 
+                    :vtbl_payway_ext_txn.open_type	          :db_ind , 
+                    :vtbl_payway_ext_txn.sett_md       :db_ind, 
+                    :vtbl_payway_ext_txn.plat_sett_bank               :db_ind , 
+                    :vtbl_payway_ext_txn.plat_sett_acct_type              :db_ind , 
+                    :vtbl_payway_ext_txn.plat_sett_acct           :db_ind  ,
+                    :vtbl_payway_ext_txn.plat_sett_acct_nm          :db_ind ,
+                    :vtbl_payway_ext_txn.plat_debit_bank            :db_ind  ,
+                    :vtbl_payway_ext_txn.plat_debit_acct_type	         :db_ind , 
+                    :vtbl_payway_ext_txn.plat_debit_acct	       :db_ind  ,
+                    :vtbl_payway_ext_txn.plat_debit_acct_nm	   :db_ind , 
+                    :vtbl_payway_ext_txn.brh_role	        :db_ind ,
+                    :vtbl_payway_ext_txn.pay_chan	        :db_ind ,
+                    :vtbl_payway_ext_txn.sett_type             :db_ind
+                from 
+                    tp_payway_ext@PUBLIC_DATA
+               where
+                    payway_code = :vtbl_payway_ext_txn.payway_code;
+        HtMemcpy(pht_tbl_payway_ext_txn, &vtbl_payway_ext_txn, sizeof(vtbl_payway_ext_txn));
+        return sqlca.sqlcode;
+                                    
+        default:
+            return NO_SWITCH;
+    }
+}

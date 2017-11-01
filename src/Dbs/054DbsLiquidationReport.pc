@@ -1,0 +1,42 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+EXEC SQL BEGIN DECLARE SECTION;
+    char strsql[128];
+    int count;
+EXEC SQL END DECLARE SECTION;
+
+int DbsLiquidationReport(int vnOprType)
+{  
+    switch(vnOprType)
+    {
+        case DBS_INSERT:
+            memset(strsql, 0x00, sizeof(strsql));
+            strcpy(strsql, "BEGIN P_LIQUIDATION_REPORT.LIQUIDATION_REPORT;  END;");
+            EXEC SQL EXECUTE IMMEDIATE :strsql;
+            return sqlca.sqlcode; 
+        case DBS_SELECT:
+	    count = 0;
+	    EXEC SQL SELECT
+                COUNT(*)
+            INTO
+                :count
+            FROM
+                TBL_HOST_CHECK_REPORT@PUBLIC_DATA a
+            WHERE
+                a.SETT_DATE =(SELECT DISTINCT(SYESTERDAY) FROM HT_TBL_DATE_INF);
+        return count;
+
+	default:
+        return NO_SWITCH;
+    }
+
+}
+

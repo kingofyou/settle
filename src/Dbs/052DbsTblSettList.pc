@@ -1,0 +1,796 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsTblSett.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+extern  char    gLogFile[32];
+
+
+/* 结算明细表操作 */
+int DbsTblSettList(int vnOprType, tbl_sett_list_def* vtdbtbl_sett_list)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char        brh_id[10+1];
+            char        sett_date[8+1] ;
+            char        trans_date[8+1] ;
+            char        mcht_no[15+1];
+            char        mcht_role[4+1] ;
+            char        mcht_rslt_no[32+1];
+            char        seq_no[20+1];
+            char        plat_sett_bank[12+1] ;
+            char        plat_sett_bank_nm[80+1];
+            char        plat_sett_acct_type[1+1];
+            char        plat_sett_acct[22+1];
+            char        plat_sett_acct_nm[80+1] ;
+            char        dc_flag[1+1] ;
+            char        mcht_sett_xingmin_acct[40+1];
+            char        mcht_sett_bank[12+1] ;
+            char        mcht_sett_bank_nm[80+1] ;
+            char        mcht_sett_acct_type[1+1] ;
+            char        mcht_sett_acct[22+1] ;
+            char        mcht_sett_acct_nm[80+1] ;
+            double      amt;
+            double      amt_fee;
+            double      plat_amt_fee;
+            char        acct_statu[1+1];
+            char        status[1+1] ;
+            char        chl_id[10+1];
+            char        chnl_name[70+1];
+            char        file_name[100+1];
+            char        ps[80+1] ;
+            char        reserve1[8+1];
+            char        reserve2[16+1];
+            char        reserve3[32+1];
+            char        reserve4[64+1];
+            char        reserve5[128+1];
+        }ptdbtbl_sett_list;
+        char SettBankNO[10+1];
+        double TotalAmt;
+        int  TotalNum;
+        short db_ind;
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    
+    memset(SettBankNO, 0, sizeof(SettBankNO)-1);
+    memset(&ptdbtbl_sett_list, 0x00, sizeof(ptdbtbl_sett_list));
+    memcpy(&ptdbtbl_sett_list, vtdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+
+    switch(vnOprType)
+    {
+        case DBS_INSERT:
+            EXEC SQL
+            INSERT INTO
+                ht_tbl_sett_list (
+                brh_id,
+                sett_date,
+                trans_date,
+                mcht_no,
+                mcht_role,
+                mcht_rslt_no,
+                seq_no,
+                plat_sett_bank,
+                plat_sett_bank_nm,
+                plat_sett_acct_type,
+                plat_sett_acct,
+                plat_sett_acct_nm,
+                dc_flag,
+                mcht_sett_xingmin_acct,
+                mcht_sett_bank,
+                mcht_sett_bank_nm,
+                mcht_sett_acct_type,
+                mcht_sett_acct,
+                mcht_sett_acct_nm,
+                amt,
+                amt_fee,
+                plat_amt_fee,
+                acct_statu,
+                status,
+                chl_id,
+                chnl_name
+                )
+            VALUES (
+                :ptdbtbl_sett_list.brh_id           :db_ind,
+                :ptdbtbl_sett_list.sett_date        :db_ind,
+                :ptdbtbl_sett_list.trans_date       :db_ind,
+                :ptdbtbl_sett_list.mcht_no          :db_ind,
+                :ptdbtbl_sett_list.mcht_role        :db_ind,
+                :ptdbtbl_sett_list.mcht_rslt_no     :db_ind,
+                :ptdbtbl_sett_list.seq_no           :db_ind,
+                :ptdbtbl_sett_list.plat_sett_bank    :db_ind,
+                :ptdbtbl_sett_list.plat_sett_bank_nm :db_ind,
+                :ptdbtbl_sett_list.plat_sett_acct_type        :db_ind,
+                :ptdbtbl_sett_list.plat_sett_acct          :db_ind,
+                :ptdbtbl_sett_list.plat_sett_acct_nm        :db_ind,
+                :ptdbtbl_sett_list.dc_flag          :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_xingmin_acct :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_bank       :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_bank_nm :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_acct_type       :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_acct         :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_acct_nm       :db_ind,
+                :ptdbtbl_sett_list.amt              :db_ind,
+                :ptdbtbl_sett_list.amt_fee          :db_ind,
+                :ptdbtbl_sett_list.plat_amt_fee     :db_ind,
+                :ptdbtbl_sett_list.acct_statu       :db_ind,
+                :ptdbtbl_sett_list.status           :db_ind,
+                :ptdbtbl_sett_list.chl_id           :db_ind,
+                :ptdbtbl_sett_list.chnl_name        :db_ind
+            );
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+
+        case DBS_SELECT:
+            EXEC SQL
+            SELECT
+                dc_flag,
+                status,
+                mcht_rslt_no,
+                mcht_role
+            INTO
+                :ptdbtbl_sett_list.dc_flag,
+                :ptdbtbl_sett_list.status,
+                :ptdbtbl_sett_list.mcht_rslt_no,
+                :ptdbtbl_sett_list.mcht_role
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                seq_no = :ptdbtbl_sett_list.seq_no;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return 0;
+
+        case DBS_SELECT1:
+	    TotalNum = 0;
+	    EXEC SQL SELECT
+                COUNT(*)
+            INTO
+                :TotalNum
+            FROM
+                ht_tbl_sett_list
+            WHERE trans_date = :ptdbtbl_sett_list.sett_date and
+	          dc_flag = :ptdbtbl_sett_list.dc_flag and
+	          status != '5' and
+		  status != '4';
+            return TotalNum;
+
+	case DBS_SELECT3:
+	    TotalNum = 0;
+	    EXEC SQL SELECT
+                COUNT(*)
+            INTO
+                :TotalNum
+            FROM
+                ht_tbl_sett_list
+            WHERE trans_date = :ptdbtbl_sett_list.sett_date and
+	          dc_flag = :ptdbtbl_sett_list.dc_flag and
+	          status != '5' and
+		  status != '6';
+            return TotalNum;
+            
+        case DBS_CURSOR_VAR:
+            EXEC SQL DECLARE tbl_sett_var_cur CURSOR FOR
+            SELECT
+                brh_id,
+                sett_date,   
+                trans_date,
+                mcht_role,  
+                mcht_rslt_no,
+                seq_no,      
+                plat_sett_bank,   
+                plat_sett_acct,     
+                plat_sett_acct_nm,   
+                dc_flag,
+                mcht_sett_xingmin_acct,
+                mcht_sett_bank,  
+                mcht_sett_acct,    
+                mcht_sett_acct_nm,  
+                amt
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                sett_date = :ptdbtbl_sett_list.sett_date
+            AND
+                mcht_sett_acct_type = :ptdbtbl_sett_list.mcht_sett_acct_type
+            AND
+                status = :ptdbtbl_sett_list.status;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH_VAR:
+            EXEC SQL FETCH tbl_sett_var_cur
+            INTO
+                :ptdbtbl_sett_list.brh_id           :db_ind,
+                :ptdbtbl_sett_list.sett_date        :db_ind,   
+                :ptdbtbl_sett_list.trans_date       :db_ind,
+                :ptdbtbl_sett_list.mcht_role        :db_ind,  
+                :ptdbtbl_sett_list.mcht_rslt_no     :db_ind,
+                :ptdbtbl_sett_list.seq_no           :db_ind,      
+                :ptdbtbl_sett_list.plat_sett_bank   :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct   :db_ind,     
+                :ptdbtbl_sett_list.plat_sett_acct_nm    :db_ind,   
+                :ptdbtbl_sett_list.dc_flag          :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_xingmin_acct   :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_bank   :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct   :db_ind,    
+                :ptdbtbl_sett_list.mcht_sett_acct_nm    :db_ind,  
+                :ptdbtbl_sett_list.amt  :db_ind;
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN_VAR:
+            EXEC SQL OPEN
+                tbl_sett_var_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE_VAR:
+            EXEC SQL CLOSE
+                tbl_sett_var_cur;
+            return sqlca.sqlcode;
+            
+        case DBS_UPDATE:
+            EXEC SQL
+                UPDATE
+                    ht_tbl_sett_list
+                SET
+                    status = :ptdbtbl_sett_list.status
+                WHERE
+                    sett_date = :ptdbtbl_sett_list.sett_date
+                AND
+                    plat_sett_bank = :ptdbtbl_sett_list.plat_sett_bank
+                AND
+                    status = '1';
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+
+	case DBS_UPDATE3:
+            EXEC SQL
+                UPDATE HT_TBL_SETT_LIST a set CHL_ID = 'XY'
+//		(
+//                    SELECT decode(SUBSTR(t.PAYWAY_CODE, 0,2), 'XY', 'XY', 'FY', 'FY')
+//                    FROM HT_TBL_BRH_FEE_INF@PUBLIC_DATA t 
+//                    WHERE FEE_VALUE=(
+//                        SELECT MIN(tt.FEE_VALUE)
+//                        FROM HT_TBL_BRH_FEE_INF@PUBLIC_DATA tt
+//                    )
+//                )
+                WHERE a.SETT_DATE = (SELECT SYESTERDAY FROM HT_TBL_DATE_INF b where trim(a.brh_id) = trim(b.INTER_BRH_CODE))
+		  AND a.status = '2';   
+
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        case DBS_UPD_SEQ:
+            EXEC SQL
+                update 
+                    ht_tbl_sett_list
+                set
+                    status = :ptdbtbl_sett_list.status
+                where 
+                    seq_no = :ptdbtbl_sett_list.seq_no;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        case DBS_UPD_MISS:
+            EXEC SQL
+                UPDATE 
+                    ht_tbl_sett_list
+                SET
+                    status = :ptdbtbl_sett_list.status
+                WHERE
+                    sett_date = :ptdbtbl_sett_list.sett_date
+                AND
+                    plat_sett_bank = :ptdbtbl_sett_list.plat_sett_bank
+                AND
+                    status = '9';
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+
+        case DBS_UPD_FL:
+            EXEC SQL
+                update 
+                    ht_tbl_sett_list
+                set
+                    status = :ptdbtbl_sett_list.status,
+                    chl_id = :ptdbtbl_sett_list.chl_id,
+                    chnl_name = :ptdbtbl_sett_list.chnl_name,
+                    file_name = :ptdbtbl_sett_list.file_name
+                where 
+                    sett_date = :ptdbtbl_sett_list.sett_date
+                and
+                    seq_no = :ptdbtbl_sett_list.seq_no;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        case DBS_UPD_KEY:
+            EXEC SQL
+                update 
+                    ht_tbl_sett_list
+                set
+                    plat_sett_bank = :ptdbtbl_sett_list.plat_sett_bank,
+                    plat_sett_acct_type = :ptdbtbl_sett_list.plat_sett_acct_type,
+                    plat_sett_acct   = :ptdbtbl_sett_list.plat_sett_acct,
+                    plat_sett_acct_nm = :ptdbtbl_sett_list.plat_sett_acct_nm,
+                    status   = :ptdbtbl_sett_list.status
+                where 
+                    seq_no    = :ptdbtbl_sett_list.seq_no 
+                and
+                    sett_date = :ptdbtbl_sett_list.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+           
+        case DBS_CURSOR_BNK:
+            EXEC SQL DECLARE tbl_sett_bnk_cur CURSOR FOR
+            SELECT
+                distinct plat_sett_bank
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                sett_date = :ptdbtbl_sett_list.sett_date
+            AND
+                status = :ptdbtbl_sett_list.status
+            AND
+                dc_flag = :ptdbtbl_sett_list.dc_flag
+            AND 
+                mcht_sett_acct_type != '3';
+            return sqlca.sqlcode;
+
+        case DBS_FETCH_BNK:
+            EXEC SQL FETCH tbl_sett_bnk_cur
+            INTO
+                :SettBankNO;
+            memcpy(vtdbtbl_sett_list->plat_sett_bank, SettBankNO, sizeof(SettBankNO)-1);
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN_BNK:
+            EXEC SQL OPEN
+                tbl_sett_bnk_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE_BNK:
+            EXEC SQL CLOSE
+                tbl_sett_bnk_cur;
+            return sqlca.sqlcode;
+            
+        case DBS_CURSOR_C:
+            EXEC SQL DECLARE tbl_sett_c_cur CURSOR FOR
+            SELECT
+                brh_id,
+                sett_date,   
+                trans_date, 
+                mcht_role, 
+                mcht_rslt_no,
+                seq_no,      
+                plat_sett_bank,   
+                plat_sett_acct_type,   
+                plat_sett_acct,     
+                plat_sett_acct_nm,   
+                mcht_sett_bank,  
+                mcht_sett_acct_type,  
+                mcht_sett_acct,    
+                mcht_sett_acct_nm,  
+                amt
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                sett_date = :ptdbtbl_sett_list.sett_date
+            AND
+                plat_sett_bank = :ptdbtbl_sett_list.plat_sett_bank
+            AND
+                plat_sett_acct_type = :ptdbtbl_sett_list.plat_sett_acct_type
+            AND
+                dc_flag = :ptdbtbl_sett_list.dc_flag
+            AND
+                status = :ptdbtbl_sett_list.status;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH_C:
+            EXEC SQL FETCH tbl_sett_c_cur
+            INTO
+                :ptdbtbl_sett_list.brh_id   :db_ind,
+                :ptdbtbl_sett_list.sett_date    :db_ind,   
+                :ptdbtbl_sett_list.trans_date   :db_ind,  
+                :ptdbtbl_sett_list.mcht_role    :db_ind,
+                :ptdbtbl_sett_list.mcht_rslt_no :db_ind,
+                :ptdbtbl_sett_list.seq_no   :db_ind,      
+                :ptdbtbl_sett_list.plat_sett_bank   :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct_type  :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct   :db_ind,     
+                :ptdbtbl_sett_list.plat_sett_acct_nm    :db_ind,   
+                :ptdbtbl_sett_list.mcht_sett_bank   :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct_type  :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct   :db_ind,    
+                :ptdbtbl_sett_list.mcht_sett_acct_nm    :db_ind,  
+                :ptdbtbl_sett_list.amt  :db_ind;
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN_C:
+            EXEC SQL OPEN
+                tbl_sett_c_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE_C:
+            EXEC SQL CLOSE
+                tbl_sett_c_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CURSOR_KRNL:
+            EXEC SQL DECLARE tbl_sett_list_cur_krnl CURSOR FOR
+            SELECT
+                brh_id,
+                sett_date,   
+                trans_date, 
+                mcht_role, 
+                mcht_rslt_no,
+                seq_no,      
+                plat_sett_bank,   
+                plat_sett_acct_type,   
+                plat_sett_acct,     
+                plat_sett_acct_nm,
+                dc_flag,   
+                mcht_sett_bank,  
+                mcht_sett_acct_type,  
+                mcht_sett_acct,    
+                mcht_sett_acct_nm,  
+                amt,         
+                chl_id,
+                chnl_name
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                sett_date = :ptdbtbl_sett_list.sett_date
+            AND
+                status = :ptdbtbl_sett_list.status;
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN_KRNL:
+            EXEC SQL OPEN
+                tbl_sett_list_cur_krnl;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH_KRNL:
+            EXEC SQL FETCH tbl_sett_list_cur_krnl
+            INTO
+                :ptdbtbl_sett_list.brh_id   :db_ind,
+                :ptdbtbl_sett_list.sett_date    :db_ind,   
+                :ptdbtbl_sett_list.trans_date   :db_ind, 
+                :ptdbtbl_sett_list.mcht_role    :db_ind, 
+                :ptdbtbl_sett_list.mcht_rslt_no :db_ind,
+                :ptdbtbl_sett_list.seq_no   :db_ind,      
+                :ptdbtbl_sett_list.plat_sett_bank   :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct_type  :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct   :db_ind,     
+                :ptdbtbl_sett_list.plat_sett_acct_nm    :db_ind,
+                :ptdbtbl_sett_list.dc_flag  :db_ind,   
+                :ptdbtbl_sett_list.mcht_sett_bank   :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct_type  :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct   :db_ind,    
+                :ptdbtbl_sett_list.mcht_sett_acct_nm    :db_ind,  
+                :ptdbtbl_sett_list.amt  :db_ind,         
+                :ptdbtbl_sett_list.chl_id   :db_ind,
+                :ptdbtbl_sett_list.chnl_name    :db_ind;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return 0;
+
+        case DBS_CLOSE_KRNL:
+            EXEC SQL CLOSE
+                 tbl_sett_list_cur_krnl;
+            return sqlca.sqlcode;
+            
+        
+
+        case DBS_CUR_MISS_BNK:
+            EXEC SQL DECLARE tbl_sett_list_cur_miss CURSOR FOR
+            SELECT
+                brh_id,
+                sett_date,   
+                trans_date,  
+                mcht_role,
+                mcht_rslt_no,
+                seq_no,      
+                plat_sett_bank,   
+                plat_sett_acct_type,   
+                plat_sett_acct,     
+                plat_sett_acct_nm,
+                dc_flag,   
+                mcht_sett_bank,  
+                mcht_sett_acct_type,  
+                mcht_sett_acct,    
+                mcht_sett_acct_nm,  
+                amt
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                sett_date = :ptdbtbl_sett_list.sett_date
+            AND
+                plat_sett_bank = :ptdbtbl_sett_list.plat_sett_bank
+            AND
+                status = :ptdbtbl_sett_list.status;
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN_MISS_BNK:
+            EXEC SQL OPEN
+                tbl_sett_list_cur_miss;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH_MISS_BNK:
+            EXEC SQL FETCH tbl_sett_list_cur_miss
+            INTO
+                :ptdbtbl_sett_list.brh_id   :db_ind,
+                :ptdbtbl_sett_list.sett_date    :db_ind,   
+                :ptdbtbl_sett_list.trans_date   :db_ind, 
+                :ptdbtbl_sett_list.mcht_role    :db_ind, 
+                :ptdbtbl_sett_list.mcht_rslt_no :db_ind,
+                :ptdbtbl_sett_list.seq_no   :db_ind,      
+                :ptdbtbl_sett_list.plat_sett_bank   :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct_type  :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct   :db_ind,     
+                :ptdbtbl_sett_list.plat_sett_acct_nm    :db_ind,
+                :ptdbtbl_sett_list.dc_flag  :db_ind,   
+                :ptdbtbl_sett_list.mcht_sett_bank   :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct_type  :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct   :db_ind,    
+                :ptdbtbl_sett_list.mcht_sett_acct_nm    :db_ind,  
+                :ptdbtbl_sett_list.amt  :db_ind;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return 0;
+
+        case DBS_CLOSE_MISS_BNK:
+            EXEC SQL CLOSE
+                 tbl_sett_list_cur_miss;
+            return sqlca.sqlcode;
+
+
+        case DBS_CURSOR1:
+            EXEC SQL DECLARE ht_tbl_sett_list_cur1 CURSOR FOR
+            SELECT
+                brh_id,
+                sett_date,   
+                trans_date, 
+                mcht_role, 
+                mcht_rslt_no,
+                seq_no,      
+                plat_sett_bank,   
+                plat_sett_acct_type,   
+                plat_sett_acct,     
+                plat_sett_acct_nm,
+                mcht_sett_xingmin_acct,   
+                mcht_sett_bank,  
+                mcht_sett_acct_type,  
+                mcht_sett_acct,    
+                mcht_sett_acct_nm,  
+                amt,
+                amt_fee,
+                plat_amt_fee,
+                acct_statu,
+                status,
+                chl_id,
+                chnl_name
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                trans_date = :ptdbtbl_sett_list.sett_date
+            AND
+                dc_flag = :ptdbtbl_sett_list.dc_flag
+            AND 
+                mcht_sett_acct_type != '3'
+            AND
+                status = :ptdbtbl_sett_list.status
+	    AND
+	        chl_id = :ptdbtbl_sett_list.chl_id
+            ORDER BY seq_no;
+            HtLog(gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "sett_date[%s]dc_flag[%s]status[%s].", ptdbtbl_sett_list.sett_date,ptdbtbl_sett_list.dc_flag,ptdbtbl_sett_list.status);    
+            return sqlca.sqlcode;
+
+        case DBS_FETCH1:
+            EXEC SQL FETCH ht_tbl_sett_list_cur1
+            INTO
+                :ptdbtbl_sett_list.brh_id   :db_ind,
+                :ptdbtbl_sett_list.sett_date    :db_ind,   
+                :ptdbtbl_sett_list.trans_date   :db_ind,
+                :ptdbtbl_sett_list.mcht_role    :db_ind,  
+                :ptdbtbl_sett_list.mcht_rslt_no :db_ind,
+                :ptdbtbl_sett_list.seq_no   :db_ind,      
+                :ptdbtbl_sett_list.plat_sett_bank   :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct_type  :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct   :db_ind,     
+                :ptdbtbl_sett_list.plat_sett_acct_nm    :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_xingmin_acct   :db_ind,   
+                :ptdbtbl_sett_list.mcht_sett_bank   :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct_type  :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct   :db_ind,    
+                :ptdbtbl_sett_list.mcht_sett_acct_nm    :db_ind,  
+                :ptdbtbl_sett_list.amt  :db_ind,
+                :ptdbtbl_sett_list.amt_fee  :db_ind,
+                :ptdbtbl_sett_list.plat_amt_fee :db_ind,
+                :ptdbtbl_sett_list.acct_statu   :db_ind,  
+                :ptdbtbl_sett_list.status   :db_ind,
+                :ptdbtbl_sett_list.chl_id   :db_ind,
+                :ptdbtbl_sett_list.chnl_name    :db_ind;                
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN1:
+            EXEC SQL OPEN
+                ht_tbl_sett_list_cur1;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE1:
+            EXEC SQL CLOSE
+                ht_tbl_sett_list_cur1;
+            return sqlca.sqlcode;
+        case DBS_CURSOR2:
+            EXEC SQL DECLARE ht_tbl_sett_list_cur2 CURSOR FOR
+            SELECT
+                brh_id,
+                sett_date,   
+                trans_date,
+                mcht_role,  
+                mcht_rslt_no,
+                seq_no,      
+                plat_sett_bank,   
+                plat_sett_acct,     
+                plat_sett_acct_nm,   
+                dc_flag,
+                mcht_sett_bank,  
+                mcht_sett_acct,    
+                mcht_sett_acct_nm,  
+                amt
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                trans_date = :ptdbtbl_sett_list.sett_date
+            AND
+                status = :ptdbtbl_sett_list.status
+            ORDER BY seq_no;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH2:
+            EXEC SQL FETCH ht_tbl_sett_list_cur2
+            INTO
+                :ptdbtbl_sett_list.brh_id   :db_ind,
+                :ptdbtbl_sett_list.sett_date    :db_ind,   
+                :ptdbtbl_sett_list.trans_date   :db_ind,
+                :ptdbtbl_sett_list.mcht_role    :db_ind,  
+                :ptdbtbl_sett_list.mcht_rslt_no :db_ind,
+                :ptdbtbl_sett_list.seq_no   :db_ind,      
+                :ptdbtbl_sett_list.plat_sett_bank   :db_ind,   
+                :ptdbtbl_sett_list.plat_sett_acct   :db_ind,     
+                :ptdbtbl_sett_list.plat_sett_acct_nm    :db_ind,   
+                :ptdbtbl_sett_list.dc_flag  :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_bank   :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct   :db_ind,    
+                :ptdbtbl_sett_list.mcht_sett_acct_nm    :db_ind,  
+                :ptdbtbl_sett_list.amt  :db_ind;
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN2:
+            EXEC SQL OPEN
+                ht_tbl_sett_list_cur2;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE2:
+            EXEC SQL CLOSE
+                ht_tbl_sett_list_cur2;
+            return sqlca.sqlcode;
+            
+        case DBS_UPDATE2:
+            EXEC SQL
+                update 
+                    ht_tbl_sett_list
+                set
+                    status = :ptdbtbl_sett_list.status,
+                    amt_fee = :ptdbtbl_sett_list.amt_fee
+                where 
+                    seq_no = :ptdbtbl_sett_list.seq_no;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+        case DBS_CURSOR3:
+            EXEC SQL DECLARE ht_tbl_sett_list_cur3 CURSOR FOR
+            SELECT
+                brh_id,
+                sett_date,   
+                trans_date,
+                mcht_role,  
+                mcht_rslt_no,
+                seq_no,                       
+                dc_flag,
+                mcht_sett_xingmin_acct,
+                mcht_sett_bank,  
+                mcht_sett_acct,    
+                mcht_sett_acct_nm,  
+                amt
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                sett_date = :ptdbtbl_sett_list.sett_date
+            AND
+                mcht_sett_acct_type = :ptdbtbl_sett_list.mcht_sett_acct_type
+            AND
+                status = :ptdbtbl_sett_list.status
+            ORDER BY seq_no;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH3:
+            EXEC SQL FETCH ht_tbl_sett_list_cur3
+            INTO
+                :ptdbtbl_sett_list.brh_id   :db_ind,
+                :ptdbtbl_sett_list.sett_date    :db_ind,   
+                :ptdbtbl_sett_list.trans_date   :db_ind,
+                :ptdbtbl_sett_list.mcht_role    :db_ind,  
+                :ptdbtbl_sett_list.mcht_rslt_no :db_ind,
+                :ptdbtbl_sett_list.seq_no   :db_ind,   
+                :ptdbtbl_sett_list.dc_flag  :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_xingmin_acct   :db_ind,
+                :ptdbtbl_sett_list.mcht_sett_bank   :db_ind,  
+                :ptdbtbl_sett_list.mcht_sett_acct   :db_ind,    
+                :ptdbtbl_sett_list.mcht_sett_acct_nm    :db_ind,  
+                :ptdbtbl_sett_list.amt  :db_ind;
+            memcpy(vtdbtbl_sett_list, &ptdbtbl_sett_list, sizeof(ptdbtbl_sett_list));
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN3:
+            EXEC SQL OPEN
+                ht_tbl_sett_list_cur3;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE3:
+            EXEC SQL CLOSE
+                ht_tbl_sett_list_cur3;
+            return sqlca.sqlcode;                                    
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}

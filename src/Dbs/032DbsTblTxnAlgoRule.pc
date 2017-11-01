@@ -1,0 +1,119 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsOprInf.pc                                            */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include "DbsDef.h"
+#include "batch.h"
+
+extern    char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_txn_algo_rule_tab
+{
+char	bus_tp	    [8+1];
+char	txn_num	    [4+1];
+char	algo_id	    [5+1];
+char	param_flag	[32+1];
+char	rec_upd_opr	[11+1];
+char	rec_crt_ts	[14+1];
+char	rec_upd_ts	[14+1];
+}vtbl_txn_algo_rule;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblTxnAlgoRule(int vnOprType, struct ht_tbl_txn_algo_rule_tab *ptbl_txn_algo_rule, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_txn_algo_rule, 0x00, sizeof(vtbl_txn_algo_rule));
+    memcpy(&vtbl_txn_algo_rule, ptbl_txn_algo_rule, sizeof(vtbl_txn_algo_rule));
+
+    switch(vnOprType)
+    {
+    case DBS_SELECT:
+            EXEC SQL
+                select 
+                    bus_tp	   ,
+                    txn_num  , 
+                    algo_id	   ,
+                    param_flag	,
+                    rec_upd_opr,
+                    rec_crt_ts	,
+                    rec_upd_ts	
+                into
+                    :vtbl_txn_algo_rule.bus_tp :db_ind,
+                    :vtbl_txn_algo_rule.txn_num :db_ind, 
+                    :vtbl_txn_algo_rule.algo_id :db_ind,
+                    :vtbl_txn_algo_rule.param_flag :db_ind,
+                    :vtbl_txn_algo_rule.rec_upd_opr :db_ind,
+                    :vtbl_txn_algo_rule.rec_crt_ts :db_ind,
+                    :vtbl_txn_algo_rule.rec_upd_ts  :db_ind
+                from 
+                    HT_TBL_TXN_ALGO_RULE
+               where
+                    bus_tp = :vtbl_txn_algo_rule.bus_tp and 
+                    txn_num = :vtbl_txn_algo_rule.txn_num
+                    ;
+        HtMemcpy(ptbl_txn_algo_rule, &vtbl_txn_algo_rule, sizeof(vtbl_txn_algo_rule));
+        return sqlca.sqlcode;
+           
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_txn_algo_rule_cur CURSOR FOR
+            SELECT
+                    bus_tp	   ,
+                    txn_num  , 
+                    algo_id	   ,
+                    param_flag	,
+                    rec_upd_opr,
+                    rec_crt_ts	,
+                    rec_upd_ts	
+            FROM
+                HT_TBL_TXN_ALGO_RULE;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            tbl_txn_algo_rule_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH tbl_txn_algo_rule_cur
+        INTO
+                :vtbl_txn_algo_rule.bus_tp :db_ind,
+                :vtbl_txn_algo_rule.txn_num  :db_ind, 
+                :vtbl_txn_algo_rule.algo_id :db_ind ,
+                :vtbl_txn_algo_rule.param_flag	 :db_ind,
+                :vtbl_txn_algo_rule.rec_upd_opr :db_ind,
+                :vtbl_txn_algo_rule.rec_crt_ts	 :db_ind,
+                :vtbl_txn_algo_rule.rec_upd_ts	 :db_ind
+        ;
+        memcpy(ptbl_txn_algo_rule, &vtbl_txn_algo_rule, sizeof(vtbl_txn_algo_rule));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            tbl_txn_algo_rule_cur;
+        return sqlca.sqlcode;
+        
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+}
+

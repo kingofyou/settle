@@ -1,0 +1,88 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_risk_txn_tab
+{
+char inter_brh_code    [10+ 1];
+char sett_date	       [8 + 1];
+char trans_date      [8 + 1];
+char trans_time             [10+ 1];
+char gateway_key       [48 + 1] ;
+char order_no          [32 + 1] ;
+char payway_type       [32 + 1];
+char bus_tp            [8 + 1];
+char trans_tp          [4 + 1]   ;
+char user_id           [20 + 1]  ;
+char pan               [20 + 1]   ;
+double trans_at        ;
+char sett_mcht_no      [15 + 1]   ;
+char ext_mcht_no       [15 + 1] ;
+char risk_reason       [255 + 1]    ;
+char remark            [256 + 1]        ;
+}vtbl_risk_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblRiskTxn(int nvtOpr, struct ht_tbl_risk_txn_tab * pht_tbl_risk_txn)
+{
+
+    memset(&vtbl_risk_txn, 0, sizeof(vtbl_risk_txn));
+    HtMemcpy(&vtbl_risk_txn, pht_tbl_risk_txn, sizeof(vtbl_risk_txn));
+    switch(nvtOpr)
+    {
+        case DBS_INSERT:
+            EXEC SQL 
+                insert into HT_TBL_RISK_TXN(
+                    inter_brh_code  ,
+                    sett_date       ,
+                    trans_date     	,   
+                    trans_time      ,
+                    gateway_key      ,
+                    order_no         ,
+                    payway_type        ,
+                    bus_tp            ,
+                    trans_tp           ,
+                    user_id            ,
+                    pan              ,
+                    trans_at           ,
+                    sett_mcht_no       ,
+                    ext_mcht_no      ,
+                    risk_reason      ,
+                    remark
+                ) values (
+                    :vtbl_risk_txn.inter_brh_code  	,  
+                    :vtbl_risk_txn.sett_date  	,  
+                    :vtbl_risk_txn.trans_date  	,   
+                    :vtbl_risk_txn.trans_time     ,
+                    :vtbl_risk_txn.gateway_key    ,
+                    :vtbl_risk_txn.order_no       ,
+                    :vtbl_risk_txn.payway_type  ,
+                    :vtbl_risk_txn.bus_tp       ,
+                    :vtbl_risk_txn.trans_tp     ,
+                    :vtbl_risk_txn.user_id      ,
+                    :vtbl_risk_txn.pan            ,
+                    :vtbl_risk_txn.trans_at     ,
+                    :vtbl_risk_txn.sett_mcht_no     ,
+                    :vtbl_risk_txn.ext_mcht_no    ,
+                    :vtbl_risk_txn.risk_reason    ,
+                    :vtbl_risk_txn.remark
+                );
+            return sqlca.sqlcode;
+            
+        default:
+            return NO_SWITCH;
+    }
+}
+
+

@@ -1,0 +1,24 @@
+#!/bin/sh
+###############################################################################
+#  Copyright 2012, Shanghai Huateng Software Systems Co., Ltd.
+#  All right reserved.
+#
+#  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+#  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+#  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+#  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+#  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+#
+#  脚 本 名: stopbatch
+#  功    能: 批处理系统关闭
+#  编程人员: 
+#  开发时间: 
+#  备    注:
+###############################################################################
+
+$BATCHHOME/sbin/pget -k InstMisn;
+$BATCHHOME/sbin/pget -k MMisnMain;
+$BATCHHOME/sbin/pget -k MSubMisnMain;
+$BATCHHOME/sbin/pget -k TMisnMain;
+$BATCHHOME/sbin/pget -k TSubMisnMain;
+

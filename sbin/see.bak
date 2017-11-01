@@ -1,0 +1,62 @@
+#!/bin/sh
+
+findproc()
+{
+    cnt=`ps -ef | grep $LOGNAME | grep "$1" | grep -v "grep" | grep -v "vi" | grep -v "view" | grep -v "tail" | wc -l`
+    if [ $cnt != "0" ]
+    then
+        echo $cnt
+    else
+        echo "0"
+    fi
+}
+compare_eq()
+{
+    cnt=`ps -ef | grep $LOGNAME | grep -w "$1" | grep -v "grep" | grep -v "vi" | grep -v "view" | grep -v "tail" | grep -v "defunct" | wc -l`
+    
+    if [ $cnt != "$2" ]
+    then
+        if [ $cnt == "0" ]
+        then
+            echo "inactive"
+        else
+            echo  -e "\033[31;1mabnormal\033[0m"
+        fi
+    else
+        echo  -e "\033[32;1mrunning\033[0m"
+    fi
+}
+compare_ge()
+{
+    cnt=`ps -ef | grep $LOGNAME | grep -w "$1" | grep -v "grep" | grep -v "vi" | grep -v "view" | grep -v "tail" | grep -v "defunct" | wc -l`
+    
+    if [ $cnt == "0" ];then
+        echo "inactive"
+    elif [ $cnt -ge "$2" ]; then
+        echo -e "\033[32;1mrunning\033[0m"
+    else 
+        echo -e "\033[31;1mabnormal\033[0m"
+    fi
+}
+
+clear
+
+echo "================================================================================"
+echo "********************       POSP BAT PROCESS                 ********************" 
+echo "================================================================================"
+echo "name                    need                 actual               status"
+#echo "--------------------------------------------------------------------------------"
+#echo -e  "\033[34;1mclrmisn    \033[0m             >=1                    `findproc "clrmisn"`               \t `compare_ge clrmisn  1`"
+echo "--------------------------------------------------------------------------------"
+echo -e  "\033[34;1mInstMisn    \033[0m            >=1                    `findproc "InstMisn"`              \t `compare_ge MInstMisn  1`"
+echo -e  "\033[34;1mMisnMain    \033[0m            >=1                    `findproc "MisnMain"`             \t `compare_ge MMisnMain  1`"
+echo -e  "\033[34;1mSubMisnMain \033[0m            >=1                    `findproc "SubMisnMain"`          \t `compare_ge MSubMisnMain  1`"
+echo "--------------------------------------------------------------------------------"
+#echo -e  "\033[34;1mTMisnDaemon \033[0m            >=1                    `findproc "TMisnDaemon"`           \t `compare_eq TMisnDaemon  1`"
+echo -e  "\033[34;1mTMisnMain   \033[0m            >=1                    `findproc "TMisnMain"`             \t `compare_eq TMisnMain  1`"
+echo -e  "\033[34;1mTSubMisnMain\033[0m            >=1                    `findproc "TSubMisnMain"`          \t `compare_eq TSubMisnMain  1 `"
+echo "--------------------------------------------------------------------------------"
+echo "================================================================================"
+echo "Please Press Button <Return> ..."
+echo
+read

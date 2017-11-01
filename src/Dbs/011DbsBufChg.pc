@@ -1,0 +1,84 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsBufChg.pc                                                */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+#include "DbsDef.h"
+
+EXEC SQL BEGIN DECLARE SECTION;
+    struct TBL_buf_chg_Def
+    {
+        int    usage_key;
+        int    buf_chg_index;
+        int    sour_buf_index;
+        int    dest_buf_index;
+        char    buf_dsp[257];
+    } ltTblBufChg;
+EXEC SQL END DECLARE SECTION;
+
+int DbsBUFCHG( int vnOprType, struct TBL_buf_chg_Def *vtpTblBufChg)
+{
+
+
+    HtMemcpy(
+        &ltTblBufChg,
+        vtpTblBufChg,
+        sizeof(ltTblBufChg));
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE
+            cur_buf_chg_1
+        CURSOR FOR SELECT
+            l_usage_key,
+            i_buf_chg_index,
+            i_sour_buf_index,
+            i_dest_buf_index
+        FROM
+            ht_tbl_buf_chg
+        WHERE
+            l_usage_key = :ltTblBufChg.usage_key
+        ORDER BY
+            l_usage_key,
+            i_buf_chg_index
+        ;
+        return LUsrErrNull;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            cur_buf_chg_1;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            cur_buf_chg_1
+        INTO
+            :ltTblBufChg.usage_key,
+            :ltTblBufChg.buf_chg_index,
+            :ltTblBufChg.sour_buf_index,
+            :ltTblBufChg.dest_buf_index;
+        HtMemcpy(
+            vtpTblBufChg,
+            &ltTblBufChg,
+            sizeof(*vtpTblBufChg));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            cur_buf_chg_1;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+} /* end of DbsBUFCHG */
+

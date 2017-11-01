@@ -1,0 +1,347 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsOprInf.pc                                            */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include "DbsDef.h"
+#include "batch.h"
+
+extern    char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_dat_flow_tab
+{
+char inter_brh_code	[10 + 1];
+char      sett_date	[8 + 1];
+char    trans_date	[8 + 1];
+char    trans_time	[10 + 1];
+char    flag_result	[1 + 1];
+char    stlm_flag[1+1];
+char      order_no	[32 + 1];
+char      plat_key	[48 + 1];
+char      batch_no	[2 + 1];
+char        bus_tp	[8 + 1];
+char      trans_tp	[4 + 1];
+char      acct_type	[2 + 1];
+char    trans_state	[1 + 1];
+char    revsal_flag	[1 + 1];
+char    key_revsal	[32 + 1];
+char    cancel_flag	[1 + 1];
+char    key_cancel	[32 + 1];
+char            pan	[20 + 1];
+char acct_name	     [60 + 1];
+char            pan1	[20 + 1];
+char            ccy	[3 + 1];
+char      trans_at	[12 + 1];
+char      trans_at2	[12 + 1];
+char      trans_at3	[12 + 1];
+char      trans_at4	[12 + 1];
+char      trans_at5	[12 + 1];
+char    ext_mcht_no	[15 + 1];
+char      sett_tp1	[3 + 1];
+char      mcht_no1	[15 + 1];
+char      sett_tp2	[3 + 1];
+char      mcht_no2	[15 + 1];
+char      sett_tp3	[3 + 1];
+char      mcht_no3	[15 + 1];
+char      sett_tp4	[3 + 1];
+char      mcht_no4	[15 + 1];
+char      sett_tp5	[3 + 1];
+char      mcht_no5	[15 + 1];
+char      sett_tp6	[3 + 1];
+char      mcht_no6	[15 + 1];
+char      sett_tp7	[3 + 1];
+char      mcht_no7	[15 + 1];
+char      sett_tp8	[3 + 1];
+char      mcht_no8	[15 + 1];
+char      sett_tp9	[3 + 1];
+char      mcht_no9	[15 + 1];
+int seq_num	         ;
+}vtbl_dat_flow;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblDatFlow(int vnOprType, struct ht_tbl_dat_flow_tab *ptbl_dat_flow, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_dat_flow, 0x00, sizeof(vtbl_dat_flow));
+    memcpy(&vtbl_dat_flow, ptbl_dat_flow, sizeof(vtbl_dat_flow));
+
+    switch(vnOprType)
+    {
+    case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select TBL_DAT_FLOW_SEQ_ID_%s.nextval from dual", vtbl_dat_flow.inter_brh_code);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from TBL_DAT_FLOW_SEQ_ID_%s error, sqlcode=[%d].", vtbl_dat_flow.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+        
+            EXEC SQL 
+                insert into ht_tbl_dat_flow(
+                    inter_brh_code,
+                    sett_date,
+                    trans_date ,
+                    trans_time ,
+                    flag_result,
+                    stlm_flag,
+                    order_no ,
+                    plat_key ,
+                    batch_no ,
+                    bus_tp ,
+                    trans_tp ,
+                    acct_type,
+                    trans_state,
+                    revsal_flag,
+                    key_revsal ,
+                    cancel_flag,
+                    key_cancel ,
+                    pan,
+                    acct_name,
+                    pan1 ,
+                    ccy,
+                    trans_at ,
+                    trans_at2,
+                    trans_at3,
+                    trans_at4,
+                    trans_at5,
+                    ext_mcht_no,
+                    sett_tp1 ,
+                    mcht_no1 ,
+                    sett_tp2 ,
+                    mcht_no2 ,
+                    sett_tp3 ,
+                    mcht_no3 ,
+                    sett_tp4 ,
+                    mcht_no4 ,
+                    sett_tp5 ,
+                    mcht_no5 ,
+                    sett_tp6 ,
+                    mcht_no6 ,
+                    sett_tp7 ,
+                    mcht_no7 ,
+                    sett_tp8 ,
+                    mcht_no8 ,
+                    sett_tp9 ,
+                    mcht_no9 ,
+                    seq_num  
+               ) values (
+                    :vtbl_dat_flow.inter_brh_code       ,
+                    :vtbl_dat_flow.sett_date       ,
+                    :vtbl_dat_flow.trans_date        ,
+                    :vtbl_dat_flow.trans_time        ,
+                    :vtbl_dat_flow.flag_result       ,
+                    :vtbl_dat_flow.stlm_flag       ,
+                    :vtbl_dat_flow.order_no        ,
+                    :vtbl_dat_flow.plat_key        ,
+                    :vtbl_dat_flow.batch_no        ,
+                    :vtbl_dat_flow.bus_tp        ,
+                    :vtbl_dat_flow.trans_tp        ,
+                    :vtbl_dat_flow.acct_type       ,
+                    :vtbl_dat_flow.trans_state       ,
+                    :vtbl_dat_flow.revsal_flag       ,
+                    :vtbl_dat_flow.key_revsal        ,
+                    :vtbl_dat_flow.cancel_flag       ,
+                    :vtbl_dat_flow.key_cancel        ,
+                    :vtbl_dat_flow.pan       ,
+                    :vtbl_dat_flow.acct_name       ,
+                    :vtbl_dat_flow.pan1       ,
+                    :vtbl_dat_flow.ccy       ,
+                    :vtbl_dat_flow.trans_at        ,
+                    :vtbl_dat_flow.trans_at2       ,
+                    :vtbl_dat_flow.trans_at3       ,
+                    :vtbl_dat_flow.trans_at4       ,
+                    :vtbl_dat_flow.trans_at5       ,
+                    :vtbl_dat_flow.ext_mcht_no       ,
+                    :vtbl_dat_flow.sett_tp1        ,
+                    :vtbl_dat_flow.mcht_no1        ,
+                    :vtbl_dat_flow.sett_tp2        ,
+                    :vtbl_dat_flow.mcht_no2        ,
+                    :vtbl_dat_flow.sett_tp3        ,
+                    :vtbl_dat_flow.mcht_no3        ,
+                    :vtbl_dat_flow.sett_tp4        ,
+                    :vtbl_dat_flow.mcht_no4        ,
+                    :vtbl_dat_flow.sett_tp5        ,
+                    :vtbl_dat_flow.mcht_no5        ,
+                    :vtbl_dat_flow.sett_tp6        ,
+                    :vtbl_dat_flow.mcht_no6        ,
+                    :vtbl_dat_flow.sett_tp7        ,
+                    :vtbl_dat_flow.mcht_no7        ,
+                    :vtbl_dat_flow.sett_tp8        ,
+                    :vtbl_dat_flow.mcht_no8        ,
+                    :vtbl_dat_flow.sett_tp9        ,
+                    :vtbl_dat_flow.mcht_no9        ,
+                    :nTotalNum     
+             );
+           return sqlca.sqlcode;
+
+    case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    NVL(max(seq_num),0)
+                into
+                    :vtbl_dat_flow.seq_num
+                from 
+                    ht_tbl_dat_flow
+               where
+               inter_brh_code = :vtbl_dat_flow.inter_brh_code
+               and sett_date = :vtbl_dat_flow.sett_date;
+        HtMemcpy(ptbl_dat_flow, &vtbl_dat_flow, sizeof(vtbl_dat_flow));
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE:
+            EXEC SQL
+                update 
+                    ht_tbl_dat_flow
+                set
+                    stlm_flag = :vtbl_dat_flow.stlm_flag
+               where
+                inter_brh_code = :vtbl_dat_flow.inter_brh_code and
+                plat_key = :vtbl_dat_flow.plat_key;
+        return sqlca.sqlcode;
+              
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_dat_flow_cur CURSOR FOR
+            SELECT
+                    inter_brh_code,
+                    sett_date,
+                    trans_date ,
+                    trans_time ,
+                    flag_result,
+                    stlm_flag,
+                    order_no ,
+                    plat_key ,
+                    batch_no ,
+                    bus_tp ,
+                    trans_tp ,
+                    acct_type,
+                    trans_state,
+                    revsal_flag,
+                    key_revsal ,
+                    cancel_flag,
+                    key_cancel ,
+                    pan,
+                    acct_name,
+                    pan1 ,
+                    ccy,
+                    trans_at ,
+                    trans_at2,
+                    trans_at3,
+                    trans_at4,
+                    trans_at5,
+                    ext_mcht_no,
+                    sett_tp1 ,
+                    mcht_no1 ,
+                    sett_tp2 ,
+                    mcht_no2 ,
+                    sett_tp3 ,
+                    mcht_no3 ,
+                    sett_tp4 ,
+                    mcht_no4 ,
+                    sett_tp5 ,
+                    mcht_no5 ,
+                    sett_tp6 ,
+                    mcht_no6 ,
+                    sett_tp7 ,
+                    mcht_no7 ,
+                    sett_tp8 ,
+                    mcht_no8 ,
+                    sett_tp9 ,
+                    mcht_no9 ,
+                    seq_num  
+            FROM
+                ht_tbl_dat_flow
+            WHERE
+                inter_brh_code = :vtbl_dat_flow.inter_brh_code and
+                sett_date = :vtbl_dat_flow.sett_date and
+                stlm_flag = :vtbl_dat_flow.stlm_flag and
+                seq_num between :ptnBeginOffset and  :ptnEndOffset ;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            tbl_dat_flow_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH tbl_dat_flow_cur
+        INTO
+                     :vtbl_dat_flow.inter_brh_code       :db_ind,
+                    :vtbl_dat_flow.sett_date       :db_ind,
+                    :vtbl_dat_flow.trans_date        :db_ind,
+                    :vtbl_dat_flow.trans_time        :db_ind,
+                    :vtbl_dat_flow.flag_result       :db_ind,
+                    :vtbl_dat_flow.stlm_flag       :db_ind,
+                    :vtbl_dat_flow.order_no        :db_ind,
+                    :vtbl_dat_flow.plat_key        :db_ind,
+                    :vtbl_dat_flow.batch_no        :db_ind,
+                    :vtbl_dat_flow.bus_tp        :db_ind,
+                    :vtbl_dat_flow.trans_tp        :db_ind,
+                    :vtbl_dat_flow.acct_type       :db_ind,
+                    :vtbl_dat_flow.trans_state       :db_ind,
+                    :vtbl_dat_flow.revsal_flag       :db_ind,
+                    :vtbl_dat_flow.key_revsal        :db_ind,
+                    :vtbl_dat_flow.cancel_flag       :db_ind,
+                    :vtbl_dat_flow.key_cancel        :db_ind,
+                    :vtbl_dat_flow.pan       :db_ind,
+                    :vtbl_dat_flow.acct_name       :db_ind,
+                    :vtbl_dat_flow.pan1       :db_ind,
+                    :vtbl_dat_flow.ccy       :db_ind,
+                    :vtbl_dat_flow.trans_at        :db_ind,
+                    :vtbl_dat_flow.trans_at2       :db_ind,
+                    :vtbl_dat_flow.trans_at3       :db_ind,
+                    :vtbl_dat_flow.trans_at4       :db_ind,
+                    :vtbl_dat_flow.trans_at5       :db_ind,
+                    :vtbl_dat_flow.ext_mcht_no       :db_ind,
+                    :vtbl_dat_flow.sett_tp1        :db_ind,
+                    :vtbl_dat_flow.mcht_no1        :db_ind,
+                    :vtbl_dat_flow.sett_tp2        :db_ind,
+                    :vtbl_dat_flow.mcht_no2        :db_ind,
+                    :vtbl_dat_flow.sett_tp3        :db_ind,
+                    :vtbl_dat_flow.mcht_no3        :db_ind,
+                    :vtbl_dat_flow.sett_tp4        :db_ind,
+                    :vtbl_dat_flow.mcht_no4        :db_ind,
+                    :vtbl_dat_flow.sett_tp5        :db_ind,
+                    :vtbl_dat_flow.mcht_no5        :db_ind,
+                    :vtbl_dat_flow.sett_tp6        :db_ind,
+                    :vtbl_dat_flow.mcht_no6        :db_ind,
+                    :vtbl_dat_flow.sett_tp7        :db_ind,
+                    :vtbl_dat_flow.mcht_no7        :db_ind,
+                    :vtbl_dat_flow.sett_tp8        :db_ind,
+                    :vtbl_dat_flow.mcht_no8        :db_ind,
+                    :vtbl_dat_flow.sett_tp9        :db_ind,
+                    :vtbl_dat_flow.mcht_no9        :db_ind,
+                    :vtbl_dat_flow.seq_num      :db_ind 
+        ;
+        memcpy(ptbl_dat_flow, &vtbl_dat_flow, sizeof(vtbl_dat_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            tbl_dat_flow_cur;
+        return sqlca.sqlcode;
+        
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+}

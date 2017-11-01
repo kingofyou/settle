@@ -1,0 +1,293 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+
+EXEC SQL include sqlca;
+extern  char    gLogFile[32];
+
+int XbsMisnTime(int vnOprType, tbl_mission_time_def *vtdbtbl_mission_tm)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char               inter_brh_code[10 + 1];
+            char               mission_index[4 + 1];
+            char               mission_name[200 + 1];
+            char               mission_date[8 + 1];
+            char               mission_weekday[1 + 1];
+            char               mission_hour[2 + 1];
+            int        mission_date_adj;
+            int        data_num;
+            int        child_num;
+            int        commit_flag;
+            int        commit_num;
+        } ptdbtbl_mission_time;
+
+        char ptinter_brh_code[10 + 1];
+        int  ptmission_level;
+        int count;
+        int ptchild_num;
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptdbtbl_mission_time, 0, sizeof(ptdbtbl_mission_time));
+    HtMemcpy(&ptdbtbl_mission_time, vtdbtbl_mission_tm, sizeof(ptdbtbl_mission_time));
+
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_mission_time_cur CURSOR FOR
+        SELECT
+               INTER_BRH_CODE,
+               MISSION_INDEX,
+               MISSION_NAME,
+               MISSION_DATE,
+               MISSION_WEEKDAY,
+               MISSION_HOUR,
+               MISSION_DATE_ADJ,
+               DATA_NUM,
+               CHILD_NUM,
+               COMMIT_FLAG,
+               COMMIT_NUM
+        from ht_tbl_mission_time order by INTER_BRH_CODE,MISSION_INDEX;
+
+        EXEC SQL OPEN tbl_mission_time_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            tbl_mission_time_cur
+        INTO
+            :ptdbtbl_mission_time.inter_brh_code,
+            :ptdbtbl_mission_time.mission_index,
+            :ptdbtbl_mission_time.mission_name,
+            :ptdbtbl_mission_time.mission_date,
+            :ptdbtbl_mission_time.mission_weekday,
+            :ptdbtbl_mission_time.mission_hour,
+           :ptdbtbl_mission_time.mission_date_adj,
+            :ptdbtbl_mission_time.data_num,
+            :ptdbtbl_mission_time.child_num,
+            :ptdbtbl_mission_time.commit_flag,
+            :ptdbtbl_mission_time.commit_num;
+
+        HtMemcpy(vtdbtbl_mission_tm, &ptdbtbl_mission_time, sizeof(ptdbtbl_mission_time));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE tbl_mission_time_cur;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    }
+}
+
+int XbsCldTime(int vnOprType, tbl_child_time_def *vtdbtbl_child_tm)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char               inter_brh_code[10 + 1];
+            char               mission_index[4 + 1];
+            char               mission_date[8 + 1];
+            char               mission_weekday[1 + 1];
+            char               mission_hour[2 + 1];
+            int        mission_date_adj;
+            int        child_id;
+            int        commit_flag;
+            int        commit_num;
+            int        child_begin_point;
+            int        child_end_point;
+            int        child_finish_point;
+            int        child_err_point;
+            int        child_status;
+        } ptdbtbl_child_tm;
+
+        int nCountNum;
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptdbtbl_child_tm, 0x00, sizeof(ptdbtbl_child_tm));
+    HtMemcpy(&ptdbtbl_child_tm, vtdbtbl_child_tm, sizeof(ptdbtbl_child_tm));
+
+    switch(vnOprType)
+    {
+    case DBS_SELECT:
+        nCountNum = 0;
+        EXEC SQL SELECT
+            count(*)
+        INTO
+            :nCountNum
+        FROM
+            ht_tbl_child_time
+        WHERE
+            inter_brh_code = :ptdbtbl_child_tm.inter_brh_code
+            and mission_index = :ptdbtbl_child_tm.mission_index
+            and mission_date = :ptdbtbl_child_tm.mission_date
+            and mission_weekday = :ptdbtbl_child_tm.mission_weekday
+            and mission_hour = :ptdbtbl_child_tm.mission_hour
+            and mission_date_adj = :ptdbtbl_child_tm.mission_date_adj;
+        return nCountNum;
+    case DBS_SELECT2:
+        nCountNum = 0;
+        EXEC SQL SELECT
+            count(*)
+        INTO
+            :nCountNum
+        FROM
+            ht_tbl_child_time
+        WHERE
+            inter_brh_code = :ptdbtbl_child_tm.inter_brh_code
+            and mission_index = :ptdbtbl_child_tm.mission_index
+            and mission_date = :ptdbtbl_child_tm.mission_date
+            and child_status =:ptdbtbl_child_tm.child_status;
+        return nCountNum;
+
+    case DBS_SELECT1:
+        nCountNum = 0;
+        EXEC SQL SELECT
+            count(*)
+        INTO
+            :nCountNum
+        FROM
+            ht_tbl_child_time
+        WHERE
+            child_status =:ptdbtbl_child_tm.child_status;
+        return nCountNum;
+
+    case DBS_SELECT3:
+        EXEC SQL SELECT
+            child_status
+        INTO
+            :ptdbtbl_child_tm.child_status
+        FROM
+            ht_tbl_child_time
+        WHERE
+            mission_date =:ptdbtbl_child_tm.mission_date
+        AND mission_index= :ptdbtbl_child_tm.mission_index;
+        HtMemcpy(vtdbtbl_child_tm, &ptdbtbl_child_tm, sizeof(ptdbtbl_child_tm));
+        return sqlca.sqlcode;
+
+    case DBS_SELECT4:
+        EXEC SQL SELECT
+            child_status
+        INTO
+            :ptdbtbl_child_tm.child_status
+        FROM
+            ht_tbl_child_time
+        WHERE
+        inter_brh_code= :ptdbtbl_child_tm.inter_brh_code
+        AND mission_index= :ptdbtbl_child_tm.mission_index
+        AND mission_date =:ptdbtbl_child_tm.mission_date ;
+        HtMemcpy(vtdbtbl_child_tm, &ptdbtbl_child_tm, sizeof(ptdbtbl_child_tm));
+        return sqlca.sqlcode;
+
+    case DBS_INSERT:
+        EXEC SQL INSERT INTO
+            ht_TBL_CHILD_TIME
+        VALUES
+        (
+            :ptdbtbl_child_tm.inter_brh_code,
+            :ptdbtbl_child_tm.mission_index,
+            :ptdbtbl_child_tm.mission_date,
+            :ptdbtbl_child_tm.mission_weekday,
+            :ptdbtbl_child_tm.mission_hour,
+            :ptdbtbl_child_tm.mission_date_adj,
+            :ptdbtbl_child_tm.child_id,
+            :ptdbtbl_child_tm.commit_flag,
+            :ptdbtbl_child_tm.commit_num,
+            :ptdbtbl_child_tm.child_begin_point,
+            :ptdbtbl_child_tm.child_end_point,
+            :ptdbtbl_child_tm.child_finish_point,
+            :ptdbtbl_child_tm.child_err_point,
+            :ptdbtbl_child_tm.child_status
+        );
+        return sqlca.sqlcode;
+
+    case DBS_CURSOR:
+        EXEC SQL DECLARE child_tm_cur CURSOR for
+        select
+            inter_brh_code,
+            mission_index,
+            mission_date,
+            mission_weekday,
+            mission_hour,
+            mission_date_adj,
+            child_id,
+            commit_flag,
+            commit_num,
+            child_begin_point,
+            child_end_point,
+            child_finish_point,
+            child_err_point,
+            child_status
+        from ht_tbl_child_time
+        where child_status = :ptdbtbl_child_tm.child_status;
+
+        EXEC SQL OPEN child_tm_cur;
+
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            child_tm_cur
+        INTO
+            :ptdbtbl_child_tm.inter_brh_code,
+            :ptdbtbl_child_tm.mission_index,
+            :ptdbtbl_child_tm.mission_date,
+            :ptdbtbl_child_tm.mission_weekday,
+            :ptdbtbl_child_tm.mission_hour,
+            :ptdbtbl_child_tm.mission_date_adj,
+            :ptdbtbl_child_tm.child_id,
+            :ptdbtbl_child_tm.commit_flag,
+            :ptdbtbl_child_tm.commit_num,
+            :ptdbtbl_child_tm.child_begin_point,
+            :ptdbtbl_child_tm.child_end_point,
+            :ptdbtbl_child_tm.child_finish_point,
+            :ptdbtbl_child_tm.child_err_point,
+            :ptdbtbl_child_tm.child_status;
+
+        HtMemcpy(vtdbtbl_child_tm, &ptdbtbl_child_tm, sizeof(ptdbtbl_child_tm));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE child_tm_cur;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE:
+        EXEC SQL UPDATE
+            ht_tbl_child_time
+        SET
+            child_status = :ptdbtbl_child_tm.child_status,
+            child_err_point=:ptdbtbl_child_tm.child_err_point
+        WHERE inter_brh_code = :ptdbtbl_child_tm.inter_brh_code
+          and mission_index = :ptdbtbl_child_tm.mission_index
+          and mission_date = :ptdbtbl_child_tm.mission_date
+          and mission_weekday = :ptdbtbl_child_tm.mission_weekday
+          and mission_hour = :ptdbtbl_child_tm.mission_hour
+          and mission_date_adj = :ptdbtbl_child_tm.mission_date_adj
+          and child_id = :ptdbtbl_child_tm.child_id;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE1:
+        EXEC SQL UPDATE
+            ht_tbl_child_time
+        SET
+            child_finish_point = :ptdbtbl_child_tm.child_finish_point
+        WHERE inter_brh_code = :ptdbtbl_child_tm.inter_brh_code
+          and mission_index = :ptdbtbl_child_tm.mission_index
+          and mission_date = :ptdbtbl_child_tm.mission_date
+          and mission_weekday = :ptdbtbl_child_tm.mission_weekday
+          and mission_hour = :ptdbtbl_child_tm.mission_hour
+          and mission_date_adj = :ptdbtbl_child_tm.mission_date_adj
+          and child_id = :ptdbtbl_child_tm.child_id;
+        return sqlca.sqlcode;
+
+    default:
+       return NO_SWITCH;
+    }
+}
+

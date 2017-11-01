@@ -1,0 +1,1245 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsTblSett.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+extern  char    gLogFile[32];
+
+
+/* 渠道信息 */
+int DbsTblSettChan(int vnOprType, double amt, tbl_sett_chan_def* vtdbtbl_sett_chan)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char bank_no[10+1];
+        struct
+        {
+            char        chnl_id[10+1];                  /*渠道编号*/
+            char        chnl_name[70+1];                 /*渠道名称*/
+            char        status[8+1];                    /*渠道状态*/
+            double      min_amt;                        /*金额条件*/
+            double      max_amt;                        /*渠道限额*/
+            double      bal;                            /*可用余额*/
+            char        index_day[6+1];                 /*工作日规则*/
+            char        index_time[6+1];                /*时间规则*/
+            char        period[8+1];                    /*支付周期*/
+            char        index_fee[6+1];                 /*费率编码*/
+            char        shadom[22+1];                    /*影子账户*/
+        } ptdbtbl_sett_chan;
+        double tran_amt;
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    
+    tran_amt = amt;
+    memset(&ptdbtbl_sett_chan, 0x00, sizeof(ptdbtbl_sett_chan)-1);
+    memcpy(&ptdbtbl_sett_chan, vtdbtbl_sett_chan, sizeof(ptdbtbl_sett_chan)-1);
+    switch(vnOprType)
+    {
+        case DBS_SELECT_FEE:
+            EXEC SQL
+                select 
+                    a.chnl_id,
+                    a.chnl_name,
+                    a.status,
+                    a.min_amt,
+                    a.max_amt,
+                    a.index_day,
+                    a.index_time,
+                    a.period,
+                    a.index_fee,
+                    a.bal,
+                    a.shadom
+                into
+                    :ptdbtbl_sett_chan.chnl_id,
+                    :ptdbtbl_sett_chan.chnl_name,
+                    :ptdbtbl_sett_chan.status,
+                    :ptdbtbl_sett_chan.min_amt,
+                    :ptdbtbl_sett_chan.max_amt,
+                    :ptdbtbl_sett_chan.index_day,
+                    :ptdbtbl_sett_chan.index_time,
+                    :ptdbtbl_sett_chan.period,
+                    :ptdbtbl_sett_chan.index_fee,
+                    :ptdbtbl_sett_chan.bal,
+                    :ptdbtbl_sett_chan.shadom
+                from 
+                    ht_tbl_sett_chan a 
+                where 
+                    a.index_fee=(select min(index_fee) from ht_tbl_sett_chan);
+            
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_sett_chan, &ptdbtbl_sett_chan, sizeof(ptdbtbl_sett_chan)-1);
+            return 0;
+            
+        case DBS_SELECT:
+            EXEC SQL
+            SELECT 
+                chnl_id,
+                chnl_name,
+                status,
+                min_amt,
+                max_amt,
+                bal,
+                index_day,
+                index_time,
+                index_fee,
+                period,
+                shadom
+            INTO
+                :ptdbtbl_sett_chan.chnl_id,
+                :ptdbtbl_sett_chan.chnl_name,
+                :ptdbtbl_sett_chan.status,
+                :ptdbtbl_sett_chan.min_amt,
+                :ptdbtbl_sett_chan.max_amt,
+                :ptdbtbl_sett_chan.bal,
+                :ptdbtbl_sett_chan.index_day,
+                :ptdbtbl_sett_chan.index_time,
+                :ptdbtbl_sett_chan.index_fee,
+                :ptdbtbl_sett_chan.period,
+                :ptdbtbl_sett_chan.shadom
+            FROM 
+                ht_tbl_sett_chan
+            WHERE
+                status = :ptdbtbl_sett_chan.status
+            AND
+                min_amt <= :tran_amt
+            AND
+                bal >= :tran_amt
+            AND rownum = '1'
+            ORDER BY period ASC, index_fee ASC;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_sett_chan, &ptdbtbl_sett_chan, sizeof(ptdbtbl_sett_chan)-1);
+            return 0;
+            
+        case DBS_UPDATE:
+            EXEC SQL 
+            UPDATE 
+                ht_tbl_sett_chan
+            SET
+                bal = :ptdbtbl_sett_chan.bal
+            WHERE
+                chnl_id = :ptdbtbl_sett_chan.chnl_id;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+
+        case DBS_CURSOR:
+            EXEC SQL DECLARE ht_tbl_sett_chan_cur1 CURSOR FOR
+            SELECT 
+                chnl_id,
+                chnl_name,
+                status,
+                min_amt,
+                max_amt,
+                bal,
+                index_day,
+                index_time,
+                index_fee,
+                period,
+                shadom            
+            FROM 
+                ht_tbl_sett_chan
+            WHERE
+                status = :ptdbtbl_sett_chan.status
+            ORDER BY period ASC, index_fee ASC;
+            return sqlca.sqlcode;
+        case DBS_OPEN:
+            EXEC SQL OPEN
+                ht_tbl_sett_chan_cur1;
+            return sqlca.sqlcode;
+        case DBS_FETCH:
+            EXEC SQL FETCH ht_tbl_sett_chan_cur1
+            INTO
+                :ptdbtbl_sett_chan.chnl_id,
+                :ptdbtbl_sett_chan.chnl_name,
+                :ptdbtbl_sett_chan.status,
+                :ptdbtbl_sett_chan.min_amt,
+                :ptdbtbl_sett_chan.max_amt,
+                :ptdbtbl_sett_chan.bal,
+                :ptdbtbl_sett_chan.index_day,
+                :ptdbtbl_sett_chan.index_time,
+                :ptdbtbl_sett_chan.index_fee,
+                :ptdbtbl_sett_chan.period,
+                :ptdbtbl_sett_chan.shadom;
+            memcpy(vtdbtbl_sett_chan, &ptdbtbl_sett_chan, sizeof(ptdbtbl_sett_chan)-1);
+            return sqlca.sqlcode;
+            
+        case DBS_CLOSE:
+            EXEC SQL CLOSE
+                ht_tbl_sett_chan_cur1;
+            return sqlca.sqlcode;                
+        default:
+            return NO_SWITCH;
+    }
+}
+
+/* 归集汇总信息操作 */
+int DbsTblSettTotal(int vnOprType, sett_miss_info_def* vtsett_miss_info)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char        sett_date[8+1];                 /*结算日期*/
+            char        status[1+1];                    /*结算状态*/
+            char        bank_no[12+1];                  /*结算银行*/
+            char        acct_type[1+1];                 /*平台结算账户类型*/
+            char        acct_no[22+1];                  /*平台结算账户账号*/
+            char        acct_name[70+1];                /*平台结算账户名称*/
+            double      total_amt;                      /*总金额*/
+            int         total_num;                      /*总笔数*/
+        } ptsett_miss_info;
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    
+    memset(&ptsett_miss_info, 0x00, sizeof(sett_miss_info_def)-1);
+    memcpy(&ptsett_miss_info, vtsett_miss_info, sizeof(sett_miss_info_def)-1);
+
+    switch(vnOprType)
+    {
+        case DBS_CURSOR:
+            EXEC SQL DECLARE tbl_sett_miss_cur CURSOR FOR
+            SELECT
+                plat_sett_bank, count(*) AS total_num, sum(amt) AS total_amt
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                sett_date = :ptsett_miss_info.sett_date
+            AND
+                status = :ptsett_miss_info.status
+            GROUP BY plat_sett_bank
+            ORDER BY total_num DESC,total_amt DESC;
+            return sqlca.sqlcode;
+            
+        case DBS_FETCH:
+            EXEC SQL FETCH tbl_sett_miss_cur
+            INTO
+                :ptsett_miss_info.bank_no,
+                :ptsett_miss_info.total_num,
+                :ptsett_miss_info.total_amt;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtsett_miss_info, &ptsett_miss_info, sizeof(ptsett_miss_info)-1);
+            return 0;
+            
+        case DBS_OPEN:
+            EXEC SQL OPEN
+                tbl_sett_miss_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE:
+            EXEC SQL CLOSE
+                 tbl_sett_miss_cur;
+            return sqlca.sqlcode;
+        
+        case DBS_SEL_TAL:
+            EXEC SQL 
+            SELECT
+                count(*) AS total_num, sum(amt) AS total_amt 
+            INTO
+                :ptsett_miss_info.total_num,
+                :ptsett_miss_info.total_amt
+            FROM
+                ht_tbl_sett_list
+            WHERE
+                plat_sett_bank = :ptsett_miss_info.bank_no
+            AND
+                status = '1';
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtsett_miss_info, &ptsett_miss_info, sizeof(ptsett_miss_info)-1);
+            return 0;
+            
+        case DBS_SEL_BNK:
+            EXEC SQL
+            SELECT
+                acct_no, acct_name
+            INTO
+                :ptsett_miss_info.acct_no,
+                :ptsett_miss_info.acct_name
+            FROM
+                ht_tbl_postion_trial
+            WHERE
+                bank_code = :ptsett_miss_info.bank_no;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtsett_miss_info, &ptsett_miss_info, sizeof(ptsett_miss_info)-1);
+            return 0;
+            
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}
+
+/* 头寸信息表操作 */
+int DbsTblPostInfo(int vnOprType, tbl_postion_info_def* vtdbtbl_post_info)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char        ext_mcht_no[15+1];              /*外部商户编号*/
+            char        bank_code[12+1];                /*结算银行*/
+            char        bank_name[70+1];                /*结算银行名称*/
+            char        acct_no[22+1];                  /*备付金账号*/
+            char        acct_name[70+1];                /*结算账户名称*/
+            double      interest;                       /*利率*/
+            char        sett_date[8+1];                 /*结算日期*/
+            double      bal;                            /*更新前账户余额*/
+            double      acct_bal;                       /*代付后账户余额*/
+            double      resv_bal;                       /*保底余额*/
+            double      avai_bal;                       /*可用余额*/
+            double      block_bal;                      /*冻结余额*/
+            double      ctrl_bal;                       /*控制余额*/
+            char        sync_time[14+1];                /*更新时间*/
+        } ptdbtbl_post_info;
+        short db_ind;
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    memset(&ptdbtbl_post_info, 0x00, sizeof(tbl_postion_info_def)-1);
+    memcpy(&ptdbtbl_post_info, vtdbtbl_post_info, sizeof(tbl_postion_info_def)-1);
+
+    switch(vnOprType)
+    {
+        case DBS_CURSOR:
+            EXEC SQL DECLARE tbl_postion_info_browse_cur CURSOR FOR
+            SELECT
+                ext_mcht_no,
+                bank_code,
+                bank_name,
+                acct_no,
+                acct_name,
+                interest,
+                sett_date,
+                bal,
+                acct_bal,
+                resv_bal,
+                avai_bal,
+                block_bal,
+                ctrl_bal,
+                sync_time
+            FROM
+                ht_tbl_postion_info@PUBLIC_DATA
+            WHERE    
+                sett_date = :ptdbtbl_post_info.sett_date;
+            return sqlca.sqlcode;
+            
+        case DBS_FETCH:
+            EXEC SQL FETCH tbl_postion_info_browse_cur
+            INTO
+                :ptdbtbl_post_info.ext_mcht_no,                
+                :ptdbtbl_post_info.bank_code,
+                :ptdbtbl_post_info.bank_name,
+                :ptdbtbl_post_info.acct_no,
+                :ptdbtbl_post_info.acct_name,
+                :ptdbtbl_post_info.interest,
+                :ptdbtbl_post_info.sett_date,
+                :ptdbtbl_post_info.bal,
+                :ptdbtbl_post_info.acct_bal,
+                :ptdbtbl_post_info.resv_bal,
+                :ptdbtbl_post_info.avai_bal,
+                :ptdbtbl_post_info.block_bal,
+                :ptdbtbl_post_info.ctrl_bal,
+                :ptdbtbl_post_info.sync_time;
+            memcpy(vtdbtbl_post_info, &ptdbtbl_post_info, sizeof(ptdbtbl_post_info)-1);
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN:
+            EXEC SQL OPEN
+                tbl_postion_info_browse_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE:
+            EXEC SQL CLOSE
+                 tbl_postion_info_browse_cur;
+            return sqlca.sqlcode;
+
+        case DBS_SELECT:
+            EXEC SQL
+            SELECT
+                ext_mcht_no,
+                bank_code,
+                bank_name,
+                acct_no,
+                acct_name,
+                interest,
+                sett_date,
+                bal,
+                acct_bal,
+                resv_bal,
+                avai_bal,
+                block_bal,
+                ctrl_bal,
+                sync_time
+            INTO
+                :ptdbtbl_post_info.ext_mcht_no,                
+                :ptdbtbl_post_info.bank_code,
+                :ptdbtbl_post_info.bank_name,
+                :ptdbtbl_post_info.acct_no,
+                :ptdbtbl_post_info.acct_name,
+                :ptdbtbl_post_info.interest,
+                :ptdbtbl_post_info.sett_date,
+                :ptdbtbl_post_info.bal,
+                :ptdbtbl_post_info.acct_bal,
+                :ptdbtbl_post_info.resv_bal,
+                :ptdbtbl_post_info.avai_bal,
+                :ptdbtbl_post_info.block_bal,
+                :ptdbtbl_post_info.ctrl_bal,
+                :ptdbtbl_post_info.sync_time
+            FROM
+                ht_tbl_postion_info@PUBLIC_DATA
+            WHERE
+                bank_code = :ptdbtbl_post_info.bank_code
+            AND    
+                sett_date = :ptdbtbl_post_info.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_post_info,&ptdbtbl_post_info,sizeof(tbl_postion_info_def)-1);
+            return 0;
+            
+       case DBS_SEL_BNK:
+            EXEC SQL
+            SELECT
+                ext_mcht_no,
+                bank_code,
+                bank_name,
+                acct_no,
+                acct_name,
+                interest,
+                sett_date,
+                bal,
+                acct_bal,
+                resv_bal,
+                avai_bal,
+                block_bal,
+                ctrl_bal,
+                sync_time
+            INTO
+                :ptdbtbl_post_info.ext_mcht_no,                
+                :ptdbtbl_post_info.bank_code,
+                :ptdbtbl_post_info.bank_name,
+                :ptdbtbl_post_info.acct_no,
+                :ptdbtbl_post_info.acct_name,
+                :ptdbtbl_post_info.interest,
+                :ptdbtbl_post_info.sett_date,
+                :ptdbtbl_post_info.bal,
+                :ptdbtbl_post_info.acct_bal,
+                :ptdbtbl_post_info.resv_bal,
+                :ptdbtbl_post_info.avai_bal,
+                :ptdbtbl_post_info.block_bal,
+                :ptdbtbl_post_info.ctrl_bal,
+                :ptdbtbl_post_info.sync_time
+            FROM
+                ht_tbl_postion_info@PUBLIC_DATA
+            WHERE
+                acct_no = :ptdbtbl_post_info.acct_no
+            AND    
+                sett_date = :ptdbtbl_post_info.sett_date;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_post_info,&ptdbtbl_post_info,sizeof(tbl_postion_info_def)-1);
+            return 0;
+            
+        case DBS_UPD_BAL:
+            EXEC SQL
+            UPDATE
+                ht_tbl_postion_info@PUBLIC_DATA
+            SET
+                acct_bal = :ptdbtbl_post_info.acct_bal
+            WHERE
+                bank_code = :ptdbtbl_post_info.bank_code
+             AND    
+                sett_date = :ptdbtbl_post_info.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+       case DBS_SELECT1:
+            EXEC SQL
+            SELECT
+                ext_mcht_no,
+                bank_code,
+                bank_name,
+                acct_no,
+                acct_name,
+                interest,
+                sett_date,
+                bal,
+                acct_bal,
+                resv_bal,
+                avai_bal,
+                block_bal,
+                ctrl_bal,
+                sync_time
+            INTO
+                :ptdbtbl_post_info.ext_mcht_no,                
+                :ptdbtbl_post_info.bank_code,
+                :ptdbtbl_post_info.bank_name,
+                :ptdbtbl_post_info.acct_no,
+                :ptdbtbl_post_info.acct_name,
+                :ptdbtbl_post_info.interest,
+                :ptdbtbl_post_info.sett_date,
+                :ptdbtbl_post_info.bal,
+                :ptdbtbl_post_info.acct_bal,
+                :ptdbtbl_post_info.resv_bal,
+                :ptdbtbl_post_info.avai_bal,
+                :ptdbtbl_post_info.block_bal,
+                :ptdbtbl_post_info.ctrl_bal,
+                :ptdbtbl_post_info.sync_time
+            FROM
+                ht_tbl_postion_info@PUBLIC_DATA
+            WHERE
+                ext_mcht_no = :ptdbtbl_post_info.ext_mcht_no
+            AND
+                sett_date = :ptdbtbl_post_info.sett_date;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_post_info,&ptdbtbl_post_info,sizeof(ptdbtbl_post_info)-1);
+            return 0;
+                        
+        case DBS_INSERT:
+            EXEC SQL
+            INSERT INTO
+                ht_tbl_postion_info@PUBLIC_DATA
+                (
+                ext_mcht_no,
+                bank_code,
+                bank_name,
+                acct_no,
+                acct_name,
+                interest,
+                sett_date,
+                bal,
+                acct_bal,
+                resv_bal,
+                avai_bal,
+                block_bal,
+                ctrl_bal,
+                sync_time
+                )                
+            VALUES (
+                :ptdbtbl_post_info.ext_mcht_no  ,                
+                :ptdbtbl_post_info.bank_code    ,
+                :ptdbtbl_post_info.bank_name    ,
+                :ptdbtbl_post_info.acct_no      ,
+                :ptdbtbl_post_info.acct_name    ,
+                :ptdbtbl_post_info.interest     ,
+                :ptdbtbl_post_info.sett_date    ,
+                :ptdbtbl_post_info.bal          ,
+                :ptdbtbl_post_info.acct_bal     ,
+                :ptdbtbl_post_info.resv_bal     ,
+                :ptdbtbl_post_info.avai_bal     ,
+                :ptdbtbl_post_info.block_bal    ,
+                :ptdbtbl_post_info.ctrl_bal     ,
+                :ptdbtbl_post_info.sync_time    );
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+        case DBS_UPDATE:
+            EXEC SQL
+            UPDATE
+                ht_tbl_postion_info@PUBLIC_DATA
+            SET
+                acct_no   = :ptdbtbl_post_info.acct_no,
+                bal       = :ptdbtbl_post_info.bal,
+                acct_bal  = :ptdbtbl_post_info.acct_bal,
+                resv_bal  = :ptdbtbl_post_info.resv_bal,
+                avai_bal  = :ptdbtbl_post_info.avai_bal,
+                block_bal = :ptdbtbl_post_info.block_bal,
+                ctrl_bal  = :ptdbtbl_post_info.ctrl_bal
+            WHERE
+                ext_mcht_no = :ptdbtbl_post_info.ext_mcht_no
+            AND
+                sett_date = :ptdbtbl_post_info.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;           
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}
+
+/* 头寸试算表操作 */
+int DbsTblPostTrial(int vnOprType, tbl_postion_trial_def* vtdbtbl_post_trial)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char        bank_code[12+1];                /*结算银行*/
+            char        bank_name[70+1];                /*结算银行名称*/
+            char        acct_no[22+1];                  /*备付金账号*/
+            char        acct_name[70+1];                /*结算账户名称*/
+            double      interest;                       /*利率*/
+            char        sett_date[8+1];                 /*结算日期*/
+            double      bal;                            /*账户余额*/
+            double      resv_bal;                       /*保底余额*/
+            double      bal_trial;                      /*试算余额*/
+            char        seq_no[20+1];                   /*结算流水*/
+            char        sync_time[14+1];                /*更新时间*/
+        } ptdbtbl_post_trial;
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    memset(&ptdbtbl_post_trial, 0x00, sizeof(tbl_postion_trial_def)-1);
+    memcpy(&ptdbtbl_post_trial, vtdbtbl_post_trial, sizeof(tbl_postion_trial_def)-1);
+
+    switch(vnOprType)
+    {
+        case DBS_INSERT:
+            EXEC SQL
+            INSERT INTO
+                ht_tbl_postion_trial
+            (
+                bank_code,
+                bank_name,
+                acct_no,
+                acct_name,
+                interest,
+                sett_date,
+                bal,
+                resv_bal,
+                bal_trial,
+                seq_no,
+                sync_time            
+            )
+            VALUES (
+                :ptdbtbl_post_trial.bank_code,
+                :ptdbtbl_post_trial.bank_name,
+                :ptdbtbl_post_trial.acct_no,
+                :ptdbtbl_post_trial.acct_name,
+                :ptdbtbl_post_trial.interest,
+                :ptdbtbl_post_trial.sett_date,
+                :ptdbtbl_post_trial.bal,
+                :ptdbtbl_post_trial.resv_bal,
+                :ptdbtbl_post_trial.bal_trial,
+                :ptdbtbl_post_trial.seq_no,
+                :ptdbtbl_post_trial.sync_time);
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+                
+        case DBS_SELECT:
+            EXEC SQL
+            SELECT
+              bank_code,
+              bank_name,
+              acct_no,
+              acct_name,
+              interest,
+              sett_date,
+              bal,
+              resv_bal,
+              bal_trial,
+              seq_no,
+              sync_time
+            INTO
+                :ptdbtbl_post_trial.bank_code,
+                :ptdbtbl_post_trial.bank_name,
+                :ptdbtbl_post_trial.acct_no,
+                :ptdbtbl_post_trial.acct_name,
+                :ptdbtbl_post_trial.interest,
+                :ptdbtbl_post_trial.sett_date,
+                :ptdbtbl_post_trial.bal,
+                :ptdbtbl_post_trial.resv_bal,
+                :ptdbtbl_post_trial.bal_trial,
+                :ptdbtbl_post_trial.seq_no,
+                :ptdbtbl_post_trial.sync_time
+            FROM
+                ht_tbl_postion_trial
+            WHERE
+                bank_code = :ptdbtbl_post_trial.bank_code
+            and 
+                sett_date = :ptdbtbl_post_trial.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_post_trial,&ptdbtbl_post_trial,sizeof(tbl_postion_trial_def)-1);
+            return 0;                   
+        case DBS_UPDATE:
+            EXEC SQL
+            UPDATE
+                ht_tbl_postion_trial
+            SET
+                bal       =    :ptdbtbl_post_trial.bal,
+                resv_bal  =    :ptdbtbl_post_trial.resv_bal,
+                bal_trial =    :ptdbtbl_post_trial.bal_trial
+            WHERE
+                bank_code = :ptdbtbl_post_trial.bank_code
+            and 
+                sett_date = :ptdbtbl_post_trial.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        case DBS_UPD_BAL:
+            EXEC SQL
+            UPDATE
+                ht_tbl_postion_trial
+            SET
+                bal_trial = :ptdbtbl_post_trial.bal_trial
+            WHERE
+                bank_code = :ptdbtbl_post_trial.bank_code
+            and 
+                sett_date = :ptdbtbl_post_trial.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        case DBS_CURSOR:
+            EXEC SQL DECLARE tbl_postion_trial_cur CURSOR FOR
+            SELECT
+              bank_code,
+              bank_name,
+              acct_no,
+              acct_name,
+              interest,
+              sett_date,
+              bal,
+              resv_bal,
+              bal_trial,
+              seq_no,
+              sync_time
+            FROM
+                ht_tbl_postion_trial
+            WHERE
+                bank_code != :ptdbtbl_post_trial.bank_code
+            and 
+                sett_date = :ptdbtbl_post_trial.sett_date
+            ORDER BY interest;
+            return sqlca.sqlcode;
+            
+        case DBS_FETCH:
+            EXEC SQL FETCH tbl_postion_trial_cur
+            INTO
+                :ptdbtbl_post_trial.bank_code,
+                :ptdbtbl_post_trial.bank_name,
+                :ptdbtbl_post_trial.acct_no,
+                :ptdbtbl_post_trial.acct_name,
+                :ptdbtbl_post_trial.interest,
+                :ptdbtbl_post_trial.sett_date,
+                :ptdbtbl_post_trial.bal,
+                :ptdbtbl_post_trial.resv_bal,
+                :ptdbtbl_post_trial.bal_trial,
+                :ptdbtbl_post_trial.seq_no,
+                :ptdbtbl_post_trial.sync_time;
+            memcpy(vtdbtbl_post_trial, &ptdbtbl_post_trial, sizeof(ptdbtbl_post_trial)-1);
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN:
+            EXEC SQL OPEN
+                tbl_postion_trial_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE:
+            EXEC SQL CLOSE
+                 tbl_postion_trial_cur;
+            return sqlca.sqlcode;
+
+        case DBS_TRUNCATE:
+            EXEC SQL
+			    truncate table ht_tbl_postion_trial;
+            return sqlca.sqlcode;
+
+        case DBS_SELECT_ACCT:
+            EXEC SQL
+            SELECT
+              bank_code,
+              bank_name,
+              acct_no,
+              acct_name,
+              interest,
+              sett_date,
+              bal,
+              resv_bal,
+              bal_trial,
+              seq_no,
+              sync_time
+            INTO
+                :ptdbtbl_post_trial.bank_code,
+                :ptdbtbl_post_trial.bank_name,
+                :ptdbtbl_post_trial.acct_no,
+                :ptdbtbl_post_trial.acct_name,
+                :ptdbtbl_post_trial.interest,
+                :ptdbtbl_post_trial.sett_date,
+                :ptdbtbl_post_trial.bal,
+                :ptdbtbl_post_trial.resv_bal,
+                :ptdbtbl_post_trial.bal_trial,
+                :ptdbtbl_post_trial.seq_no,
+                :ptdbtbl_post_trial.sync_time
+            FROM
+                ht_tbl_postion_trial
+            WHERE
+                acct_no = :ptdbtbl_post_trial.acct_no
+            and 
+                sett_date = :ptdbtbl_post_trial.sett_date;
+            if(sqlca.sqlcode){
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_post_trial,&ptdbtbl_post_trial,sizeof(tbl_postion_trial_def)-1);
+            return 0;
+        case DBS_SELECT_MISS:
+            EXEC SQL
+            SELECT
+              bank_code,
+              bank_name,
+              acct_no,
+              acct_name,
+              interest,
+              sett_date,
+              bal,
+              resv_bal,
+              bal_trial,
+              seq_no,
+              sync_time
+            INTO
+                :ptdbtbl_post_trial.bank_code,
+                :ptdbtbl_post_trial.bank_name,
+                :ptdbtbl_post_trial.acct_no,
+                :ptdbtbl_post_trial.acct_name,
+                :ptdbtbl_post_trial.interest,
+                :ptdbtbl_post_trial.sett_date,
+                :ptdbtbl_post_trial.bal,
+                :ptdbtbl_post_trial.resv_bal,
+                :ptdbtbl_post_trial.bal_trial,
+                :ptdbtbl_post_trial.seq_no,
+                :ptdbtbl_post_trial.sync_time
+            FROM
+                ht_tbl_postion_trial
+            WHERE
+                bal_trial >= :ptdbtbl_post_trial.bal_trial
+            AND
+                rownum = 1
+            ORDER BY interest ASC;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_post_trial,&ptdbtbl_post_trial,sizeof(tbl_postion_trial_def)-1);
+            return 0;            
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}
+
+/* 归集明细表操作 */
+int DbsTblMissInfo(int vnOprType, tbl_mission_info_def* vtdbtbl_miss_info)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char        brh_id[10+1];                   /*内部机构号*/
+            char        sett_date[8+1];                 /*结算日期*/
+            char        trans_date[8+1];                /*交易日期*/
+            char        seq_no[20+1];                   /*归集流水*/
+            char        bank_code[12+1];               /*备付金开户行*/
+            char        acct_type[8+1];                 /*结算账户类型*/
+            char        acct_no[22+1];                  /*结算账户账号*/
+            char        acct_name[70+1];                /*平台结算账户名称*/
+            char        dc_flag[1+1];                   /*支出,收入*/
+            char        bank_code1[12+1];               /*备付金开户行*/
+            char        acct_type1[8+1];                /*对手结算账户类型*/
+            char        acct_no1[22+1];                 /*对手结算账户账号*/
+            char        acct_name1[70+1];               /*对手结算账户名称*/
+            double      amt;                            /*划账金额*/
+            char        status[1+1];                    /*结算状态*/
+            char        file_name[100+1];               /*划账文件名*/
+            char        chnl_id[8+1];                   /*划账渠道*/
+            char        ps[80+1];                       /*附言*/
+        } ptdbtbl_miss_info;
+        char    bank_code[12+1];
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    memset(&ptdbtbl_miss_info, 0x00, sizeof(ptdbtbl_miss_info)-1);
+    memset(bank_code, 0, sizeof(bank_code)-1);
+    memcpy(&ptdbtbl_miss_info, vtdbtbl_miss_info, sizeof(ptdbtbl_miss_info)-1);
+
+    switch(vnOprType)
+    {
+
+        case DBS_INSERT:
+            EXEC SQL
+            INSERT INTO ht_tbl_mission_info(
+                sett_date,
+                trans_date,
+                seq_no,
+                bank_code,
+                acct_no,
+                acct_name,
+                bank_code1,
+                acct_no1,
+                acct_name1,
+                amt,
+                status
+                )
+            VALUES(
+                :ptdbtbl_miss_info.sett_date,
+                :ptdbtbl_miss_info.trans_date,
+                :ptdbtbl_miss_info.seq_no,
+                :ptdbtbl_miss_info.bank_code,
+                :ptdbtbl_miss_info.acct_no,
+                :ptdbtbl_miss_info.acct_name,
+                :ptdbtbl_miss_info.bank_code1,
+                :ptdbtbl_miss_info.acct_no1,
+                :ptdbtbl_miss_info.acct_name1,
+                :ptdbtbl_miss_info.amt,
+                :ptdbtbl_miss_info.status
+                );
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        case DBS_SELECT:
+            EXEC SQL
+            SELECT
+                sett_date,
+                seq_no,
+                bank_code,
+                bank_code1
+            INTO
+                :ptdbtbl_miss_info.sett_date,
+                :ptdbtbl_miss_info.seq_no,
+                :ptdbtbl_miss_info.bank_code,
+                :ptdbtbl_miss_info.bank_code1
+            FROM
+                ht_tbl_mission_info
+            WHERE
+                seq_no = :ptdbtbl_miss_info.seq_no;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_miss_info, &ptdbtbl_miss_info, sizeof(ptdbtbl_miss_info)-1);
+            return 0;
+            
+        case DBS_UPDATE:
+            EXEC SQL
+            UPDATE
+                ht_tbl_mission_info
+            SET
+                status = :ptdbtbl_miss_info.status
+            WHERE
+                seq_no = :ptdbtbl_miss_info.seq_no;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        case DBS_UPD_FL:
+            EXEC SQL
+                update 
+                    ht_tbl_mission_info
+                set
+                    status = :ptdbtbl_miss_info.status,
+                    chnl_id = :ptdbtbl_miss_info.chnl_id,
+                    file_name = :ptdbtbl_miss_info.file_name
+                where 
+                    sett_date = :ptdbtbl_miss_info.sett_date
+                and
+                    seq_no = :ptdbtbl_miss_info.seq_no;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+
+        case DBS_CURSOR:
+            EXEC SQL DECLARE tbl_miss_info_cur CURSOR FOR
+            SELECT
+                sett_date,
+                trans_date,
+                seq_no,
+                bank_code,
+                acct_no,
+                acct_name,
+                bank_code1,
+                acct_no1,
+                acct_name1,
+                amt
+            FROM
+                ht_tbl_mission_info
+            WHERE
+                sett_date = :ptdbtbl_miss_info.sett_date
+            AND
+                status = :ptdbtbl_miss_info.status;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH:
+            EXEC SQL FETCH tbl_miss_info_cur
+            INTO
+                :ptdbtbl_miss_info.sett_date,
+                :ptdbtbl_miss_info.trans_date,
+                :ptdbtbl_miss_info.seq_no,
+                :ptdbtbl_miss_info.bank_code,
+                :ptdbtbl_miss_info.acct_no,
+                :ptdbtbl_miss_info.acct_name,
+                :ptdbtbl_miss_info.bank_code1,
+                :ptdbtbl_miss_info.acct_no1,
+                :ptdbtbl_miss_info.acct_name1,
+                :ptdbtbl_miss_info.amt;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_miss_info, &ptdbtbl_miss_info, sizeof(ptdbtbl_miss_info)-1);
+            return sqlca.sqlcode;
+            
+        case DBS_OPEN:
+            EXEC SQL OPEN
+                tbl_miss_info_cur;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE:
+            EXEC SQL CLOSE
+                 tbl_miss_info_cur;
+            return sqlca.sqlcode;
+            
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}
+
+/* 文件信息表操作 */
+int DbsTblFileInfo(int vnOprType, tbl_file_info_def* vtdbtbl_file_info)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char        file_name[100+1];               /*文件名*/
+            char        bank_code[12+1];                /*平台银行编号*/
+            char        sett_date[8+1];                 /*清算日期*/
+            char        step_no[2+1];                   /*步骤号*/
+            char        batch_no[2+1];                  /*批次号*/
+            char        file_type[1+1];                 /*文件种类*/
+            char        file_flag[1+1];                 /*文件类型*/
+            char        end_flag[1+1];                  /*当天文件结束标志*/
+            char        snd_time[14+1];                 /*发送时间*/
+            char        rcv_time[14+1];                 /*接收时间*/
+            char        status[1+1];                    /*文件处理状态*/
+        } ptdbtbl_file_info;
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    memset(&ptdbtbl_file_info, 0x00, sizeof(ptdbtbl_file_info));
+    memcpy(&ptdbtbl_file_info, vtdbtbl_file_info, sizeof(ptdbtbl_file_info)-1);
+
+    switch(vnOprType)
+    {
+        case DBS_UPDATE:
+            EXEC SQL
+            UPDATE
+                ht_tbl_file_info@PUBLIC_DATA
+            SET
+                status = :ptdbtbl_file_info.status
+            WHERE
+                file_name = :ptdbtbl_file_info.file_name
+            AND
+                bank_code = :ptdbtbl_file_info.bank_code
+            AND
+                file_flag = :ptdbtbl_file_info.file_flag;
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+
+        case DBS_INSERT:
+            EXEC SQL
+            INSERT INTO
+                ht_tbl_file_info@PUBLIC_DATA
+            VALUES(:ptdbtbl_file_info);
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+        case DBS_SELECT:
+           EXEC SQL 
+            SELECT
+                file_name,
+                bank_code,
+                sett_date,
+                step_no,
+                batch_no,
+                file_type,
+                file_flag,
+                end_flag,
+                status
+            FROM
+                ht_tbl_file_info@PUBLIC_DATA
+            WHERE
+                sett_date = :ptdbtbl_file_info.sett_date
+            AND
+                file_flag = :ptdbtbl_file_info.file_flag
+            AND
+                file_type = :ptdbtbl_file_info.file_type
+             AND
+                batch_no = :ptdbtbl_file_info.batch_no    
+             AND
+                step_no = :ptdbtbl_file_info.step_no    
+            AND 
+                bank_code = :ptdbtbl_file_info.bank_code;           
+            return sqlca.sqlcode;
+        case DBS_CURSOR:
+            EXEC SQL DECLARE tbl_file_info_cur2 CURSOR FOR 
+            SELECT
+                file_name,
+                bank_code,
+                sett_date,
+                step_no,
+                batch_no,
+                file_type,
+                file_flag,
+                end_flag,
+                status
+            FROM
+                ht_tbl_file_info@PUBLIC_DATA
+            WHERE
+                sett_date = :ptdbtbl_file_info.sett_date
+            AND
+                file_flag = :ptdbtbl_file_info.file_flag
+            AND
+                file_type = :ptdbtbl_file_info.file_type 
+            AND
+                step_no = :ptdbtbl_file_info.step_no                
+            AND
+                status = :ptdbtbl_file_info.status;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH:
+            EXEC SQL FETCH tbl_file_info_cur2
+            INTO
+                :ptdbtbl_file_info.file_name,
+                :ptdbtbl_file_info.bank_code,
+                :ptdbtbl_file_info.sett_date,
+                :ptdbtbl_file_info.step_no,
+                :ptdbtbl_file_info.batch_no,
+                :ptdbtbl_file_info.file_type,
+                :ptdbtbl_file_info.file_flag,
+                :ptdbtbl_file_info.end_flag,
+                :ptdbtbl_file_info.status;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_file_info, &ptdbtbl_file_info, sizeof(ptdbtbl_file_info)-1);
+            return 0;
+            
+        case DBS_OPEN:
+            EXEC SQL OPEN
+                tbl_file_info_cur2;
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE:
+            EXEC SQL CLOSE
+                 tbl_file_info_cur2;
+            return sqlca.sqlcode;
+
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}
+
+
+/* 资金缺口表操作 */
+int DbsTblFundShrt(int vnOprType, tbl_funds_shrt_def* vtdbtbl_fund_shrt)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char        bank_code[12+1];                /*平台结算行*/
+            char        acct_no[22+1];                  /*平台结算账户账号*/
+            char        acct_name[70+1];                /*平台结算账户名称*/
+            double      shrt_amt;                       /*缺口金额*/
+            char        sett_date[8+1];                 /*结算日期*/
+        } ptdbtbl_fund_shrt;
+    EXEC SQL END DECLARE SECTION;
+    int nReturnCode=0;
+    memset(&ptdbtbl_fund_shrt, 0x00, sizeof(ptdbtbl_fund_shrt));
+    memcpy(&ptdbtbl_fund_shrt, vtdbtbl_fund_shrt, sizeof(tbl_funds_shrt_def)-1);
+
+    switch(vnOprType)
+    {
+        case DBS_INSERT:
+            EXEC SQL
+            INSERT INTO ht_tbl_funds_short(
+                bank_code,
+                acct_no,
+                acct_name,
+                shrt_amt,
+                sett_date
+                )
+            VALUES(
+                :ptdbtbl_fund_shrt.bank_code,
+                :ptdbtbl_fund_shrt.acct_no,  
+                :ptdbtbl_fund_shrt.acct_name,
+                :ptdbtbl_fund_shrt.shrt_amt, 
+                :ptdbtbl_fund_shrt.sett_date
+                );
+            if(sqlca.sqlcode){
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+            
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}
+

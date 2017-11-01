@@ -1,0 +1,114 @@
+/*
+ *  Copyright 2006, Shanghai Huateng Software Systems Co., Ltd.
+ *  All right reserved.
+ *
+ *  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+ *  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+ *  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+ *  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+ *  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+ *
+ *  $Id: 194DbsBthComConfig.sqc,v 1.1.1.1 2016/11/04 07:50:31 ctedev Exp $
+ *
+ *  功能: 交易配置表：HT_TBL_COM_CONFIG 操作函数
+ *
+ *  Edit History:
+ *
+ *    2016/09/04 -phb
+ */
+
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+    struct tbl_cost_cmp_inf_tab
+    {
+    	char  plat_key                 [48 + 1];
+    	char sett_date                 [8 + 1];
+    	char  trans_tp                 [4 + 1];
+    	double   trans_amt          ;
+    	char      fee_type             [1 + 1];
+    	double    fee_rate            ;
+    	double   plat_cost            ;
+    	double   file_cost             ;
+    	char      is_equal             [1 + 1];
+    	char     cost_type           [1 + 1];
+    	char rec_crt_ts               [14 + 1];
+    }vtbl_cost_cmp_inf;
+    short ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblCostCmpInf (int nOpr, ht_tbl_cost_cmp_inf_def *ptbl_cost_cmp_inf)
+{
+    memset(&vtbl_cost_cmp_inf, 0x00, sizeof(vtbl_cost_cmp_inf));
+    memcpy (&vtbl_cost_cmp_inf, ptbl_cost_cmp_inf, sizeof (vtbl_cost_cmp_inf));
+    switch (nOpr)
+    {
+    case DBS_SELECT:
+        EXEC SQL SELECT
+            plat_key       ,
+            sett_date       ,
+            trans_tp       ,
+            trans_amt     ,
+            fee_type   ,
+            fee_rate     ,
+            plat_cost     ,
+            file_cost     ,
+            is_equal   ,
+            cost_type   ,
+            rec_crt_ts         
+        into
+            :vtbl_cost_cmp_inf.plat_key    :ind  ,
+            :vtbl_cost_cmp_inf.sett_date   :ind   ,
+            :vtbl_cost_cmp_inf.trans_tp    :ind   ,
+            :vtbl_cost_cmp_inf.trans_amt   :ind  ,
+            :vtbl_cost_cmp_inf.fee_type    :ind ,
+            :vtbl_cost_cmp_inf.fee_rate    :ind  ,
+            :vtbl_cost_cmp_inf.plat_cost   :ind  ,
+            :vtbl_cost_cmp_inf.file_cost   :ind   ,
+            :vtbl_cost_cmp_inf.is_equal    :ind   ,
+            :vtbl_cost_cmp_inf.cost_type   :ind ,
+            :vtbl_cost_cmp_inf.rec_crt_ts  :ind   
+        from ht_tbl_cost_cmp_inf;
+        memcpy (ptbl_cost_cmp_inf, &vtbl_cost_cmp_inf, sizeof (vtbl_cost_cmp_inf));
+        return sqlca.sqlcode;
+        
+    case DBS_INSERT:
+            EXEC SQL 
+                insert into ht_tbl_cost_cmp_inf(
+                    plat_key       ,
+                    sett_date       ,
+                    trans_tp       ,
+                    trans_amt     ,
+                    fee_type   ,
+                    fee_rate     ,
+                    plat_cost     ,
+                    file_cost     ,
+                    is_equal   ,
+                    cost_type   ,
+                    rec_crt_ts 
+               ) values (
+                     :vtbl_cost_cmp_inf.plat_key     ,
+                    :vtbl_cost_cmp_inf.sett_date     ,
+                    :vtbl_cost_cmp_inf.trans_tp      ,
+                    :vtbl_cost_cmp_inf.trans_amt    ,
+                    :vtbl_cost_cmp_inf.fee_type    ,
+                    :vtbl_cost_cmp_inf.fee_rate     ,
+                    :vtbl_cost_cmp_inf.plat_cost    ,
+                    :vtbl_cost_cmp_inf.file_cost     ,
+                    :vtbl_cost_cmp_inf.is_equal      ,
+                    :vtbl_cost_cmp_inf.cost_type   ,
+                    :vtbl_cost_cmp_inf.rec_crt_ts    
+             );
+           return sqlca.sqlcode;
+    }
+    return 0;
+}

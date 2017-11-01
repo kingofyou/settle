@@ -1,0 +1,62 @@
+/*
+ *  Copyright 2006, Shanghai Huateng Software Systems Co., Ltd.
+ *  All right reserved.
+ *
+ *  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+ *  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+ *  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+ *  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+ *  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+ *
+ *  $Id: 194DbsBthComConfig.sqc,v 1.1.1.1 2016/11/04 07:50:31 ctedev Exp $
+ *
+ *  功能: 交易配置表：HT_TBL_COM_CONFIG 操作函数
+ *
+ *  Edit History:
+ *
+ *    2016/09/04 -phb
+ */
+
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct tp_merc_paywayconf_tab
+{
+    char    payway_code             [32+ 1];                           
+    char    paying_merc_code        [32+ 1];   
+}vtp_merc_paywayconf;
+    short ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTpMercPaywayConf (int nOpr, tp_merc_paywayconf_def *ptp_merc_paywayconf)
+{
+    memset(&vtp_merc_paywayconf, 0x00, sizeof(vtp_merc_paywayconf));
+    memcpy (&vtp_merc_paywayconf, ptp_merc_paywayconf, sizeof (vtp_merc_paywayconf));
+    switch (nOpr)
+    {
+    case DBS_SELECT:
+        EXEC SQL SELECT
+            payway_code              ,
+            paying_merc_code        
+        into
+            :vtp_merc_paywayconf.payway_code              :ind  ,
+            :vtp_merc_paywayconf.paying_merc_code        :ind    
+        from TP_MERC_PAYWAYCONF@PUBLIC_DATA
+        where payway_code = :vtp_merc_paywayconf.payway_code;            
+        memcpy (ptp_merc_paywayconf, &vtp_merc_paywayconf, sizeof (vtp_merc_paywayconf));
+        return sqlca.sqlcode;
+        
+        default:
+            return NO_SWITCH;
+    }
+    return 0;
+}

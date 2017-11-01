@@ -1,0 +1,76 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsPartInf.pc                                            */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+#include <stdlib.h>
+#include <string.h>
+#include "batch.h"
+
+
+EXEC SQL BEGIN DECLARE SECTION;
+    struct TBL_part_inf_Def
+    {
+        char    tbl_name[60 + 1];
+        char    part_name[60 + 1];
+        char    tbl_spc_name[60 + 1];
+        int 		tbl_interval_days;
+        int 		tbl_opr_flag;
+    } ltTblPartInf;
+EXEC SQL END DECLARE SECTION;
+
+int DbsPartInf(int vnOprType, struct TBL_part_inf_Def *vtpTblPartInf)
+{
+    memset(&ltTblPartInf, 0x00, sizeof(ltTblPartInf));
+    memcpy(&ltTblPartInf, vtpTblPartInf, sizeof(ltTblPartInf));
+
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE
+            tbl_part_inf_cur
+        CURSOR FOR SELECT
+            tbl_name          ,
+            part_name         ,
+            tbl_spc_name      ,
+            tbl_intervel_day  ,
+            tbl_opr_flag
+        FROM
+            ht_tbl_part_inf;
+        return LUsrErrNull;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            tbl_part_inf_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            tbl_part_inf_cur
+        INTO
+            :ltTblPartInf.tbl_name,
+            :ltTblPartInf.part_name,
+            :ltTblPartInf.tbl_spc_name,
+            :ltTblPartInf.tbl_interval_days,
+            :ltTblPartInf.tbl_opr_flag;
+        memcpy(vtpTblPartInf, &ltTblPartInf, sizeof(ltTblPartInf));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            tbl_part_inf_cur;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    }
+}

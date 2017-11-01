@@ -1,0 +1,187 @@
+#!/bin/sh
+#. ~/.bash_profile
+##############################################################
+title="##############################################################"
+Wel="~                 MAKEALL v1.1"
+Tilte="Shanghai Huateng Software Systems Co.,Ltd."
+Version="Version: 0.1"
+Author="Author: HELU"
+Date="Last update: 2016-05-04"
+Desc="全编译脚本——找出源码目录下所有makefile文件进行编译"
+D1='            1.SOURCE_DIR 配置源码根目录'
+D2='    2.配置在DIR_LIST的目录优先编译'
+D3='      3.配置在DIR_LIST的目录按顺序编译'
+D4='      4.配置在EX_DIR_LIST的目录不编译'
+D5='    5.不支持用EX_DIR_LIST的目录排除DIR_LIST下的目录'
+##############################################################
+stopbatch
+
+################## argc config ###############################
+SOURCE_DIR=$HOME/batch/src
+COMPRE_SYS_NAME="收单交换批处理系统"
+SPLINE="=====================================================MAKEALL spline======="
+
+DIR_LIST="\
+Dbs
+Common
+Convert
+"
+
+EX_DIR_LIST="\
+
+"
+##############################################################
+echo $title
+echo $Wel
+echo $Tilte
+echo $Version
+echo $Author
+echo $Date
+echo $title
+echo $Desc
+echo $D1
+echo $D2
+echo $D3
+echo $D4
+echo " "
+echo "系统名称:$COMPRE_SYS_NAME"
+echo " "
+echo "以下目录会首先被编译:"
+echo "$DIR_LIST"
+echo "以下目录不会被编译:"
+echo "$EX_DIR_LIST"
+echo $title
+echo " "
+
+echo "请选择编译的类型 [1] make clean all   [2] make :"
+read ANS
+if [ $ANS = "1" ]; then
+        MAKEALLFLG=1
+elif [ $ANS = "2" ]; then
+       MAKEALLFLG=0
+else
+        exit -1;
+fi
+
+echo "请选择编译的目录 [1] 只编译 DIR_LIST 中的目录   [2] 除DIR_LIST外的目录   [3] 全部 :"
+read ANS
+if [ $ANS = "1" ] || [ $ANS = "2" ] || [ $ANS = "3" ]; then
+        MODE=$ANS
+else
+        exit -1;
+fi
+
+echo "################################## starting MAKEALL ...#################################"
+
+cd $SOURCE_DIR
+
+TMP_FILE=$SOURCE_DIR/makefile_dir.list
+TMP_LIB_FILE=$SOURCE_DIR/makefile_lib_dir.list
+TMP_NOR_FILE=$SOURCE_DIR/makefile_nor_dir.list
+TMP_EX_FILE=$SOURCE_DIR/makefile_ex_dir.list
+
+rm -f $TMP_FILE > /dev/null
+rm -f $TMP_LIB_FILE > /dev/null
+rm -f $TMP_NOR_FILE > /dev/null
+rm -f $TMP_EX_FILE > /dev/null
+
+find $SOURCE_DIR -name makefile > $TMP_FILE
+
+for DIR_NAME in $DIR_LIST; do
+        if [ "a$DIR_NAME" = "a" ]; then
+                continue
+        fi
+        cat $TMP_FILE | grep $SOURCE_DIR/$DIR_NAME >> $TMP_LIB_FILE
+done
+
+for LINE1 in $(cat $TMP_FILE); do
+        for DIR_NAME in $EX_DIR_LIST; do
+                if [ "a$DIR_NAME" = "a" ]; then
+                        continue
+                fi
+                echo $LINE1 | grep $DIR_NAME
+        done
+done >> $TMP_EX_FILE
+
+for LINE1 in $(cat $TMP_FILE); do
+        OUTPUTFLG=1
+        for LINE2 in $(cat $TMP_LIB_FILE); do
+                if [ $LINE1 = $LINE2 ]; then
+                        OUTPUTFLG=0
+                fi
+        done
+
+        for LINE2 in $(cat $TMP_EX_FILE); do
+                if [ $LINE1 = $LINE2 ]; then
+                        OUTPUTFLG=0
+                fi
+        done
+
+        if [ $OUTPUTFLG = "1" ]; then
+                echo $LINE1
+        fi
+done >> $TMP_NOR_FILE
+
+while read LINE; do
+        cd `dirname $LINE`
+    if [ $? -ne 0 ]; then
+       echo "cd $LINE err"
+       exit -1;
+    fi
+
+    if [ -f makefile ] && [ $MODE != "2" ]; then
+        echo $SPLINE
+        if [ $MAKEALLFLG = "1" ]; then
+                make clean all
+        else
+                make
+        fi
+
+        if [ $? -ne 0 ]
+        then
+                        echo "MAKEALL Failed."
+                        rm -f $TMP_FILE > /dev/null
+                        rm -f $TMP_LIB_FILE > /dev/null
+                        rm -f $TMP_NOR_FILE > /dev/null
+                        rm -f $TMP_EX_FILE > /dev/null
+                        exit 1
+        fi
+    fi
+done < $TMP_LIB_FILE
+
+while read LINE; do
+        cd `dirname $LINE`
+    if [ $? -ne 0 ]; then
+       echo "cd $LINE err"
+       exit -1;
+    fi
+
+    if [ -f makefile ] && [ $MODE != "1" ]; then
+        echo $SPLINE
+        if [ $MAKEALLFLG = "1" ]; then
+                make clean all
+        else
+                make
+        fi
+
+        if [ $? -ne 0 ]
+        then
+                        echo "MAKEALL Failed."
+                        rm -f $TMP_FILE > /dev/null
+                        rm -f $TMP_LIB_FILE > /dev/null
+                        rm -f $TMP_NOR_FILE > /dev/null
+                        rm -f $TMP_EX_FILE > /dev/null
+                        exit 1
+        fi
+    fi
+done < $TMP_NOR_FILE
+
+rm -f $TMP_FILE > /dev/null
+rm -f $TMP_LIB_FILE > /dev/null
+rm -f $TMP_NOR_FILE > /dev/null
+rm -f $TMP_EX_FILE > /dev/null
+
+echo "############################### makeall compiled success ###############################"
+
+exit 0;
+

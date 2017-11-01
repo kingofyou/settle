@@ -1,0 +1,711 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+#include "Common.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_gateway_txn_tab
+{
+    char inter_brh_code[10 + 1];
+    char sett_date	   [8 + 1];
+    char trans_date	   [8 + 1];
+    char trans_time	   [10 + 1];
+    char flag_result	 [1 + 1];
+    char order_no	     [32 + 1];
+    char plat_key	     [48 + 1];
+    char host_key	     [48 + 1];
+    char batch_no	     [2 + 1];
+    char bus_tp	       [8 + 1];
+    char trans_tp	     [4 + 1];
+    char acct_type	   [2 + 1];
+    char trans_state	 [1 + 1];
+    char revsal_flag	 [1 + 1];
+    char key_revsal	   [32 + 1];
+    char cancel_flag	 [1 + 1];
+    char key_cancel	   [32 + 1];
+    char pan	         [20 + 1];
+    char acct_name	     [60 + 1];
+    char pan1	     [20 + 1];
+    char ccy            [3 + 1];
+    char trans_at	     [12 + 1];
+    char trans_at2	   [12 + 1];
+    char trans_at3	   [12 + 1];
+    char trans_at4	   [12 + 1];
+    char trans_at5	   [12 + 1];
+    char sett_mcht_no	 [15 + 1];    
+    char ext_mcht_no	 [15 + 1];
+    char sett_tp1	     [3 + 1];
+    char mcht_no1	     [15 + 1];
+    char sett_tp2	     [3 + 1];
+    char mcht_no2	     [15 + 1];
+    char sett_tp3	     [3 + 1];
+    char mcht_no3	     [15 + 1];
+    char sett_tp4	     [3 + 1];
+    char mcht_no4	     [15 + 1];
+    char sett_tp5	     [3 + 1];
+    char mcht_no5	     [15 + 1];
+    char sett_tp6	     [3 + 1];
+    char mcht_no6	     [15 + 1];
+    char sett_tp7	     [3 + 1];
+    char mcht_no7	     [15 + 1];
+    char sett_tp8	     [3 + 1];
+    char mcht_no8	     [15 + 1];
+    char sett_tp9	     [3 + 1];
+    char mcht_no9	     [15 + 1];
+    int seq_num;
+}vtbl_gateway_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblGatewayTxn(int nvtOpr, struct ht_tbl_gateway_txn_tab * pht_tbl_gateway_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_gateway_txn, 0, sizeof(vtbl_gateway_txn));
+    HtMemcpy(&vtbl_gateway_txn, pht_tbl_gateway_txn, sizeof(vtbl_gateway_txn));
+    switch(nvtOpr)
+    {
+        case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select TBL_GATEWAY_TXN_SEQ_ID_%s.nextval from dual", vtbl_gateway_txn.inter_brh_code);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from TBL_GATEWAY_TXN_SEQ_ID_%s error, sqlcode=[%d].", vtbl_gateway_txn.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+        
+            EXEC SQL 
+                insert into ht_tbl_gateway_txn(
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    host_key        ,
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    acct_type	    ,
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    pan	          ,
+                    acct_name     ,
+                    pan1 ,
+                    ccy                 ,
+                    trans_at	    , 
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    sett_mcht_no	  ,                    
+                    ext_mcht_no	  ,
+                    sett_tp1	    , 
+                    mcht_no1	    , 
+                    sett_tp2	    , 
+                    mcht_no2	    , 
+                    sett_tp3	    , 
+                    mcht_no3	    , 
+                    sett_tp4	    , 
+                    mcht_no4	    , 
+                    sett_tp5	    , 
+                    mcht_no5	    , 
+                    sett_tp6	    , 
+                    mcht_no6	    , 
+                    sett_tp7	    , 
+                    mcht_no7	    , 
+                    sett_tp8	    , 
+                    mcht_no8	    , 
+                    sett_tp9	    , 
+                    mcht_no9	    , 
+                    seq_num       
+                ) values (
+                    :vtbl_gateway_txn.inter_brh_code :db_ind,
+                    :vtbl_gateway_txn.sett_date	     :db_ind,
+                    :vtbl_gateway_txn.trans_date	  :db_ind , 
+                    :vtbl_gateway_txn.trans_time	 :db_ind  , 
+                    :vtbl_gateway_txn.flag_result	 :db_ind  ,
+                    :vtbl_gateway_txn.order_no	     :db_ind, 
+                    :vtbl_gateway_txn.plat_key	    :db_ind ,
+                    :vtbl_gateway_txn.host_key	    :db_ind , 
+                    :vtbl_gateway_txn.batch_no	     :db_ind, 
+                    :vtbl_gateway_txn.bus_tp	      :db_ind , 
+                    :vtbl_gateway_txn.trans_tp	    :db_ind , 
+                    :vtbl_gateway_txn.acct_type	   :db_ind  ,
+                    :vtbl_gateway_txn.trans_state	  :db_ind ,
+                    :vtbl_gateway_txn.revsal_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_revsal	  :db_ind , 
+                    :vtbl_gateway_txn.cancel_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_cancel	  :db_ind , 
+                    :vtbl_gateway_txn.pan	          :db_ind ,
+                    :vtbl_gateway_txn.acct_name	          :db_ind ,
+                    :vtbl_gateway_txn.pan1	          :db_ind ,
+                    :vtbl_gateway_txn.ccy           :db_ind ,
+                    :vtbl_gateway_txn.trans_at	    :db_ind , 
+                    :vtbl_gateway_txn.trans_at2 :db_ind	    ,
+                    :vtbl_gateway_txn.trans_at3	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at4	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at5	 :db_ind    ,
+                    :vtbl_gateway_txn.sett_mcht_no	 :db_ind  ,
+                    :vtbl_gateway_txn.ext_mcht_no	 :db_ind  ,
+                    :vtbl_gateway_txn.sett_tp1	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no1	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp2	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no2	   :db_ind  , 
+                    :vtbl_gateway_txn.sett_tp3	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no3	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp4	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no4 :db_ind	    , 
+                    :vtbl_gateway_txn.sett_tp5	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no5	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp6	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no6	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp7	  :db_ind   , 
+                    :vtbl_gateway_txn.mcht_no7	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp8	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no8	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp9	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no9 :db_ind	    , 
+                    :nTotalNum :db_ind
+                );
+            return sqlca.sqlcode;
+
+        case DBS_SELECT:
+            EXEC SQL
+                select 
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    host_key        ,
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    acct_type	    ,
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    pan	          ,
+                    acct_name     ,
+                    pan1 ,
+                    ccy                 ,
+                    trans_at	    , 
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    sett_mcht_no	  ,                    
+                    ext_mcht_no	  ,
+                    sett_tp1	    , 
+                    mcht_no1	    , 
+                    sett_tp2	    , 
+                    mcht_no2	    , 
+                    sett_tp3	    , 
+                    mcht_no3	    , 
+                    sett_tp4	    , 
+                    mcht_no4	    , 
+                    sett_tp5	    , 
+                    mcht_no5	    , 
+                    sett_tp6	    , 
+                    mcht_no6	    , 
+                    sett_tp7	    , 
+                    mcht_no7	    , 
+                    sett_tp8	    , 
+                    mcht_no8	    , 
+                    sett_tp9	    , 
+                    mcht_no9	    , 
+                    seq_num  
+                into
+                    :vtbl_gateway_txn.inter_brh_code :db_ind,
+                    :vtbl_gateway_txn.sett_date	     :db_ind,
+                    :vtbl_gateway_txn.trans_date	  :db_ind , 
+                    :vtbl_gateway_txn.trans_time	 :db_ind  , 
+                    :vtbl_gateway_txn.flag_result	 :db_ind  ,
+                    :vtbl_gateway_txn.order_no	     :db_ind, 
+                    :vtbl_gateway_txn.plat_key	    :db_ind ,
+                    :vtbl_gateway_txn.host_key	    :db_ind , 
+                    :vtbl_gateway_txn.batch_no	     :db_ind, 
+                    :vtbl_gateway_txn.bus_tp	      :db_ind , 
+                    :vtbl_gateway_txn.trans_tp	    :db_ind , 
+                    :vtbl_gateway_txn.acct_type	   :db_ind  ,
+                    :vtbl_gateway_txn.trans_state	  :db_ind ,
+                    :vtbl_gateway_txn.revsal_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_revsal	  :db_ind , 
+                    :vtbl_gateway_txn.cancel_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_cancel	  :db_ind , 
+                    :vtbl_gateway_txn.pan	          :db_ind ,
+                    :vtbl_gateway_txn.acct_name	          :db_ind ,
+                    :vtbl_gateway_txn.pan1	          :db_ind ,
+                    :vtbl_gateway_txn.ccy           :db_ind ,
+                    :vtbl_gateway_txn.trans_at	    :db_ind , 
+                    :vtbl_gateway_txn.trans_at2 :db_ind	    ,
+                    :vtbl_gateway_txn.trans_at3	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at4	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at5	 :db_ind    ,
+                    :vtbl_gateway_txn.sett_mcht_no	 :db_ind  ,
+                    :vtbl_gateway_txn.ext_mcht_no	 :db_ind  ,
+                    :vtbl_gateway_txn.sett_tp1	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no1	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp2	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no2	   :db_ind  , 
+                    :vtbl_gateway_txn.sett_tp3	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no3	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp4	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no4 :db_ind	    , 
+                    :vtbl_gateway_txn.sett_tp5	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no5	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp6	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no6	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp7	  :db_ind   , 
+                    :vtbl_gateway_txn.mcht_no7	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp8	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no8	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp9	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no9 :db_ind	    , 
+                    :nTotalNum :db_ind
+                from 
+                    ht_tbl_gateway_txn
+               where
+                    inter_brh_code = :vtbl_gateway_txn.inter_brh_code
+               and plat_key = :vtbl_gateway_txn.plat_key;
+        HtMemcpy(pht_tbl_gateway_txn, &vtbl_gateway_txn, sizeof(vtbl_gateway_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    NVL(max(seq_num),0)
+                into
+                    :vtbl_gateway_txn.seq_num
+                from 
+                    ht_tbl_gateway_txn
+               where
+                    trans_state = :vtbl_gateway_txn.trans_state
+               and  inter_brh_code = :vtbl_gateway_txn.inter_brh_code 
+               and  flag_result = :vtbl_gateway_txn.flag_result
+               and  sett_date <= :vtbl_gateway_txn.sett_date
+               and  revsal_flag = :vtbl_gateway_txn.revsal_flag 
+               and  cancel_flag = :vtbl_gateway_txn.cancel_flag; 
+        HtMemcpy(pht_tbl_gateway_txn, &vtbl_gateway_txn, sizeof(vtbl_gateway_txn));
+        return sqlca.sqlcode;
+        
+        case DBS_UPDATE:
+            EXEC SQL
+                update ht_tbl_gateway_txn
+                    set flag_result= :vtbl_gateway_txn.flag_result 
+                where
+                    inter_brh_code = :vtbl_gateway_txn.inter_brh_code
+                    and plat_key = :vtbl_gateway_txn.plat_key;
+            return sqlca.sqlcode;  
+
+        case DBS_CURSOR:
+            EXEC SQL DECLARE tbl_gateway_txn_cur CURSOR FOR
+                select 
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    host_key        ,
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    acct_type	    ,
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    pan	          ,
+                    acct_name     ,
+                    pan1          ,
+                    ccy                 ,
+                    trans_at	    , 
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    sett_mcht_no	  ,                    
+                    ext_mcht_no	  ,
+                    sett_tp1	    , 
+                    mcht_no1	    , 
+                    sett_tp2	    , 
+                    mcht_no2	    , 
+                    sett_tp3	    , 
+                    mcht_no3	    , 
+                    sett_tp4	    , 
+                    mcht_no4	    , 
+                    sett_tp5	    , 
+                    mcht_no5	    , 
+                    sett_tp6	    , 
+                    mcht_no6	    , 
+                    sett_tp7	    , 
+                    mcht_no7	    , 
+                    sett_tp8	    , 
+                    mcht_no8	    , 
+                    sett_tp9	    , 
+                    mcht_no9	    , 
+                    seq_num      
+                from 
+                    ht_tbl_gateway_txn
+                where
+                    trans_state = :vtbl_gateway_txn.trans_state and 
+                    inter_brh_code = :vtbl_gateway_txn.inter_brh_code and 
+                    flag_result = :vtbl_gateway_txn.flag_result and
+                    sett_date <= :vtbl_gateway_txn.sett_date   and
+                    revsal_flag = :vtbl_gateway_txn.revsal_flag and
+                    cancel_flag = :vtbl_gateway_txn.cancel_flag and
+                    seq_num between :ptnBeginOffset and  :ptnEndOffset;
+            return sqlca.sqlcode;
+
+        case DBS_OPEN:
+            EXEC SQL OPEN tbl_gateway_txn_cur;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH:
+            EXEC SQL FETCH 
+                tbl_gateway_txn_cur
+                into
+                    :vtbl_gateway_txn.inter_brh_code :db_ind,
+                    :vtbl_gateway_txn.sett_date	     :db_ind,
+                    :vtbl_gateway_txn.trans_date	  :db_ind , 
+                    :vtbl_gateway_txn.trans_time	 :db_ind  , 
+                    :vtbl_gateway_txn.flag_result	 :db_ind  ,
+                    :vtbl_gateway_txn.order_no	     :db_ind, 
+                    :vtbl_gateway_txn.plat_key	    :db_ind , 
+                    :vtbl_gateway_txn.host_key	    :db_ind ,
+                    :vtbl_gateway_txn.batch_no	     :db_ind, 
+                    :vtbl_gateway_txn.bus_tp	      :db_ind , 
+                    :vtbl_gateway_txn.trans_tp	    :db_ind , 
+                    :vtbl_gateway_txn.acct_type	   :db_ind  ,
+                    :vtbl_gateway_txn.trans_state	  :db_ind ,
+                    :vtbl_gateway_txn.revsal_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_revsal	  :db_ind , 
+                    :vtbl_gateway_txn.cancel_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_cancel	  :db_ind , 
+                    :vtbl_gateway_txn.pan	          :db_ind ,
+                    :vtbl_gateway_txn.acct_name	          :db_ind ,
+                    :vtbl_gateway_txn.pan1	          :db_ind ,
+                    :vtbl_gateway_txn.ccy           :db_ind ,
+                    :vtbl_gateway_txn.trans_at	    :db_ind , 
+                    :vtbl_gateway_txn.trans_at2 :db_ind	    ,
+                    :vtbl_gateway_txn.trans_at3	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at4	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at5	 :db_ind    ,
+                    :vtbl_gateway_txn.sett_mcht_no	 :db_ind  ,                    
+                    :vtbl_gateway_txn.ext_mcht_no	 :db_ind  ,
+                    :vtbl_gateway_txn.sett_tp1	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no1	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp2	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no2	   :db_ind  , 
+                    :vtbl_gateway_txn.sett_tp3	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no3	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp4	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no4 :db_ind	    , 
+                    :vtbl_gateway_txn.sett_tp5	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no5	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp6	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no6	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp7	  :db_ind   , 
+                    :vtbl_gateway_txn.mcht_no7	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp8	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no8	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp9	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no9 :db_ind	    , 
+                    :vtbl_gateway_txn.seq_num;
+            HtMemcpy(pht_tbl_gateway_txn, &vtbl_gateway_txn, sizeof(vtbl_gateway_txn));
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE:
+            EXEC SQL CLOSE tbl_gateway_txn_cur;
+            return sqlca.sqlcode;
+            
+        case DBS_CURSOR1:
+            EXEC SQL DECLARE tbl_gateway_txn_cur1 CURSOR FOR
+                select 
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    host_key        ,
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    acct_type	    ,
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    pan	          ,
+                    acct_name     ,
+                    pan1          ,
+                    ccy                 ,
+                    trans_at	    , 
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    sett_mcht_no	  ,                    
+                    ext_mcht_no	  ,
+                    sett_tp1	    , 
+                    mcht_no1	    , 
+                    sett_tp2	    , 
+                    mcht_no2	    , 
+                    sett_tp3	    , 
+                    mcht_no3	    , 
+                    sett_tp4	    , 
+                    mcht_no4	    , 
+                    sett_tp5	    , 
+                    mcht_no5	    , 
+                    sett_tp6	    , 
+                    mcht_no6	    , 
+                    sett_tp7	    , 
+                    mcht_no7	    , 
+                    sett_tp8	    , 
+                    mcht_no8	    , 
+                    sett_tp9	    , 
+                    mcht_no9	    , 
+                    seq_num      
+                from 
+                    ht_tbl_gateway_txn
+                where
+                    inter_brh_code = :vtbl_gateway_txn.inter_brh_code   and
+                    flag_result = :vtbl_gateway_txn.flag_result and                    
+                    sett_date <= :vtbl_gateway_txn.sett_date   and
+                    revsal_flag = :vtbl_gateway_txn.revsal_flag and
+                    cancel_flag = :vtbl_gateway_txn.cancel_flag and
+                    trans_tp = '5001' and
+                    seq_num between :ptnBeginOffset and  :ptnEndOffset;
+            return sqlca.sqlcode;
+
+        case DBS_OPEN1:
+            EXEC SQL OPEN tbl_gateway_txn_cur1;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH1:
+            EXEC SQL FETCH 
+                tbl_gateway_txn_cur1
+                into
+                    :vtbl_gateway_txn.inter_brh_code :db_ind,
+                    :vtbl_gateway_txn.sett_date	     :db_ind,
+                    :vtbl_gateway_txn.trans_date	  :db_ind , 
+                    :vtbl_gateway_txn.trans_time	 :db_ind  , 
+                    :vtbl_gateway_txn.flag_result	 :db_ind  ,
+                    :vtbl_gateway_txn.order_no	     :db_ind, 
+                    :vtbl_gateway_txn.plat_key	    :db_ind , 
+                    :vtbl_gateway_txn.host_key	    :db_ind ,
+                    :vtbl_gateway_txn.batch_no	     :db_ind, 
+                    :vtbl_gateway_txn.bus_tp	      :db_ind , 
+                    :vtbl_gateway_txn.trans_tp	    :db_ind , 
+                    :vtbl_gateway_txn.acct_type	   :db_ind  ,
+                    :vtbl_gateway_txn.trans_state	  :db_ind ,
+                    :vtbl_gateway_txn.revsal_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_revsal	  :db_ind , 
+                    :vtbl_gateway_txn.cancel_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_cancel	  :db_ind , 
+                    :vtbl_gateway_txn.pan	          :db_ind ,
+                    :vtbl_gateway_txn.acct_name	          :db_ind ,
+                    :vtbl_gateway_txn.pan1	          :db_ind ,
+                    :vtbl_gateway_txn.ccy           :db_ind ,
+                    :vtbl_gateway_txn.trans_at	    :db_ind , 
+                    :vtbl_gateway_txn.trans_at2 :db_ind	    ,
+                    :vtbl_gateway_txn.trans_at3	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at4	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at5	 :db_ind    ,
+                    :vtbl_gateway_txn.sett_mcht_no	 :db_ind  ,                    
+                    :vtbl_gateway_txn.ext_mcht_no	 :db_ind  ,
+                    :vtbl_gateway_txn.sett_tp1	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no1	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp2	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no2	   :db_ind  , 
+                    :vtbl_gateway_txn.sett_tp3	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no3	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp4	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no4 :db_ind	    , 
+                    :vtbl_gateway_txn.sett_tp5	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no5	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp6	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no6	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp7	  :db_ind   , 
+                    :vtbl_gateway_txn.mcht_no7	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp8	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no8	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp9	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no9 :db_ind	    , 
+                    :vtbl_gateway_txn.seq_num;
+            HtMemcpy(pht_tbl_gateway_txn, &vtbl_gateway_txn, sizeof(vtbl_gateway_txn));
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE1:
+            EXEC SQL CLOSE tbl_gateway_txn_cur1;
+            return sqlca.sqlcode;
+
+        case DBS_CURSOR2:
+            EXEC SQL DECLARE tbl_gateway_txn_cur2 CURSOR FOR
+                select 
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    host_key        ,
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    acct_type	    ,
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    pan	          ,
+                    acct_name     ,
+                    pan1          ,
+                    ccy                 ,
+                    trans_at	    , 
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    sett_mcht_no	  ,                    
+                    ext_mcht_no	  ,
+                    sett_tp1	    , 
+                    mcht_no1	    , 
+                    sett_tp2	    , 
+                    mcht_no2	    , 
+                    sett_tp3	    , 
+                    mcht_no3	    , 
+                    sett_tp4	    , 
+                    mcht_no4	    , 
+                    sett_tp5	    , 
+                    mcht_no5	    , 
+                    sett_tp6	    , 
+                    mcht_no6	    , 
+                    sett_tp7	    , 
+                    mcht_no7	    , 
+                    sett_tp8	    , 
+                    mcht_no8	    , 
+                    sett_tp9	    , 
+                    mcht_no9	    , 
+                    seq_num      
+                from 
+                    ht_tbl_gateway_txn
+                where
+                    trans_state = :vtbl_gateway_txn.trans_state and
+                    inter_brh_code = :vtbl_gateway_txn.inter_brh_code   and
+                    flag_result = :vtbl_gateway_txn.flag_result and
+                    sett_date <= :vtbl_gateway_txn.sett_date   and
+                    revsal_flag = :vtbl_gateway_txn.revsal_flag and
+                    cancel_flag = :vtbl_gateway_txn.cancel_flag and
+                    trans_tp != '5001' and
+                    seq_num between :ptnBeginOffset and  :ptnEndOffset;
+            return sqlca.sqlcode;
+
+        case DBS_OPEN2:
+            EXEC SQL OPEN tbl_gateway_txn_cur2;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH2:
+            EXEC SQL FETCH 
+                tbl_gateway_txn_cur2
+                into
+                    :vtbl_gateway_txn.inter_brh_code :db_ind,
+                    :vtbl_gateway_txn.sett_date	     :db_ind,
+                    :vtbl_gateway_txn.trans_date	  :db_ind , 
+                    :vtbl_gateway_txn.trans_time	 :db_ind  , 
+                    :vtbl_gateway_txn.flag_result	 :db_ind  ,
+                    :vtbl_gateway_txn.order_no	     :db_ind, 
+                    :vtbl_gateway_txn.plat_key	    :db_ind , 
+                    :vtbl_gateway_txn.host_key	    :db_ind ,
+                    :vtbl_gateway_txn.batch_no	     :db_ind, 
+                    :vtbl_gateway_txn.bus_tp	      :db_ind , 
+                    :vtbl_gateway_txn.trans_tp	    :db_ind , 
+                    :vtbl_gateway_txn.acct_type	   :db_ind  ,
+                    :vtbl_gateway_txn.trans_state	  :db_ind ,
+                    :vtbl_gateway_txn.revsal_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_revsal	  :db_ind , 
+                    :vtbl_gateway_txn.cancel_flag	 :db_ind  ,
+                    :vtbl_gateway_txn.key_cancel	  :db_ind , 
+                    :vtbl_gateway_txn.pan	          :db_ind ,
+                    :vtbl_gateway_txn.acct_name	          :db_ind ,
+                    :vtbl_gateway_txn.pan1	          :db_ind ,
+                    :vtbl_gateway_txn.ccy           :db_ind ,
+                    :vtbl_gateway_txn.trans_at	    :db_ind , 
+                    :vtbl_gateway_txn.trans_at2 :db_ind	    ,
+                    :vtbl_gateway_txn.trans_at3	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at4	 :db_ind    ,
+                    :vtbl_gateway_txn.trans_at5	 :db_ind    ,
+                    :vtbl_gateway_txn.sett_mcht_no	 :db_ind  ,                    
+                    :vtbl_gateway_txn.ext_mcht_no	 :db_ind  ,
+                    :vtbl_gateway_txn.sett_tp1	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no1	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp2	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no2	   :db_ind  , 
+                    :vtbl_gateway_txn.sett_tp3	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no3	  :db_ind   , 
+                    :vtbl_gateway_txn.sett_tp4	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no4 :db_ind	    , 
+                    :vtbl_gateway_txn.sett_tp5	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no5	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp6	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no6	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp7	  :db_ind   , 
+                    :vtbl_gateway_txn.mcht_no7	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp8	     :db_ind, 
+                    :vtbl_gateway_txn.mcht_no8	 :db_ind    , 
+                    :vtbl_gateway_txn.sett_tp9	    :db_ind , 
+                    :vtbl_gateway_txn.mcht_no9 :db_ind	    , 
+                    :vtbl_gateway_txn.seq_num;
+            HtMemcpy(pht_tbl_gateway_txn, &vtbl_gateway_txn, sizeof(vtbl_gateway_txn));
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE2:
+            EXEC SQL CLOSE tbl_gateway_txn_cur2;
+            return sqlca.sqlcode;
+            
+   case DBS_DELETE:
+        EXEC SQL DELETE FROM
+            ht_tbl_gateway_txn
+        WHERE
+            inter_brh_code = :vtbl_gateway_txn.inter_brh_code
+            and plat_key = :vtbl_gateway_txn.plat_key;
+        ;
+
+        return sqlca.sqlcode;
+
+        default:
+            return NO_SWITCH;
+    }
+}
+
+

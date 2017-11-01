@@ -1,0 +1,70 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_active_mcht_inf_tab
+{
+    char inter_brh_code [10+1];
+    char sett_date [8+1];
+    char mcht_no	[15+1];
+    char mcht_nm	[60+1];
+    int trans_num;
+    double trans_at;
+}vtbl_active_mcht_inf_txn;
+static int nTotalNum = 0;
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+char    sSqlBuf[128];
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblActiveMchtInfTxn(int nvtOpr, struct ht_tbl_active_mcht_inf_tab * pht_tbl_active_mcht_inf_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_active_mcht_inf_txn, 0, sizeof(vtbl_active_mcht_inf_txn));
+    HtMemcpy(&vtbl_active_mcht_inf_txn, pht_tbl_active_mcht_inf_txn, sizeof(vtbl_active_mcht_inf_txn));
+    switch(nvtOpr)
+    {
+        case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select TBL_ACTIVE_MCHT_SEQ_ID_%s.nextval from dual", vtbl_active_mcht_inf_txn.inter_brh_code);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from TBL_ACTIVE_MCHT_SEQ_ID_%s error, sqlcode=[%d].", vtbl_active_mcht_inf_txn.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+            EXEC SQL 
+                insert into ht_tbl_active_mcht_inf(
+                    inter_brh_code,
+                    sett_date,
+                    mcht_no,	
+                    mcht_nm,	
+                    trans_num,
+                    trans_at,
+                    SEQ_NUM 
+                ) values (
+                    :vtbl_active_mcht_inf_txn.inter_brh_code,
+                    :vtbl_active_mcht_inf_txn.sett_date,
+                    :vtbl_active_mcht_inf_txn.mcht_no,
+                    :vtbl_active_mcht_inf_txn.mcht_nm,
+                    :vtbl_active_mcht_inf_txn.trans_num,
+                    :vtbl_active_mcht_inf_txn.trans_at,
+                    :nTotalNum
+                    );
+            return sqlca.sqlcode;
+                        
+        default:
+            return NO_SWITCH;
+    }
+}

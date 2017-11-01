@@ -1,0 +1,144 @@
+/*
+ *  Copyright 2006, Shanghai Huateng Software Systems Co., Ltd.
+ *  All right reserved.
+ *
+ *  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+ *  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+ *  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+ *  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+ *  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+ *
+ *  $Id: 194DbsBthComConfig.sqc,v 1.1.1.1 2016/11/04 07:50:31 ctedev Exp $
+ *
+ *  功能: 交易配置表：HT_TBL_COM_CONFIG 操作函数
+ *
+ *  Edit History:
+ *
+ *    2016/09/04 -phb
+ */
+
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct tbl_cost_cmp_inf_tab
+{
+    char    id             [20+ 1];                           
+    char    opr_code       [20+ 1];                           
+    char    opr_name       [100+ 1];                          
+    char    opr_type       [4+ 1];                            
+    char    bk             [12+ 1];                           
+    char    br             [12+ 1];                           
+    char    opr_acc_no     [40+ 1];                           
+    char    opr_acc_name   [300+ 1];                          
+    char    core_acc_type  [4+ 1];                            
+    char    opr_acc_status [2+ 1];                            
+    char    opr_acc_type   [2+ 1];                            
+    char    ccy            [3+ 1];                            
+    char    platform_id    [20+ 1];                           
+    char    system_id      [20+ 1];                           
+    char    createor       [100+ 1];                          
+    char    create_time    [6+ 1];                            
+    char    updater        [100+ 1];                          
+    char    update_time    [6+ 1];                            
+    char    userid         [40+ 1];                           
+    char    remark         [300+ 1];                          
+    char    rs_fld1        [40+ 1];                           
+    char    rs_fld2        [100+ 1];                          
+    char    rs_fld3        [40+ 1];                           
+    char    rs_fld4        [100+ 1];                          
+    char    flag           [4+ 1];                            
+    char    open_sts       [2+ 1];                            
+    char    res_code       [4+ 1];                            
+    char    res_msg        [40+ 1];                           
+    char    res_sys_seq    [20+ 1];   
+}vtbl_operater_acc_inf;
+    short ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblOperaterAcctInf (int nOpr, tp_operater_acc_def *ptbl_operater_acc_inf)
+{
+    memset(&vtbl_operater_acc_inf, 0x00, sizeof(vtbl_operater_acc_inf));
+    memcpy (&vtbl_operater_acc_inf, ptbl_operater_acc_inf, sizeof (vtbl_operater_acc_inf));
+    switch (nOpr)
+    {
+    case DBS_SELECT:
+        EXEC SQL SELECT
+            id              ,
+            opr_code        ,
+            opr_name        ,
+            opr_type        ,
+            bk              ,
+            br              ,
+            opr_acc_no      ,
+            opr_acc_name    ,
+            core_acc_type   ,
+            opr_acc_status  ,
+            opr_acc_type    ,
+            ccy             ,
+            platform_id     ,
+            system_id       ,
+            createor        ,
+            create_time     ,
+            updater         ,
+            update_time     ,
+            userid          ,
+            remark          ,
+            rs_fld1         ,
+            rs_fld2         ,
+            rs_fld3         ,
+            rs_fld4         ,
+            flag            ,
+            open_sts        ,
+            res_code        ,
+            res_msg         ,
+            res_sys_seq
+        into
+            :vtbl_operater_acc_inf.id              :ind  ,
+            :vtbl_operater_acc_inf.opr_code        :ind   ,
+            :vtbl_operater_acc_inf.opr_name        :ind   ,
+            :vtbl_operater_acc_inf.opr_type        :ind  ,
+            :vtbl_operater_acc_inf.bk              :ind ,
+            :vtbl_operater_acc_inf.br              :ind  ,
+            :vtbl_operater_acc_inf.opr_acc_no      :ind  ,
+            :vtbl_operater_acc_inf.opr_acc_name    :ind   ,
+            :vtbl_operater_acc_inf.core_acc_type   :ind   ,
+            :vtbl_operater_acc_inf.opr_acc_status  :ind ,
+            :vtbl_operater_acc_inf.opr_acc_type    :ind  ,
+            :vtbl_operater_acc_inf.ccy             :ind   ,
+            :vtbl_operater_acc_inf.platform_id     :ind   ,
+            :vtbl_operater_acc_inf.system_id       :ind  ,
+            :vtbl_operater_acc_inf.createor        :ind ,
+            :vtbl_operater_acc_inf.create_time     :ind  ,
+            :vtbl_operater_acc_inf.updater         :ind  ,
+            :vtbl_operater_acc_inf.update_time     :ind   ,
+            :vtbl_operater_acc_inf.userid          :ind   ,
+            :vtbl_operater_acc_inf.remark          :ind ,
+            :vtbl_operater_acc_inf.rs_fld1         :ind  ,
+            :vtbl_operater_acc_inf.rs_fld2         :ind   ,
+            :vtbl_operater_acc_inf.rs_fld3         :ind   ,
+            :vtbl_operater_acc_inf.rs_fld4         :ind  ,
+            :vtbl_operater_acc_inf.flag            :ind ,
+            :vtbl_operater_acc_inf.open_sts        :ind  ,
+            :vtbl_operater_acc_inf.res_code        :ind  ,
+            :vtbl_operater_acc_inf.res_msg         :ind   ,
+            :vtbl_operater_acc_inf.res_sys_seq     :ind    
+        from TP_OPERATER_ACC_INFO@PUBLIC_DATA
+            where core_acc_type = :vtbl_operater_acc_inf.core_acc_type;
+            
+        memcpy (ptbl_operater_acc_inf, &vtbl_operater_acc_inf, sizeof (vtbl_operater_acc_inf));
+        return sqlca.sqlcode;
+        
+        default:
+            return NO_SWITCH;
+    }
+    return 0;
+}

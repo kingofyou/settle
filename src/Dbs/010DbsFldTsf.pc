@@ -1,0 +1,84 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsFldTsf.pc                                                */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+#include "DbsDef.h"
+
+EXEC SQL BEGIN DECLARE SECTION;
+    struct sql_TBL_fld_tsf_Def
+    {
+        int    usage_key;
+        int    buf_chg_index;
+        int    sour_fld_index;
+        int    dest_fld_index;
+    } ltTblFldTsf;
+EXEC SQL END DECLARE SECTION;
+
+int DbsFLDTSF( int vnOprType, struct sql_TBL_fld_tsf_Def *vtpTblFldTsf)
+{
+
+    HtMemcpy(
+        &ltTblFldTsf,
+        vtpTblFldTsf,
+        sizeof(ltTblFldTsf));
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE
+            cur_fld_tsf_1
+        CURSOR FOR SELECT
+            l_usage_key,
+            i_buf_chg_index,
+            i_sour_fld_index,
+            i_dest_fld_index
+        FROM
+            ht_tbl_fld_tsf
+        WHERE
+            (l_usage_key = :ltTblFldTsf.usage_key) AND
+            (i_buf_chg_index = :ltTblFldTsf.buf_chg_index)
+        ORDER BY
+            l_usage_key,
+            i_buf_chg_index,
+            i_sour_fld_index
+        ;
+        return LUsrErrNull;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            cur_fld_tsf_1;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            cur_fld_tsf_1
+        INTO
+            :ltTblFldTsf.usage_key,
+            :ltTblFldTsf.buf_chg_index,
+            :ltTblFldTsf.sour_fld_index,
+            :ltTblFldTsf.dest_fld_index;
+        HtMemcpy(
+            vtpTblFldTsf,
+            &ltTblFldTsf,
+            sizeof(*vtpTblFldTsf));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            cur_fld_tsf_1;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+} /* end of DbsFLDTSF */
+

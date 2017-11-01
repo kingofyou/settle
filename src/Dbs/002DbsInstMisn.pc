@@ -1,0 +1,68 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsInstDef.pc                                            */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include "DbsDef.h"
+#include "batch.h"
+
+extern    char    gLogFile[LOG_NAME_LEN_MAX];
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+EXEC SQL BEGIN DECLARE SECTION;
+    struct
+    {
+        char       inter_brh_code[10 + 1];
+        char       brh_level[1 + 1];
+    } hInstdef;
+EXEC SQL END DECLARE SECTION;
+
+int DbsInstMisn( int vnOprType, stInstInf *pInstIf)
+{
+    memset(&hInstdef, 0x00, sizeof(hInstdef));
+    switch(vnOprType)
+    {
+
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_brh_info_cur CURSOR
+        FOR
+        SELECT BRH_ID,brh_level 
+        FROM ht_tbl_brh_info;
+        return LUsrErrNull;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            tbl_brh_info_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            tbl_brh_info_cur
+        INTO
+            :hInstdef.inter_brh_code,
+            :hInstdef.brh_level;
+
+        HtMemcpy(
+            pInstIf,
+            &hInstdef,
+            sizeof(hInstdef));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            tbl_brh_info_cur;
+        return sqlca.sqlcode;
+
+    default:
+       return NO_SWITCH;
+    } /* end of switch */
+} /* end of DbsInstMisn */
+

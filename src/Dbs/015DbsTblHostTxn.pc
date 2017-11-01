@@ -1,0 +1,357 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_host_txn_tab
+{
+	char inter_brh_code	 [10+ 1];
+	char sett_date	    [8+ 1];
+	char trans_date	    [8+ 1];
+	char trans_time	    [10+ 1];
+	char flag_result	 [1+ 1];
+	char ext_mcht_no	 [15+ 1];
+	char order_no	     [32+ 1];
+	char plat_key	     [48+ 1];
+	char batch_no	     [2+ 1];
+	char bus_tp	       [8+ 1];
+	char trans_tp	     [4+ 1];
+	char trans_state	 [1+ 1];
+	char revsal_flag	 [1+ 1];
+	char key_revsal	   [32+ 1];
+	char cancel_flag	 [1+ 1];
+	char key_cancel	   [32+ 1];
+	char acct_type	   [2+ 1];
+	char pan	         [20+ 1];
+	char ccy	         [3+ 1];
+	char trans_at	   [12+ 1];
+	char trans_at2	 [12+ 1];
+	char trans_at3	 [12+ 1];
+	char trans_at4	 [12+ 1];
+	char trans_at5	 [12+ 1];
+	int seq_num      ;
+}vtbl_host_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblHostTxn(int nvtOpr, struct ht_tbl_host_txn_tab * pht_tbl_host_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_host_txn, 0, sizeof(vtbl_host_txn));
+    HtMemcpy(&vtbl_host_txn, pht_tbl_host_txn, sizeof(vtbl_host_txn));
+    switch(nvtOpr)
+    {
+        case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select TBL_HOST_TXN_SEQ_ID_%s.nextval from dual", vtbl_host_txn.inter_brh_code);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from TBL_HOST_TXN_SEQ_ID_%s error, sqlcode=[%d].", vtbl_host_txn.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+        
+            EXEC SQL 
+                insert into HT_TBL_HOST_TXN(
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    ext_mcht_no	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    acct_type	    ,
+                    pan	          ,
+                    ccy	          ,
+                    trans_at	    ,
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    seq_num      
+                ) values (
+                    :vtbl_host_txn.inter_brh_code :db_ind   , 
+                    :vtbl_host_txn.sett_date	    :db_ind   , 
+                    :vtbl_host_txn.trans_date	  :db_ind   ,  
+                    :vtbl_host_txn.trans_time	  :db_ind   ,  
+                    :vtbl_host_txn.flag_result	  :db_ind   , 
+                    :vtbl_host_txn.ext_mcht_no	  :db_ind   , 
+                    :vtbl_host_txn.order_no	    :db_ind   ,  
+                    :vtbl_host_txn.plat_key	    :db_ind   ,  
+                    :vtbl_host_txn.batch_no	    :db_ind   ,  
+                    :vtbl_host_txn.bus_tp	      :db_ind   ,  
+                    :vtbl_host_txn.trans_tp	    :db_ind   ,  
+                    :vtbl_host_txn.trans_state	  :db_ind   , 
+                    :vtbl_host_txn.revsal_flag	  :db_ind   , 
+                    :vtbl_host_txn.key_revsal	  :db_ind   ,  
+                    :vtbl_host_txn.cancel_flag	  :db_ind   , 
+                    :vtbl_host_txn.key_cancel	  :db_ind   ,  
+                    :vtbl_host_txn.acct_type	    :db_ind   , 
+                    :vtbl_host_txn.pan	          :db_ind   , 
+                    :vtbl_host_txn.ccy	          :db_ind   , 
+                    :vtbl_host_txn.trans_at	    :db_ind   , 
+                    :vtbl_host_txn.trans_at2	    :db_ind   , 
+                    :vtbl_host_txn.trans_at3	    :db_ind   , 
+                    :vtbl_host_txn.trans_at4	    :db_ind   , 
+                    :vtbl_host_txn.trans_at5	    :db_ind   , 
+                    :nTotalNum :db_ind
+                );
+            return sqlca.sqlcode;
+
+        case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    NVL(max(seq_num),0)
+                into
+                    :vtbl_host_txn.seq_num
+                from 
+                    HT_TBL_HOST_TXN
+               where
+                inter_brh_code = :vtbl_host_txn.inter_brh_code
+            and trans_state = :vtbl_host_txn.trans_state 
+            and flag_result = :vtbl_host_txn.flag_result
+            and sett_date <= :vtbl_host_txn.sett_date
+            and revsal_flag = :vtbl_host_txn.revsal_flag 
+            and cancel_flag = :vtbl_host_txn.cancel_flag;
+        HtMemcpy(pht_tbl_host_txn, &vtbl_host_txn, sizeof(vtbl_host_txn));
+        return sqlca.sqlcode;
+
+         case DBS_SELECT2:
+            EXEC SQL
+                select 
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    ext_mcht_no	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    acct_type	    ,
+                    pan	          ,
+                    ccy	          ,
+                    trans_at	    ,
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    seq_num      
+                into
+                    :vtbl_host_txn.inter_brh_code   , 
+                    :vtbl_host_txn.sett_date	       , 
+                    :vtbl_host_txn.trans_date	     ,  
+                    :vtbl_host_txn.trans_time	     ,  
+                    :vtbl_host_txn.flag_result	     , 
+                    :vtbl_host_txn.ext_mcht_no	     , 
+                    :vtbl_host_txn.order_no	       ,  
+                    :vtbl_host_txn.plat_key	       ,  
+                    :vtbl_host_txn.batch_no	       ,  
+                    :vtbl_host_txn.bus_tp	         ,  
+                    :vtbl_host_txn.trans_tp	       ,  
+                    :vtbl_host_txn.trans_state	     , 
+                    :vtbl_host_txn.revsal_flag	     , 
+                    :vtbl_host_txn.key_revsal	     ,  
+                    :vtbl_host_txn.cancel_flag	     , 
+                    :vtbl_host_txn.key_cancel	     ,  
+                    :vtbl_host_txn.acct_type	       , 
+                    :vtbl_host_txn.pan	             , 
+                    :vtbl_host_txn.ccy	             , 
+                    :vtbl_host_txn.trans_at	       :db_ind, 
+                    :vtbl_host_txn.trans_at2	      :db_ind , 
+                    :vtbl_host_txn.trans_at3	     :db_ind  , 
+                    :vtbl_host_txn.trans_at4	      :db_ind , 
+                    :vtbl_host_txn.trans_at5	      :db_ind , 
+                    :vtbl_host_txn.seq_num 
+                from 
+                    HT_TBL_HOST_TXN
+               where
+                    inter_brh_code = :vtbl_host_txn.inter_brh_code
+                    and key_cancel = :vtbl_host_txn.key_cancel
+                    and  cancel_flag = :vtbl_host_txn.cancel_flag;
+        HtMemcpy(pht_tbl_host_txn, &vtbl_host_txn, sizeof(vtbl_host_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT3:
+            EXEC SQL
+                select 
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    ext_mcht_no	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    acct_type	    ,
+                    pan	          ,
+                    ccy	          ,
+                    trans_at	    ,
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    seq_num      
+                into
+                    :vtbl_host_txn.inter_brh_code    :db_ind, 
+                    :vtbl_host_txn.sett_date	        :db_ind, 
+                    :vtbl_host_txn.trans_date	      :db_ind,  
+                    :vtbl_host_txn.trans_time	      :db_ind,  
+                    :vtbl_host_txn.flag_result	      :db_ind, 
+                    :vtbl_host_txn.ext_mcht_no	      :db_ind, 
+                    :vtbl_host_txn.order_no	        :db_ind,  
+                    :vtbl_host_txn.plat_key	        :db_ind,  
+                    :vtbl_host_txn.batch_no	        :db_ind,  
+                    :vtbl_host_txn.bus_tp	          :db_ind,  
+                    :vtbl_host_txn.trans_tp	        :db_ind,  
+                    :vtbl_host_txn.trans_state	      :db_ind, 
+                    :vtbl_host_txn.revsal_flag	      :db_ind, 
+                    :vtbl_host_txn.key_revsal	      :db_ind,  
+                    :vtbl_host_txn.cancel_flag	      :db_ind, 
+                    :vtbl_host_txn.key_cancel	      :db_ind,  
+                    :vtbl_host_txn.acct_type	        :db_ind, 
+                    :vtbl_host_txn.pan	              :db_ind, 
+                    :vtbl_host_txn.ccy	              :db_ind, 
+                    :vtbl_host_txn.trans_at	       :db_ind, 
+                    :vtbl_host_txn.trans_at2	      :db_ind , 
+                    :vtbl_host_txn.trans_at3	     :db_ind  , 
+                    :vtbl_host_txn.trans_at4	      :db_ind , 
+                    :vtbl_host_txn.trans_at5	      :db_ind , 
+                    :vtbl_host_txn.seq_num 
+                from 
+                    HT_TBL_HOST_TXN
+               where
+                    plat_key = :vtbl_host_txn.plat_key;
+        HtMemcpy(pht_tbl_host_txn, &vtbl_host_txn, sizeof(vtbl_host_txn));
+        return sqlca.sqlcode;
+
+        case DBS_CURSOR1:
+            EXEC SQL DECLARE HT_TBL_HOST_TXN_CUR1 CURSOR FOR
+                select 
+                    inter_brh_code,
+                    sett_date	    ,
+                    trans_date	  , 
+                    trans_time	  , 
+                    flag_result	  ,
+                    ext_mcht_no	  ,
+                    order_no	    , 
+                    plat_key	    , 
+                    batch_no	    , 
+                    bus_tp	      , 
+                    trans_tp	    , 
+                    trans_state	  ,
+                    revsal_flag	  ,
+                    key_revsal	  , 
+                    cancel_flag	  ,
+                    key_cancel	  , 
+                    acct_type	    ,
+                    pan	          ,
+                    ccy	          ,
+                    trans_at	    ,
+                    trans_at2	    ,
+                    trans_at3	    ,
+                    trans_at4	    ,
+                    trans_at5	    ,
+                    seq_num      
+            from
+                    HT_TBL_HOST_TXN
+            where
+                inter_brh_code = :vtbl_host_txn.inter_brh_code
+            and trans_state = :vtbl_host_txn.trans_state 
+            and flag_result = :vtbl_host_txn.flag_result
+            and sett_date <= :vtbl_host_txn.sett_date
+            and revsal_flag = :vtbl_host_txn.revsal_flag 
+            and cancel_flag = :vtbl_host_txn.cancel_flag 
+            and seq_num between :ptnBeginOffset and  :ptnEndOffset ;
+            return sqlca.sqlcode;
+        
+        case DBS_OPEN1:
+            EXEC SQL OPEN HT_TBL_HOST_TXN_CUR1;
+             return sqlca.sqlcode;
+             
+        case DBS_FETCH1:
+            EXEC SQL FETCH HT_TBL_HOST_TXN_CUR1
+            into
+                    :vtbl_host_txn.inter_brh_code   :db_ind , 
+                    :vtbl_host_txn.sett_date	      :db_ind  , 
+                    :vtbl_host_txn.trans_date	     :db_ind ,  
+                    :vtbl_host_txn.trans_time	    :db_ind  ,  
+                    :vtbl_host_txn.flag_result	    :db_ind  , 
+                    :vtbl_host_txn.ext_mcht_no	    :db_ind  , 
+                    :vtbl_host_txn.order_no	    :db_ind    ,  
+                    :vtbl_host_txn.plat_key	    :db_ind    ,  
+                    :vtbl_host_txn.batch_no	    :db_ind    ,  
+                    :vtbl_host_txn.bus_tp	         :db_ind ,  
+                    :vtbl_host_txn.trans_tp	      :db_ind  ,  
+                    :vtbl_host_txn.trans_state	 :db_ind     , 
+                    :vtbl_host_txn.revsal_flag	 :db_ind     , 
+                    :vtbl_host_txn.key_revsal	 :db_ind     ,  
+                    :vtbl_host_txn.cancel_flag	 :db_ind     , 
+                    :vtbl_host_txn.key_cancel	   :db_ind   ,  
+                    :vtbl_host_txn.acct_type	 :db_ind       , 
+                    :vtbl_host_txn.pan	         :db_ind     , 
+                    :vtbl_host_txn.ccy	         :db_ind     , 
+                    :vtbl_host_txn.trans_at	      :db_ind  , 
+                    :vtbl_host_txn.trans_at2	  :db_ind      , 
+                    :vtbl_host_txn.trans_at3	    :db_ind    , 
+                    :vtbl_host_txn.trans_at4	   :db_ind     , 
+                    :vtbl_host_txn.trans_at5	   :db_ind     , 
+                    :vtbl_host_txn.seq_num          :db_ind  ;
+            HtMemcpy(pht_tbl_host_txn, &vtbl_host_txn, sizeof(vtbl_host_txn));
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE1:
+            EXEC SQL CLOSE HT_TBL_HOST_TXN_CUR1;
+            return sqlca.sqlcode;
+
+        case DBS_UPDATE:
+            EXEC SQL 
+                UPDATE HT_TBL_HOST_TXN
+                set flag_result=:vtbl_host_txn.flag_result
+                where
+                      plat_key =rtrim(:vtbl_host_txn.plat_key);
+            return sqlca.sqlcode;
+            
+        default:
+            return NO_SWITCH;
+    }
+}
+
+

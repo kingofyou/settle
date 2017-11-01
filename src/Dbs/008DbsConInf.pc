@@ -1,0 +1,137 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsConInf.pc                                                */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+#include "DbsDef.h"
+#include "batch.h"
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+EXEC SQL BEGIN DECLARE SECTION;
+    struct TBL_con_inf_Def
+    {
+        int    usage_key;
+        int    txn_num;
+        int    con_index;
+        int    fld_index;
+        int    begin_byte_pos;
+        int    format_chg_need;
+        char        val[36];
+    } ltTblConInf;
+
+    struct
+    {
+        int    txn_num;
+        char        val[36];
+    } ipcTblConInf;
+
+EXEC SQL END DECLARE SECTION;
+
+int DbsCONINF( int vnOprType, struct TBL_con_inf_Def *vtpTblConInf)
+{
+    HtMemcpy(
+        &ltTblConInf,
+        vtpTblConInf,
+        sizeof(ltTblConInf));
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE
+            cur_con_inf_1
+        CURSOR FOR SELECT
+            usage_key,
+            txn_num,
+            con_index,
+            fld_index,
+            begin_byte_pos,
+            format_chg_need,
+            val
+        FROM
+            ht_tbl_con_inf
+        WHERE
+            usage_key = :ltTblConInf.usage_key
+        ORDER BY
+            usage_key,
+            con_index,
+            fld_index
+        ;
+        return LUsrErrNull;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            cur_con_inf_1;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            cur_con_inf_1
+        INTO
+            :ltTblConInf.usage_key,
+            :ltTblConInf.txn_num,
+            :ltTblConInf.con_index,
+            :ltTblConInf.fld_index,
+            :ltTblConInf.begin_byte_pos,
+            :ltTblConInf.format_chg_need,
+            :ltTblConInf.val;
+        HtMemcpy(
+            vtpTblConInf,
+            &ltTblConInf,
+            sizeof(*vtpTblConInf));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            cur_con_inf_1;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+} /* end of DbsCONINF */
+
+int LoadRuleInf(IPCRuleInf *pipcRuleInf)
+{
+    EXEC SQL DECLARE cur_con_inf_2 CURSOR FOR
+             SELECT  txn_num, RTrim(val)
+             FROM    ht_tbl_con_inf
+             WHERE   usage_key = 7
+             ORDER BY usage_key, txn_num, fld_index
+             ;
+
+    EXEC SQL OPEN cur_con_inf_2;
+    pipcRuleInf->nCount = 0;
+    while(1)
+    {
+        memset(&ipcTblConInf, 0, sizeof(IPCTblConInf));
+        EXEC SQL FETCH
+            cur_con_inf_2
+        INTO
+            :ipcTblConInf.txn_num,
+            :ipcTblConInf.val;
+        if (sqlca.sqlcode != 0 && sqlca.sqlcode != DBS_NOTFOUND)
+        {
+            HtLog(gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "fetch error: %d", sqlca.sqlcode);
+            EXEC SQL CLOSE cur_con_inf_2;
+            return -1;
+        }
+        else if(sqlca.sqlcode == DBS_NOTFOUND)
+        {
+            break;
+        }
+
+        HtMemcpy(&pipcRuleInf->ipcTblConInf[pipcRuleInf->nCount], &ipcTblConInf, sizeof(IPCTblConInf));
+        pipcRuleInf->nCount++;
+    }
+    EXEC SQL CLOSE cur_con_inf_2;
+    return 0;
+}
+

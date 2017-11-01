@@ -1,0 +1,161 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+extern  char    gLogFile[32];
+
+
+int DbsTbldateInf(int vnOprType, tbl_date_inf_def *vtdbtbl_date_inf)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char    inter_brh_code[10 + 1];
+            char    stoday[8 + 1];
+	    char    stwodaysago[8 + 1];
+            char    syesterday[8 + 1];
+            char    snextdate[8 + 1];
+            char    sstartdate[8 + 1];
+            char    sforestartdate[8 + 1];
+	    int     status;
+        } ptdbtbl_date_inf;
+        char ptsToday[8 + 1];
+        char ptsInterBrhCode[10 + 1];
+        int date_tmp;
+	int count;
+    EXEC SQL END DECLARE SECTION;
+    count = 0;
+    memset(&ptdbtbl_date_inf, 0, sizeof(ptdbtbl_date_inf));
+
+    HtMemcpy(&ptdbtbl_date_inf, vtdbtbl_date_inf, sizeof(ptdbtbl_date_inf));
+
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_dat_inf_cur CURSOR FOR
+                        SELECT max(cast(sToday as integer)), inter_brh_code 
+                        FROM ht_tbl_date_inf group by inter_brh_code;
+        return LUsrErrNull;
+    case DBS_OPEN:
+        EXEC SQL OPEN tbl_dat_inf_cur;
+        return sqlca.sqlcode;
+    case DBS_FETCH:
+        date_tmp = 0;
+        memset(ptsToday, 0, sizeof(ptsToday));
+        memset(ptsInterBrhCode, 0, sizeof(ptsInterBrhCode));
+        EXEC SQL FETCH
+            tbl_dat_inf_cur
+        INTO
+            :date_tmp,
+            :ptsInterBrhCode
+        ;
+
+        sprintf(vtdbtbl_date_inf->stoday, "%d", date_tmp);
+        HtMemcpy(vtdbtbl_date_inf->inter_brh_code, ptsInterBrhCode, sizeof(vtdbtbl_date_inf->inter_brh_code));
+
+        return sqlca.sqlcode;
+
+    case DBS_SELECT:
+        EXEC SQL SELECT
+            stoday,stwodaysago,syesterday,snextdate,sstartdate,sforestartdate,status
+        INTO
+            :ptdbtbl_date_inf.stoday,
+	    :ptdbtbl_date_inf.stwodaysago,
+            :ptdbtbl_date_inf.syesterday,
+            :ptdbtbl_date_inf.snextdate,
+            :ptdbtbl_date_inf.sstartdate,
+            :ptdbtbl_date_inf.sforestartdate,
+	    :ptdbtbl_date_inf.status 
+        FROM
+            ht_TBL_DATE_INF
+        WHERE
+            inter_brh_code = :ptdbtbl_date_inf.inter_brh_code ;
+
+	memcpy(vtdbtbl_date_inf->stoday, ptdbtbl_date_inf.stoday, 8);
+	memcpy(vtdbtbl_date_inf->stwodaysago, ptdbtbl_date_inf.stwodaysago, 8);
+        memcpy(vtdbtbl_date_inf->syesterday, ptdbtbl_date_inf.syesterday, 8);
+        memcpy(vtdbtbl_date_inf->snextdate, ptdbtbl_date_inf.snextdate, 8);
+        memcpy(vtdbtbl_date_inf->sstartdate, ptdbtbl_date_inf.sstartdate, 8);
+	memcpy(vtdbtbl_date_inf->sforestartdate, ptdbtbl_date_inf.sforestartdate, 8);
+        vtdbtbl_date_inf->status = ptdbtbl_date_inf.status;
+
+        return sqlca.sqlcode;
+
+    case DBS_SELECT1:
+        EXEC SQL SELECT
+            min(STODAY)
+        INTO
+            :ptdbtbl_date_inf.stoday
+        FROM
+            ht_TBL_DATE_INF
+        WHERE
+            INTER_BRH_CODE not in ('0000', 'CCCC')
+            ;
+
+        HtMemcpy(vtdbtbl_date_inf->stoday, ptdbtbl_date_inf.stoday , 8);
+
+        return sqlca.sqlcode;
+
+    case DBS_SELECT2:
+        EXEC SQL SELECT SFORESTARTDATE
+        INTO
+            :ptdbtbl_date_inf.sforestartdate
+        FROM ht_TBL_DATE_INF 
+        WHERE INTER_BRH_CODE= :ptdbtbl_date_inf.inter_brh_code ;
+        HtMemcpy(vtdbtbl_date_inf, &ptdbtbl_date_inf, sizeof(ptdbtbl_date_inf));
+        return sqlca.sqlcode;
+
+    case DBS_SELECT3:
+        EXEC SQL SELECT COUNT(*)
+        INTO
+            :count
+        FROM ht_TBL_DATE_INF 
+        WHERE STATUS=3 AND
+	      stoday=:ptdbtbl_date_inf.stoday;
+        HtMemcpy(vtdbtbl_date_inf, &ptdbtbl_date_inf, sizeof(ptdbtbl_date_inf));
+        return count;
+
+    case DBS_UPDATE:
+        EXEC SQL UPDATE
+            ht_tbl_date_inf
+        SET
+            sToday = :ptdbtbl_date_inf.stoday,
+	    stwodaysago = :ptdbtbl_date_inf.stwodaysago,
+            sYesterday = :ptdbtbl_date_inf.syesterday,
+            sNextdate  = :ptdbtbl_date_inf.snextdate,
+            sStartdate = :ptdbtbl_date_inf.sstartdate,
+            sForestartdate = :ptdbtbl_date_inf.sforestartdate,
+	    status = :ptdbtbl_date_inf.status
+        WHERE
+            inter_brh_code= :ptdbtbl_date_inf.inter_brh_code;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE1:
+        EXEC SQL UPDATE
+            ht_tbl_date_inf
+        SET
+        sforestartdate = :ptdbtbl_date_inf.sforestartdate
+        WHERE inter_brh_code= :ptdbtbl_date_inf.inter_brh_code;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE2:
+        EXEC SQL UPDATE
+            ht_tbl_date_inf
+        SET
+        status = :ptdbtbl_date_inf.status
+        WHERE inter_brh_code= :ptdbtbl_date_inf.inter_brh_code;
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE tbl_dat_inf_cur;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    }
+}

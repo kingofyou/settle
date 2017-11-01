@@ -1,0 +1,65 @@
+###############################################################################
+#  Copyright 2012, Shanghai Huateng Software Systems Co., Ltd.
+#  All right reserved.
+#
+#  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+#  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+#  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+#  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+#  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+#
+#  脚 本 名: pget
+#  功    能: 向进程发送信号
+#  编程人员: 
+#  开发时间: 
+#  备    注: 
+###############################################################################
+
+do_getpid()
+{
+    ps -e |sed -e '/'$1'/!d
+        s/^ *\([0-9]*\).* \(.*\)$/\1 \2/
+        /'$1'/!d
+        s/ .*$//'
+}
+
+pid=`do_getpid $2`
+
+echo $2
+
+if test "${pid}" = ""
+then    
+        echo "no such processes"
+        exit 0
+fi
+
+   case "$1" in 
+   '-k')
+        echo $pid   
+        kill -9 $pid
+   esac
+
+   case "$1" in 
+   '-t')
+        echo $pid   
+        kill -15 $pid
+   esac
+
+   case "$1" in 
+   '-u1')
+        echo $pid   
+        kill -30 $pid
+   esac
+
+   case "$1" in 
+   '-l')   
+        echo show $pid
+        ;;
+   esac
+ 
+   case "$1" in 
+   '-u')
+        echo $pid   
+        kill -16 $pid
+   esac
+

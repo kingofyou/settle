@@ -1,0 +1,102 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+extern  char    gLogFile[32];
+
+EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char type[4+1];
+            char bank_code[20+1];
+            char acct_type[20+1];
+            char acct_no[40+1];
+            char acct_name[60+1];
+            double account_balance;
+            double available_balance;
+            double blocked_balance;
+            double controlled_balance;
+            char rec_crt_ts[14+1];
+            char rec_upd_ts[14+1];      
+        }ptdbtbl_acct_inf;
+        char SettBankNO[10+1];
+        double TotalAmt;
+        int  TotalNum;
+        short db_ind;
+    EXEC SQL END DECLARE SECTION;
+
+/* 结算明细表操作 */
+int DbsTblAcctInf(int vnOprType, ht_tbl_acct_inf_def* vtdbtbl_acct_inf)
+{
+  
+    int nReturnCode=0;
+    
+    memset(SettBankNO, 0, sizeof(SettBankNO)-1);
+    memset(&ptdbtbl_acct_inf, 0x00, sizeof(ptdbtbl_acct_inf)-1);
+    memcpy(&ptdbtbl_acct_inf, vtdbtbl_acct_inf, sizeof(ptdbtbl_acct_inf)-1);
+
+    switch(vnOprType)
+    {
+        case DBS_SELECT:
+            EXEC SQL
+            SELECT
+                type,
+                bank_code,
+                acct_type,
+                acct_no,
+                acct_name,
+                account_balance,
+                available_balance,
+                blocked_balance,
+                controlled_balance,
+                rec_crt_ts,
+                rec_upd_ts            
+            INTO
+                :ptdbtbl_acct_inf.type                  :db_ind,
+                :ptdbtbl_acct_inf.bank_code             :db_ind,
+                :ptdbtbl_acct_inf.acct_type             :db_ind,
+                :ptdbtbl_acct_inf.acct_no               :db_ind,
+                :ptdbtbl_acct_inf.acct_name             :db_ind,
+                :ptdbtbl_acct_inf.account_balance       :db_ind,
+                :ptdbtbl_acct_inf.available_balance     :db_ind,
+                :ptdbtbl_acct_inf.blocked_balance       :db_ind,
+                :ptdbtbl_acct_inf.controlled_balance    :db_ind,
+                :ptdbtbl_acct_inf.rec_crt_ts            :db_ind,
+                :ptdbtbl_acct_inf.rec_upd_ts            :db_ind
+            FROM
+                ht_tbl_acct_inf
+            WHERE
+                type = :ptdbtbl_acct_inf.type;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+            memcpy(vtdbtbl_acct_inf, &ptdbtbl_acct_inf, sizeof(ptdbtbl_acct_inf)-1);
+            return 0;            
+        case DBS_UPDATE:
+            EXEC SQL
+                UPDATE
+                    ht_tbl_acct_inf
+                SET
+                    account_balance = :ptdbtbl_acct_inf.account_balance,
+                    available_balance = :ptdbtbl_acct_inf.available_balance,
+                    blocked_balance = :ptdbtbl_acct_inf.blocked_balance,
+                    controlled_balance = :ptdbtbl_acct_inf.controlled_balance
+                WHERE
+                    type = :ptdbtbl_acct_inf.type;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode=sqlca.sqlcode;
+                return nReturnCode;
+            }
+            EXEC SQL COMMIT;
+            return 0;
+        default:
+            return NO_SWITCH;
+    } /* end of switch */
+}

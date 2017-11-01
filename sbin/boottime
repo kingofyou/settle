@@ -1,0 +1,30 @@
+#!/bin/sh
+. $HOME/.bash_profile
+
+#kill server
+stopbatch >/dev/null  2>&1 
+sleep 1
+#系统当前日期
+CURDATE=`date +%Y%m%d`
+echo "系统当前日期: ${CURDATE}"
+
+#取日期参数
+if [ $# -gt 0 ]
+then
+    DATE=$1
+else
+    DATE=`date +%Y%m%d`
+fi
+echo "参数日期: ${DATE}"
+
+#启动服务前，清理当前日期及以后的tbl_child_inf、tbl_proc_ctl、tbl_mission_inf表数据
+echo "start delete database................."
+sqlplus $DBUSER/$DBPWD@$DBNAME << EOF
+update ht_tbl_child_inf t set t.child_status='0' where t.settlmt_date=${DATE} and t.child_status='2';
+commit;
+EOF
+echo "finish delete database................."
+#
+runbatch
+
+sleep 2

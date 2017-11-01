@@ -1,0 +1,26 @@
+# set environment variables for NCUP
+# database
+# for ORACLE
+ORACLE_BASE=/home/oracle/app;export ORACLE_BASE
+ORACLE_HOME=$ORACLE_BASE;export ORACLE_HOME
+ORACLE_SID=orcl;export ORACLE_SID
+NLS_LANG=AMERICAN_AMERICA.ZHS16GBK;export NLS_LANG
+NLS_DATE_FORMAT=YYYYMMDDHH24MISS;export NLS_DATE_FORMAT
+LD_LIBRARY_PATH=$ORACLE_HOME;export LD_LIBRARY_PATH
+LIBPATH=$LIBPATH:$ORACLE_HOME/:$ORACLE_HOME/sdk;export LIBPATH
+export TNS_ADMIN=/home/oracle/app
+
+
+DBNAME=sett;export DBNAME
+DBUSER=settlement;export DBUSER
+DBPWD=settlement;export DBPWD
+
+#¹«¹²¿â
+DBPUBNAME=multicard_pdb;export DBPUBNAME
+DBPUBUSER=multicard;export DBPUBUSER
+DBPUBPWD=multicard;export DBPUBPWD
+
+# path
+PATH=$PATH:$HOME/bin:$ORACLE_HOME:$ORACLE_HOME/sdk/
+export PATH
+

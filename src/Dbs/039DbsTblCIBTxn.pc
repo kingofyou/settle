@@ -1,0 +1,310 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_cib_txn_tab
+{
+    char inter_brh_code	[10+1];
+    char sett_date	[8+1];
+    char epaytime	[14+1];
+    char orderdate   [8+1];
+    char transdate   [8+1];
+    char plat_key	[48+1];
+    char batch_no	[2+1];
+    char flag_result	[1+1];
+    char sno         [16+1];
+    char mrchno      [8+1]; 
+    char order_no    [32+1];
+    char orderamt    [12+1];
+    char feeamt      [12+1];
+    char bus_tp	[8+1];
+    char trans_tp	[4+1];
+    char trans_state	[1+1];
+    char acct_type	[2+1];
+    char pan	[20+1];
+    char ccy  [3+1];
+    int seq_num;
+}vtbl_cib_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblCIBTxn(int nvtOpr, struct ht_tbl_cib_txn_tab * pht_tbl_cib_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_cib_txn, 0, sizeof(vtbl_cib_txn));
+    HtMemcpy(&vtbl_cib_txn, pht_tbl_cib_txn, sizeof(vtbl_cib_txn));
+    switch(nvtOpr)
+    {
+        case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select TBL_CIB_TXN_SEQ_ID_%s.nextval from dual", vtbl_cib_txn.inter_brh_code);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from TBL_CIB_TXN_SEQ_ID_%s error, sqlcode=[%d].", vtbl_cib_txn.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+        
+            EXEC SQL 
+                insert into ht_tbl_cib_txn(
+                    inter_brh_code	     ,
+                    sett_date	         ,
+                    epaytime	         ,                   
+                    orderdate            ,
+                    transdate            ,                    
+                    plat_key	         ,
+                    batch_no	         ,
+                    flag_result          ,
+                    sno                  ,
+                    mrchno               ,                    
+                    order_no             ,
+                    orderamt             ,
+                    feeamt               ,
+                    bus_tp	             ,
+                    trans_tp	         ,
+                    trans_state	         ,
+                    acct_type	         ,
+                    pan           	     ,
+                    ccy                  ,
+                    seq_num
+                ) values (
+                    :vtbl_cib_txn.inter_brh_code   :db_ind,
+                    :vtbl_cib_txn.sett_date	       :db_ind,
+                    :vtbl_cib_txn.epaytime	        :db_ind ,                     
+                    :vtbl_cib_txn.orderdate         :db_ind  , 
+                    :vtbl_cib_txn.transdate         :db_ind  ,
+                    :vtbl_cib_txn.plat_key	           :db_ind, 
+                    :vtbl_cib_txn.batch_no	          :db_ind , 
+                    :vtbl_cib_txn.flag_result       :db_ind, 
+                    :vtbl_cib_txn.sno               :db_ind , 
+                    :vtbl_cib_txn.mrchno              :db_ind , 
+                    :vtbl_cib_txn.order_no           :db_ind  ,
+                    :vtbl_cib_txn.orderamt          :db_ind ,
+                    :vtbl_cib_txn.feeamt            :db_ind  ,
+                    :vtbl_cib_txn.bus_tp	         :db_ind , 
+                    :vtbl_cib_txn.trans_tp	       :db_ind  ,
+                    :vtbl_cib_txn.trans_state	   :db_ind , 
+                    :vtbl_cib_txn.acct_type	        :db_ind ,
+                    :vtbl_cib_txn.pan             :db_ind ,
+                    :vtbl_cib_txn.ccy             :db_ind , 
+                    :nTotalNum :db_ind
+                );
+            return sqlca.sqlcode;
+
+        case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    NVL(max(seq_num),0)
+                into
+                    :vtbl_cib_txn.seq_num
+                from 
+                    ht_tbl_cib_txn
+               where
+               inter_brh_code = :vtbl_cib_txn.inter_brh_code
+               and  flag_result = :vtbl_cib_txn.flag_result
+               and  sett_date <= :vtbl_cib_txn.sett_date;
+        HtMemcpy(pht_tbl_cib_txn, &vtbl_cib_txn, sizeof(vtbl_cib_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT3:
+            EXEC SQL
+                select 
+                    inter_brh_code	     ,
+                    sett_date	         ,
+                    epaytime	         ,
+                    orderdate            ,
+                    transdate            ,
+                    plat_key	         ,
+                    batch_no	         ,
+                    flag_result          ,
+                    sno                  ,
+                    mrchno               ,
+                    order_no             ,
+                    orderamt             ,
+                    feeamt               ,
+                    bus_tp	             ,
+                    trans_tp	         ,
+                    trans_state	         ,
+                    acct_type	         ,
+                    pan           	     ,
+                    ccy                  ,
+                    seq_num      
+                into
+                    :vtbl_cib_txn.inter_brh_code   :db_ind,
+                    :vtbl_cib_txn.sett_date	       :db_ind,
+                    :vtbl_cib_txn.epaytime	        :db_ind , 
+                    :vtbl_cib_txn.orderdate         :db_ind  , 
+                    :vtbl_cib_txn.transdate         :db_ind  ,
+                    :vtbl_cib_txn.plat_key	           :db_ind, 
+                    :vtbl_cib_txn.batch_no	          :db_ind , 
+                    :vtbl_cib_txn.flag_result       :db_ind, 
+                    :vtbl_cib_txn.sno               :db_ind , 
+                    :vtbl_cib_txn.mrchno              :db_ind , 
+                    :vtbl_cib_txn.order_no           :db_ind  ,
+                    :vtbl_cib_txn.orderamt          :db_ind ,
+                    :vtbl_cib_txn.feeamt            :db_ind  ,
+                    :vtbl_cib_txn.bus_tp	         :db_ind , 
+                    :vtbl_cib_txn.trans_tp	       :db_ind  ,
+                    :vtbl_cib_txn.trans_state	   :db_ind , 
+                    :vtbl_cib_txn.acct_type	        :db_ind ,
+                    :vtbl_cib_txn.pan             :db_ind ,
+                    :vtbl_cib_txn.ccy             :db_ind , 
+                    :nTotalNum :db_ind
+                from 
+                    ht_tbl_cib_txn
+               where
+                    inter_brh_code = :vtbl_cib_txn.inter_brh_code
+                  and plat_key = rtrim(:vtbl_cib_txn.plat_key)  
+                  and trans_tp = :vtbl_cib_txn.trans_tp
+                  and flag_result= :vtbl_cib_txn.flag_result; 
+        HtMemcpy(pht_tbl_cib_txn, &vtbl_cib_txn, sizeof(vtbl_cib_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT4:
+            EXEC SQL
+                select 
+                    inter_brh_code	     ,
+                    sett_date	         ,
+                    epaytime	         ,
+                    orderdate            ,
+                    transdate            ,
+                    plat_key	         ,
+                    batch_no	         ,
+                    flag_result          ,
+                    sno                  ,
+                    mrchno               ,
+                    order_no             ,
+                    orderamt             ,
+                    feeamt               ,
+                    bus_tp	             ,
+                    trans_tp	         ,
+                    trans_state	         ,
+                    acct_type	         ,
+                    pan           	     ,
+                    ccy                  ,
+                    seq_num      
+                into
+                    :vtbl_cib_txn.inter_brh_code   :db_ind,
+                    :vtbl_cib_txn.sett_date	       :db_ind,
+                    :vtbl_cib_txn.epaytime	        :db_ind , 
+                    :vtbl_cib_txn.orderdate         :db_ind  , 
+                    :vtbl_cib_txn.transdate         :db_ind  ,
+                    :vtbl_cib_txn.plat_key	           :db_ind, 
+                    :vtbl_cib_txn.batch_no	          :db_ind , 
+                    :vtbl_cib_txn.flag_result       :db_ind, 
+                    :vtbl_cib_txn.sno               :db_ind , 
+                    :vtbl_cib_txn.mrchno              :db_ind , 
+                    :vtbl_cib_txn.order_no           :db_ind  ,
+                    :vtbl_cib_txn.orderamt          :db_ind ,
+                    :vtbl_cib_txn.feeamt            :db_ind  ,
+                    :vtbl_cib_txn.bus_tp	         :db_ind , 
+                    :vtbl_cib_txn.trans_tp	       :db_ind  ,
+                    :vtbl_cib_txn.trans_state	   :db_ind , 
+                    :vtbl_cib_txn.acct_type	        :db_ind ,
+                    :vtbl_cib_txn.pan             :db_ind ,
+                    :vtbl_cib_txn.ccy             :db_ind , 
+                    :nTotalNum :db_ind
+                from 
+                    ht_tbl_cib_txn
+               where
+                    inter_brh_code = :vtbl_cib_txn.inter_brh_code
+                  and plat_key = rtrim(:vtbl_cib_txn.plat_key)  
+                  and trans_tp = :vtbl_cib_txn.trans_tp
+                  and flag_result= :vtbl_cib_txn.flag_result; 
+        HtMemcpy(pht_tbl_cib_txn, &vtbl_cib_txn, sizeof(vtbl_cib_txn));
+        return sqlca.sqlcode;
+        
+        case DBS_UPDATE:
+            EXEC SQL
+                update ht_tbl_cib_txn
+                    set flag_result= :vtbl_cib_txn.flag_result 
+                where
+                    inter_brh_code = :vtbl_cib_txn.inter_brh_code
+                   and plat_key = :vtbl_cib_txn.plat_key 
+                   and trans_tp = :vtbl_cib_txn.trans_tp;
+        return sqlca.sqlcode;  
+
+         case DBS_CURSOR1:
+            EXEC SQL DECLARE ht_tbl_cib_txn_CUR1 CURSOR FOR
+                select 
+                    inter_brh_code	     ,
+                    sett_date	         ,
+                    epaytime	         ,
+                    orderdate            ,
+                    transdate            ,
+                    plat_key	         ,
+                    batch_no	         ,
+                    flag_result          ,
+                    sno                  ,
+                    mrchno               ,
+                    order_no             ,
+                    orderamt             ,
+                    feeamt               ,
+                    bus_tp	             ,
+                    trans_tp	         ,
+                    trans_state	         ,
+                    acct_type	         ,
+                    pan           	     ,
+                    ccy                  ,
+                    seq_num      
+            from
+                    ht_tbl_cib_txn
+            where
+            inter_brh_code = :vtbl_cib_txn.inter_brh_code
+            and flag_result = :vtbl_cib_txn.flag_result
+            and sett_date <= :vtbl_cib_txn.sett_date
+            and seq_num between :ptnBeginOffset and  :ptnEndOffset ;
+            return sqlca.sqlcode;
+        
+        case DBS_OPEN1:
+            EXEC SQL OPEN ht_tbl_cib_txn_CUR1;
+             return sqlca.sqlcode;
+             
+        case DBS_FETCH1:
+            EXEC SQL FETCH ht_tbl_cib_txn_CUR1
+            into
+                    :vtbl_cib_txn.inter_brh_code   :db_ind,
+                    :vtbl_cib_txn.sett_date	       :db_ind,
+                    :vtbl_cib_txn.epaytime	        :db_ind , 
+                    :vtbl_cib_txn.orderdate         :db_ind  , 
+                    :vtbl_cib_txn.transdate         :db_ind  ,
+                    :vtbl_cib_txn.plat_key	           :db_ind, 
+                    :vtbl_cib_txn.batch_no	          :db_ind , 
+                    :vtbl_cib_txn.flag_result       :db_ind, 
+                    :vtbl_cib_txn.sno               :db_ind , 
+                    :vtbl_cib_txn.mrchno              :db_ind , 
+                    :vtbl_cib_txn.order_no           :db_ind  ,
+                    :vtbl_cib_txn.orderamt          :db_ind ,
+                    :vtbl_cib_txn.feeamt            :db_ind  ,
+                    :vtbl_cib_txn.bus_tp	         :db_ind , 
+                    :vtbl_cib_txn.trans_tp	       :db_ind  ,
+                    :vtbl_cib_txn.trans_state	   :db_ind , 
+                    :vtbl_cib_txn.acct_type	        :db_ind ,
+                    :vtbl_cib_txn.pan             :db_ind ,
+                    :vtbl_cib_txn.ccy             :db_ind , 
+                    :nTotalNum :db_ind;
+            HtMemcpy(pht_tbl_cib_txn, &vtbl_cib_txn, sizeof(vtbl_cib_txn));
+            return sqlca.sqlcode;
+
+        case DBS_CLOSE1:
+            EXEC SQL CLOSE ht_tbl_cib_txn_CUR1;
+            return sqlca.sqlcode;
+                                   
+        default:
+            return NO_SWITCH;
+    }
+}

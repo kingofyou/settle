@@ -1,0 +1,2402 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsOprInf.pc                                            */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include "DbsDef.h"
+#include "batch.h"
+
+extern    char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_sett_flow_tab
+{
+char        inter_brh_code	   [10+1];
+char              sett_date	   [8+1] ;
+char            trans_date	   [8+1] ;
+char            trans_time	   [10+1];
+char            flag_result	   [1+1] ;
+char            acct_statu     [1+1] ;
+char                status     [1+1] ;
+char              order_no	   [32+1];
+char              plat_key	   [48+1];
+char              batch_no	   [2+1] ;
+char                bus_tp	   [8+1] ;
+char              trans_tp	   [4+1] ;
+char              acct_type	   [2+1] ;
+char            trans_state	   [1+1] ;
+char            revsal_flag	   [1+1] ;
+char            key_revsal	   [32+1];
+char            cancel_flag	   [1+1] ;
+char            key_cancel	   [32+1];
+char                    pan	   [20+1];
+char              acct_name    [60+1];
+char                    pan1	   [20+1];
+double        amt_fee;
+char          bank_order_no    [32+1];
+char                    ccy	   [3+1] ;
+double            trans_at	         ;
+double            trans_at2	         ;
+double            trans_at3	         ;
+double            trans_at4	         ;
+double            trans_at5	         ;
+char            ext_mcht_no	   [15+1];
+char              sett_tp1	   [3+1] ;
+char              mcht_no1	   [15+1];
+char              up_mcht_no1	   [15+1];
+char            mcht_role1	   [4+1] ;
+double    debt_at_mcht_no1	         ;
+double    cret_at_mcht_no1	         ;
+double    debt_fee_mcht_no1	         ;
+double    cret_fee_mcht_no1	         ;
+double   share_profit_mcht_no1	     ;
+double  mcht_rate1;
+char              sett_tp2	   [3+1] ;
+char              mcht_no2	   [15+1];
+char              up_mcht_no2	   [15+1];
+char            mcht_role2	   [4+1] ;
+double    debt_at_mcht_no2	         ;
+double    cret_at_mcht_no2	         ;
+double    debt_fee_mcht_no2	         ;
+double    cret_fee_mcht_no2	         ;
+double   share_profit_mcht_no2	     ;
+double  mcht_rate2;
+char              sett_tp3	   [3+1] ;
+char              mcht_no3	   [15+1];
+char              up_mcht_no3	   [15+1];
+char            mcht_role3	   [4+1] ;
+double    debt_at_mcht_no3	         ;
+double    cret_at_mcht_no3	         ;
+double    debt_fee_mcht_no3	         ;
+double    cret_fee_mcht_no3	         ;
+double  share_profit_mcht_no3	       ;
+double  mcht_rate3;
+char              sett_tp4	   [3+1] ;
+char              mcht_no4	   [15+1];
+char              up_mcht_no4	   [15+1];
+char            mcht_role4	   [4+1] ;
+double    debt_at_mcht_no4	         ;
+double    cret_at_mcht_no4	         ;
+double    debt_fee_mcht_no4	         ;
+double    cret_fee_mcht_no4	         ;
+double  share_profit_mcht_no4	       ;
+double  mcht_rate4;
+char              sett_tp5	   [3+1] ;
+char              mcht_no5	   [15+1];
+char              up_mcht_no5	   [15+1];
+char            mcht_role5	   [4+1] ;
+double    debt_at_mcht_no5	         ;
+double    cret_at_mcht_no5	         ;
+double    debt_fee_mcht_no5	         ;
+double    cret_fee_mcht_no5	         ;
+double  share_profit_mcht_no5	       ;
+double  mcht_rate5;
+char              sett_tp6	   [3+1] ;
+char              mcht_no6	   [15+1];
+char              up_mcht_no6	   [15+1];
+char            mcht_role6	   [4+1] ;
+double    debt_at_mcht_no6	         ;
+double    cret_at_mcht_no6	         ;
+double    debt_fee_mcht_no6	         ;
+double    cret_fee_mcht_no6	         ;
+double  share_profit_mcht_no6	       ;
+double  mcht_rate6;
+char              sett_tp7	   [3+1] ;
+char              mcht_no7	   [15+1];
+char              up_mcht_no7	   [15+1];
+char            mcht_role7	   [4+1] ;
+double    debt_at_mcht_no7	         ;
+double    cret_at_mcht_no7	         ;
+double    debt_fee_mcht_no7	         ;
+double    cret_fee_mcht_no7	         ;
+double  share_profit_mcht_no7	       ;
+double  mcht_rate7;
+char              sett_tp8	   [3+1] ;
+char              mcht_no8	   [15+1];
+char              up_mcht_no8	   [15+1];
+char            mcht_role8	   [4+1] ;
+double    debt_at_mcht_no8	         ;
+double    cret_at_mcht_no8	         ;
+double    debt_fee_mcht_no8	         ;
+double    cret_fee_mcht_no8	         ;
+double  share_profit_mcht_no8	       ;
+double  mcht_rate8;
+char              sett_tp9	   [3+1] ;
+char              mcht_no9	   [15+1];
+char              up_mcht_no9	   [15+1];
+char            mcht_role9	   [4+1] ;
+double    debt_at_mcht_no9	         ;
+double    cret_at_mcht_no9	         ;
+double    debt_fee_mcht_no9	         ;
+double    cret_fee_mcht_no9	         ;
+double  share_profit_mcht_no9	       ;
+double  mcht_rate9;
+double        debt_at_plat	         ;
+double        cret_at_plat	         ;
+double        debt_fee_plat	         ;
+double        cret_fee_plat	         ;
+double    share_profit_plat	         ;
+char    remark[512+1];
+int                 seq_num	         ;
+}vtbl_sett_flow;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+double share_profit_plat;
+double share_profit_mcht_no;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblSettFlow(int vnOprType, struct ht_tbl_sett_flow_tab *ptbl_sett_flow, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_sett_flow, 0x00, sizeof(vtbl_sett_flow));
+    memcpy(&vtbl_sett_flow, ptbl_sett_flow, sizeof(vtbl_sett_flow));
+
+    switch(vnOprType)
+    {
+    case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select TBL_SETT_FLOW_SEQ_ID_%s.nextval from dual", vtbl_sett_flow.inter_brh_code);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from TBL_SETT_FLOW_SEQ_ID_%s error, sqlcode=[%d].", vtbl_sett_flow.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+        
+            EXEC SQL 
+                insert into ht_tbl_sett_flow(
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name ,
+                    pan1	,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    up_mcht_no1 ,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    up_mcht_no2 ,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    up_mcht_no3 ,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    up_mcht_no4 ,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    up_mcht_no5 ,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    up_mcht_no6 ,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    up_mcht_no7 ,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    up_mcht_no8 ,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    up_mcht_no9 ,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num	
+               ) values (
+                    :vtbl_sett_flow.inter_brh_code	  ,
+                    :vtbl_sett_flow.sett_date	  ,
+                    :vtbl_sett_flow.trans_date	  ,
+                    :vtbl_sett_flow.trans_time	  ,
+                    :vtbl_sett_flow.flag_result	  ,
+                    :vtbl_sett_flow.acct_statu    ,
+                    :vtbl_sett_flow.status        ,
+                    :vtbl_sett_flow.order_no	  ,
+                    :vtbl_sett_flow.plat_key	  ,
+                    :vtbl_sett_flow.batch_no	  ,
+                    :vtbl_sett_flow.bus_tp	  ,
+                    :vtbl_sett_flow.trans_tp	  ,
+                    :vtbl_sett_flow.acct_type	  ,
+                    :vtbl_sett_flow.trans_state	  ,
+                    :vtbl_sett_flow.revsal_flag	  ,
+                    :vtbl_sett_flow.key_revsal	  ,
+                    :vtbl_sett_flow.cancel_flag	  ,
+                    :vtbl_sett_flow.key_cancel	  ,
+                    :vtbl_sett_flow.pan	  ,
+                    :vtbl_sett_flow.acct_name	  ,
+                    :vtbl_sett_flow.pan1	  ,
+                    :vtbl_sett_flow.ccy	  ,
+                    :vtbl_sett_flow.trans_at	    ,
+                    :vtbl_sett_flow.trans_at2	    ,
+                    :vtbl_sett_flow.trans_at3	    ,
+                    :vtbl_sett_flow.trans_at4	    ,
+                    :vtbl_sett_flow.trans_at5	    ,
+                    :vtbl_sett_flow.ext_mcht_no	  ,
+                    :vtbl_sett_flow.sett_tp1	  ,
+                    :vtbl_sett_flow.mcht_no1	  ,
+                    :vtbl_sett_flow.up_mcht_no1	  ,
+                    :vtbl_sett_flow.mcht_role1	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no1	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no1	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no1	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no1	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no1  ,
+                    :vtbl_sett_flow.mcht_rate1  ,
+                    :vtbl_sett_flow.sett_tp2	  ,
+                    :vtbl_sett_flow.mcht_no2	  ,
+                    :vtbl_sett_flow.up_mcht_no2	  ,
+                    :vtbl_sett_flow.mcht_role2	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no2	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no2	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no2	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no2	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no2  ,
+                    :vtbl_sett_flow.mcht_rate2  ,
+                    :vtbl_sett_flow.sett_tp3	  ,
+                    :vtbl_sett_flow.mcht_no3	  ,
+                    :vtbl_sett_flow.up_mcht_no3	  ,
+                    :vtbl_sett_flow.mcht_role3	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no3	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no3	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no3	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no3	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no3	  ,
+                    :vtbl_sett_flow.mcht_rate3  ,
+                    :vtbl_sett_flow.sett_tp4	  ,
+                    :vtbl_sett_flow.mcht_no4	  ,
+                    :vtbl_sett_flow.up_mcht_no4	  ,
+                    :vtbl_sett_flow.mcht_role4	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no4	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no4	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no4	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no4	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no4	  ,
+                    :vtbl_sett_flow.mcht_rate4  ,
+                    :vtbl_sett_flow.sett_tp5	  ,
+                    :vtbl_sett_flow.mcht_no5	  ,
+                    :vtbl_sett_flow.up_mcht_no5	  ,
+                    :vtbl_sett_flow.mcht_role5	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no5	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no5	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no5	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no5	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no5	  ,
+                    :vtbl_sett_flow.mcht_rate5  ,
+                    :vtbl_sett_flow.sett_tp6	  ,
+                    :vtbl_sett_flow.mcht_no6	  ,
+                    :vtbl_sett_flow.up_mcht_no6	  ,
+                    :vtbl_sett_flow.mcht_role6	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no6	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no6	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no6	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no6	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no6	  ,
+                    :vtbl_sett_flow.mcht_rate6  ,
+                    :vtbl_sett_flow.sett_tp7	  ,
+                    :vtbl_sett_flow.mcht_no7	  ,
+                    :vtbl_sett_flow.up_mcht_no7	  ,
+                    :vtbl_sett_flow.mcht_role7	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no7	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no7	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no7	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no7	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no7	  ,
+                    :vtbl_sett_flow.mcht_rate7  ,
+                    :vtbl_sett_flow.sett_tp8	  ,
+                    :vtbl_sett_flow.mcht_no8	  ,
+                    :vtbl_sett_flow.up_mcht_no8	  ,
+                    :vtbl_sett_flow.mcht_role8	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no8	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no8	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no8	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no8	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no8	  ,
+                    :vtbl_sett_flow.mcht_rate8  ,
+                    :vtbl_sett_flow.sett_tp9	  ,
+                    :vtbl_sett_flow.mcht_no9	  ,
+                    :vtbl_sett_flow.up_mcht_no9	  ,
+                    :vtbl_sett_flow.mcht_role9	  ,
+                    :vtbl_sett_flow.debt_at_mcht_no9	    ,
+                    :vtbl_sett_flow.cret_at_mcht_no9	    ,
+                    :vtbl_sett_flow.debt_fee_mcht_no9	    ,
+                    :vtbl_sett_flow.cret_fee_mcht_no9	    ,
+                    :vtbl_sett_flow.share_profit_mcht_no9	  ,
+                    :vtbl_sett_flow.mcht_rate9  ,
+                    :vtbl_sett_flow.debt_at_plat	    ,
+                    :vtbl_sett_flow.cret_at_plat	    ,
+                    :vtbl_sett_flow.debt_fee_plat	    ,
+                    :vtbl_sett_flow.cret_fee_plat	    ,
+                    :vtbl_sett_flow.share_profit_plat	    ,
+                    :vtbl_sett_flow.remark	    ,
+                    :nTotalNum 
+             );
+           return sqlca.sqlcode;
+
+    case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    NVL(max(seq_num),0)
+                into
+                    :vtbl_sett_flow.seq_num
+                from 
+                    ht_tbl_sett_flow
+               where
+               inter_brh_code = :vtbl_sett_flow.inter_brh_code
+               and sett_date = :vtbl_sett_flow.sett_date;
+        HtMemcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+           
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_sett_flow_cur CURSOR FOR
+            SELECT
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name ,
+                    pan1	,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num
+            FROM
+                ht_tbl_sett_flow
+            WHERE
+                inter_brh_code = :vtbl_sett_flow.inter_brh_code and
+                sett_date = :vtbl_sett_flow.sett_date and
+                seq_num between :ptnBeginOffset and  :ptnEndOffset ;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            tbl_sett_flow_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH tbl_sett_flow_cur
+        INTO
+                :vtbl_sett_flow.inter_brh_code	  :db_ind,
+                :vtbl_sett_flow.sett_date	  :db_ind,
+                :vtbl_sett_flow.trans_date	  :db_ind,
+                :vtbl_sett_flow.trans_time	  :db_ind,
+                :vtbl_sett_flow.flag_result	  :db_ind,
+                :vtbl_sett_flow.acct_statu    :db_ind,
+                :vtbl_sett_flow.status        :db_ind,
+                :vtbl_sett_flow.order_no	  :db_ind,
+                :vtbl_sett_flow.plat_key	  :db_ind,
+                :vtbl_sett_flow.batch_no	  :db_ind,
+                :vtbl_sett_flow.bus_tp	  :db_ind,
+                :vtbl_sett_flow.trans_tp	  :db_ind,
+                :vtbl_sett_flow.acct_type	  :db_ind,
+                :vtbl_sett_flow.trans_state	  :db_ind,
+                :vtbl_sett_flow.revsal_flag	  :db_ind,
+                :vtbl_sett_flow.key_revsal	  :db_ind,
+                :vtbl_sett_flow.cancel_flag	  :db_ind,
+                :vtbl_sett_flow.key_cancel	  :db_ind,
+                :vtbl_sett_flow.pan	  :db_ind,
+                :vtbl_sett_flow.acct_name	  :db_ind,
+                :vtbl_sett_flow.pan1	  :db_ind,
+                :vtbl_sett_flow.ccy	  :db_ind,
+                :vtbl_sett_flow.trans_at	    :db_ind,
+                :vtbl_sett_flow.trans_at2	    :db_ind,
+                :vtbl_sett_flow.trans_at3	    :db_ind,
+                :vtbl_sett_flow.trans_at4	    :db_ind,
+                :vtbl_sett_flow.trans_at5	    :db_ind,
+                :vtbl_sett_flow.ext_mcht_no	  :db_ind,
+                :vtbl_sett_flow.sett_tp1	  :db_ind,
+                :vtbl_sett_flow.mcht_no1	  :db_ind,
+                :vtbl_sett_flow.mcht_role1	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no1  :db_ind,
+                :vtbl_sett_flow.mcht_rate1  :db_ind,
+                :vtbl_sett_flow.sett_tp2	  :db_ind,
+                :vtbl_sett_flow.mcht_no2	  :db_ind,
+                :vtbl_sett_flow.mcht_role2	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no2  :db_ind,
+                :vtbl_sett_flow.mcht_rate2  :db_ind,
+                :vtbl_sett_flow.sett_tp3	  :db_ind,
+                :vtbl_sett_flow.mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_role3	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_rate3  :db_ind,
+                :vtbl_sett_flow.sett_tp4	  :db_ind,
+                :vtbl_sett_flow.mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_role4	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_rate4  :db_ind,
+                :vtbl_sett_flow.sett_tp5	  :db_ind,
+                :vtbl_sett_flow.mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_role5	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_rate5  :db_ind,
+                :vtbl_sett_flow.sett_tp6	  :db_ind,
+                :vtbl_sett_flow.mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_role6	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_rate6  :db_ind,
+                :vtbl_sett_flow.sett_tp7	  :db_ind,
+                :vtbl_sett_flow.mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_role7	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_rate7  :db_ind,
+                :vtbl_sett_flow.sett_tp8	  :db_ind,
+                :vtbl_sett_flow.mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_role8	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_rate8  :db_ind,
+                :vtbl_sett_flow.sett_tp9	  :db_ind,
+                :vtbl_sett_flow.mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_role9	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_rate9  :db_ind,
+                :vtbl_sett_flow.debt_at_plat	    :db_ind,
+                :vtbl_sett_flow.cret_at_plat	    :db_ind,
+                :vtbl_sett_flow.debt_fee_plat	    :db_ind,
+                :vtbl_sett_flow.cret_fee_plat	    :db_ind,
+                :vtbl_sett_flow.share_profit_plat	    :db_ind,
+                :vtbl_sett_flow.remark	    :db_ind,
+                :vtbl_sett_flow.seq_num	 :db_ind
+        ;
+        memcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            tbl_sett_flow_cur;
+        return sqlca.sqlcode;
+
+
+    case DBS_CURSOR1:
+        EXEC SQL DECLARE tbl_sett_flow_cur1 CURSOR FOR
+            SELECT
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name ,
+                    pan1	,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num
+            FROM
+                ht_tbl_sett_flow
+            WHERE
+                sett_date = :vtbl_sett_flow.sett_date
+             AND 
+                inter_brh_code in ('100003','100004','100005')
+            ORDER by trans_tp;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN1:
+        EXEC SQL OPEN
+            tbl_sett_flow_cur1;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH1:
+        EXEC SQL FETCH tbl_sett_flow_cur1
+        INTO
+                :vtbl_sett_flow.inter_brh_code	  :db_ind,
+                :vtbl_sett_flow.sett_date	  :db_ind,
+                :vtbl_sett_flow.trans_date	  :db_ind,
+                :vtbl_sett_flow.trans_time	  :db_ind,
+                :vtbl_sett_flow.flag_result	  :db_ind,
+                :vtbl_sett_flow.acct_statu    :db_ind,
+                :vtbl_sett_flow.status        :db_ind,
+                :vtbl_sett_flow.order_no	  :db_ind,
+                :vtbl_sett_flow.plat_key	  :db_ind,
+                :vtbl_sett_flow.batch_no	  :db_ind,
+                :vtbl_sett_flow.bus_tp	  :db_ind,
+                :vtbl_sett_flow.trans_tp	  :db_ind,
+                :vtbl_sett_flow.acct_type	  :db_ind,
+                :vtbl_sett_flow.trans_state	  :db_ind,
+                :vtbl_sett_flow.revsal_flag	  :db_ind,
+                :vtbl_sett_flow.key_revsal	  :db_ind,
+                :vtbl_sett_flow.cancel_flag	  :db_ind,
+                :vtbl_sett_flow.key_cancel	  :db_ind,
+                :vtbl_sett_flow.pan	  :db_ind,
+                :vtbl_sett_flow.acct_name	  :db_ind,
+                :vtbl_sett_flow.pan1	  :db_ind,
+                :vtbl_sett_flow.ccy	  :db_ind,
+                :vtbl_sett_flow.trans_at	    :db_ind,
+                :vtbl_sett_flow.trans_at2	    :db_ind,
+                :vtbl_sett_flow.trans_at3	    :db_ind,
+                :vtbl_sett_flow.trans_at4	    :db_ind,
+                :vtbl_sett_flow.trans_at5	    :db_ind,
+                :vtbl_sett_flow.ext_mcht_no	  :db_ind,
+                :vtbl_sett_flow.sett_tp1	  :db_ind,
+                :vtbl_sett_flow.mcht_no1	  :db_ind,
+                :vtbl_sett_flow.mcht_role1	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no1  :db_ind,
+                :vtbl_sett_flow.mcht_rate1  :db_ind,
+                :vtbl_sett_flow.sett_tp2	  :db_ind,
+                :vtbl_sett_flow.mcht_no2	  :db_ind,
+                :vtbl_sett_flow.mcht_role2	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no2  :db_ind,
+                :vtbl_sett_flow.mcht_rate2  :db_ind,
+                :vtbl_sett_flow.sett_tp3	  :db_ind,
+                :vtbl_sett_flow.mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_role3	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_rate3  :db_ind,
+                :vtbl_sett_flow.sett_tp4	  :db_ind,
+                :vtbl_sett_flow.mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_role4	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_rate4  :db_ind,
+                :vtbl_sett_flow.sett_tp5	  :db_ind,
+                :vtbl_sett_flow.mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_role5	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_rate5  :db_ind,
+                :vtbl_sett_flow.sett_tp6	  :db_ind,
+                :vtbl_sett_flow.mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_role6	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_rate6  :db_ind,
+                :vtbl_sett_flow.sett_tp7	  :db_ind,
+                :vtbl_sett_flow.mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_role7	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_rate7  :db_ind,
+                :vtbl_sett_flow.sett_tp8	  :db_ind,
+                :vtbl_sett_flow.mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_role8	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_rate8  :db_ind,
+                :vtbl_sett_flow.sett_tp9	  :db_ind,
+                :vtbl_sett_flow.mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_role9	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_rate9  :db_ind,
+                :vtbl_sett_flow.debt_at_plat	    :db_ind,
+                :vtbl_sett_flow.cret_at_plat	    :db_ind,
+                :vtbl_sett_flow.debt_fee_plat	    :db_ind,
+                :vtbl_sett_flow.cret_fee_plat	    :db_ind,
+                :vtbl_sett_flow.share_profit_plat	    :db_ind,
+                :vtbl_sett_flow.remark	    :db_ind,
+                :vtbl_sett_flow.seq_num	 :db_ind
+        ;
+        memcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE1:
+        EXEC SQL CLOSE
+            tbl_sett_flow_cur1;
+        return sqlca.sqlcode;        
+
+    case DBS_CURSOR2:
+        EXEC SQL DECLARE tbl_sett_flow_cur2 CURSOR FOR
+            SELECT
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name ,
+                    pan1	,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num
+            FROM
+                ht_tbl_sett_flow
+            WHERE
+                sett_date = :vtbl_sett_flow.sett_date
+            AND
+                trans_tp in ('1001','1101','5001','5101')
+            AND 
+                mcht_no1 = :vtbl_sett_flow.mcht_no1;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN2:
+        EXEC SQL OPEN
+            tbl_sett_flow_cur2;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH2:
+        EXEC SQL FETCH tbl_sett_flow_cur2
+        INTO
+                :vtbl_sett_flow.inter_brh_code	  :db_ind,
+                :vtbl_sett_flow.sett_date	  :db_ind,
+                :vtbl_sett_flow.trans_date	  :db_ind,
+                :vtbl_sett_flow.trans_time	  :db_ind,
+                :vtbl_sett_flow.flag_result	  :db_ind,
+                :vtbl_sett_flow.acct_statu    :db_ind,
+                :vtbl_sett_flow.status        :db_ind,
+                :vtbl_sett_flow.order_no	  :db_ind,
+                :vtbl_sett_flow.plat_key	  :db_ind,
+                :vtbl_sett_flow.batch_no	  :db_ind,
+                :vtbl_sett_flow.bus_tp	  :db_ind,
+                :vtbl_sett_flow.trans_tp	  :db_ind,
+                :vtbl_sett_flow.acct_type	  :db_ind,
+                :vtbl_sett_flow.trans_state	  :db_ind,
+                :vtbl_sett_flow.revsal_flag	  :db_ind,
+                :vtbl_sett_flow.key_revsal	  :db_ind,
+                :vtbl_sett_flow.cancel_flag	  :db_ind,
+                :vtbl_sett_flow.key_cancel	  :db_ind,
+                :vtbl_sett_flow.pan	  :db_ind,
+                :vtbl_sett_flow.acct_name	  :db_ind,
+                :vtbl_sett_flow.pan1	  :db_ind,
+                :vtbl_sett_flow.ccy	  :db_ind,
+                :vtbl_sett_flow.trans_at	    :db_ind,
+                :vtbl_sett_flow.trans_at2	    :db_ind,
+                :vtbl_sett_flow.trans_at3	    :db_ind,
+                :vtbl_sett_flow.trans_at4	    :db_ind,
+                :vtbl_sett_flow.trans_at5	    :db_ind,
+                :vtbl_sett_flow.ext_mcht_no	  :db_ind,
+                :vtbl_sett_flow.sett_tp1	  :db_ind,
+                :vtbl_sett_flow.mcht_no1	  :db_ind,
+                :vtbl_sett_flow.mcht_role1	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no1  :db_ind,
+                :vtbl_sett_flow.mcht_rate1  :db_ind,
+                :vtbl_sett_flow.sett_tp2	  :db_ind,
+                :vtbl_sett_flow.mcht_no2	  :db_ind,
+                :vtbl_sett_flow.mcht_role2	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no2  :db_ind,
+                :vtbl_sett_flow.mcht_rate2  :db_ind,
+                :vtbl_sett_flow.sett_tp3	  :db_ind,
+                :vtbl_sett_flow.mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_role3	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_rate3  :db_ind,
+                :vtbl_sett_flow.sett_tp4	  :db_ind,
+                :vtbl_sett_flow.mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_role4	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_rate4  :db_ind,
+                :vtbl_sett_flow.sett_tp5	  :db_ind,
+                :vtbl_sett_flow.mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_role5	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_rate5  :db_ind,
+                :vtbl_sett_flow.sett_tp6	  :db_ind,
+                :vtbl_sett_flow.mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_role6	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_rate6  :db_ind,
+                :vtbl_sett_flow.sett_tp7	  :db_ind,
+                :vtbl_sett_flow.mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_role7	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_rate7  :db_ind,
+                :vtbl_sett_flow.sett_tp8	  :db_ind,
+                :vtbl_sett_flow.mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_role8	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_rate8  :db_ind,
+                :vtbl_sett_flow.sett_tp9	  :db_ind,
+                :vtbl_sett_flow.mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_role9	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_rate9  :db_ind,
+                :vtbl_sett_flow.debt_at_plat	    :db_ind,
+                :vtbl_sett_flow.cret_at_plat	    :db_ind,
+                :vtbl_sett_flow.debt_fee_plat	    :db_ind,
+                :vtbl_sett_flow.cret_fee_plat	    :db_ind,
+                :vtbl_sett_flow.share_profit_plat	    :db_ind,
+                :vtbl_sett_flow.remark	    :db_ind,
+                :vtbl_sett_flow.seq_num	 :db_ind
+        ;
+        memcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE2:
+        EXEC SQL CLOSE
+            tbl_sett_flow_cur2;
+        return sqlca.sqlcode; 
+
+    case DBS_CURSOR3:
+        EXEC SQL DECLARE tbl_sett_flow_cur3 CURSOR FOR
+            SELECT
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu  ,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name,
+                    pan1	,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num
+            FROM
+                ht_tbl_sett_flow
+            WHERE
+                sett_date = :vtbl_sett_flow.sett_date
+            AND
+                trans_tp =  :vtbl_sett_flow.trans_tp
+            AND
+               flag_result = :vtbl_sett_flow.flag_result
+            AND 
+               acct_statu in ('N', '2')
+            AND 
+               status   = :vtbl_sett_flow.status;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN3:
+        EXEC SQL OPEN
+            tbl_sett_flow_cur3;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH3:
+        EXEC SQL FETCH tbl_sett_flow_cur3
+        INTO
+                :vtbl_sett_flow.inter_brh_code	  :db_ind,
+                :vtbl_sett_flow.sett_date	  :db_ind,
+                :vtbl_sett_flow.trans_date	  :db_ind,
+                :vtbl_sett_flow.trans_time	  :db_ind,
+                :vtbl_sett_flow.flag_result	  :db_ind,
+                :vtbl_sett_flow.acct_statu    :db_ind,
+                :vtbl_sett_flow.status        :db_ind,
+                :vtbl_sett_flow.order_no	  :db_ind,
+                :vtbl_sett_flow.plat_key	  :db_ind,
+                :vtbl_sett_flow.batch_no	  :db_ind,
+                :vtbl_sett_flow.bus_tp	  :db_ind,
+                :vtbl_sett_flow.trans_tp	  :db_ind,
+                :vtbl_sett_flow.acct_type	  :db_ind,
+                :vtbl_sett_flow.trans_state	  :db_ind,
+                :vtbl_sett_flow.revsal_flag	  :db_ind,
+                :vtbl_sett_flow.key_revsal	  :db_ind,
+                :vtbl_sett_flow.cancel_flag	  :db_ind,
+                :vtbl_sett_flow.key_cancel	  :db_ind,
+                :vtbl_sett_flow.pan	  :db_ind,
+                :vtbl_sett_flow.acct_name  :db_ind,
+                :vtbl_sett_flow.pan1	  :db_ind,
+                :vtbl_sett_flow.ccy	  :db_ind,
+                :vtbl_sett_flow.trans_at	    :db_ind,
+                :vtbl_sett_flow.trans_at2	    :db_ind,
+                :vtbl_sett_flow.trans_at3	    :db_ind,
+                :vtbl_sett_flow.trans_at4	    :db_ind,
+                :vtbl_sett_flow.trans_at5	    :db_ind,
+                :vtbl_sett_flow.ext_mcht_no	  :db_ind,
+                :vtbl_sett_flow.sett_tp1	  :db_ind,
+                :vtbl_sett_flow.mcht_no1	  :db_ind,
+                :vtbl_sett_flow.mcht_role1	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no1  :db_ind,
+                :vtbl_sett_flow.mcht_rate1  :db_ind,
+                :vtbl_sett_flow.sett_tp2	  :db_ind,
+                :vtbl_sett_flow.mcht_no2	  :db_ind,
+                :vtbl_sett_flow.mcht_role2	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no2  :db_ind,
+                :vtbl_sett_flow.mcht_rate2  :db_ind,
+                :vtbl_sett_flow.sett_tp3	  :db_ind,
+                :vtbl_sett_flow.mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_role3	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_rate3  :db_ind,
+                :vtbl_sett_flow.sett_tp4	  :db_ind,
+                :vtbl_sett_flow.mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_role4	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_rate4  :db_ind,
+                :vtbl_sett_flow.sett_tp5	  :db_ind,
+                :vtbl_sett_flow.mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_role5	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_rate5  :db_ind,
+                :vtbl_sett_flow.sett_tp6	  :db_ind,
+                :vtbl_sett_flow.mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_role6	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_rate6  :db_ind,
+                :vtbl_sett_flow.sett_tp7	  :db_ind,
+                :vtbl_sett_flow.mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_role7	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_rate7  :db_ind,
+                :vtbl_sett_flow.sett_tp8	  :db_ind,
+                :vtbl_sett_flow.mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_role8	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_rate8  :db_ind,
+                :vtbl_sett_flow.sett_tp9	  :db_ind,
+                :vtbl_sett_flow.mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_role9	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_rate9  :db_ind,
+                :vtbl_sett_flow.debt_at_plat	    :db_ind,
+                :vtbl_sett_flow.cret_at_plat	    :db_ind,
+                :vtbl_sett_flow.debt_fee_plat	    :db_ind,
+                :vtbl_sett_flow.cret_fee_plat	    :db_ind,
+                :vtbl_sett_flow.share_profit_plat	    :db_ind,
+                :vtbl_sett_flow.remark	    :db_ind,
+                :vtbl_sett_flow.seq_num	 :db_ind
+        ;
+        memcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE3:
+        EXEC SQL CLOSE
+            tbl_sett_flow_cur3;
+        return sqlca.sqlcode;        
+
+    case DBS_UPDATE:
+        EXEC SQL
+        UPDATE
+            ht_tbl_sett_flow
+        SET
+            acct_statu      = :vtbl_sett_flow.acct_statu,
+            bank_order_no   = :vtbl_sett_flow.bank_order_no
+        WHERE
+            plat_key    = :vtbl_sett_flow.plat_key;
+        if(sqlca.sqlcode)
+        {
+            nReturnCode = sqlca.sqlcode;
+            return nReturnCode;
+        }
+        EXEC SQL COMMIT;
+        return 0;       
+
+    case DBS_UPDATE1:
+        EXEC SQL
+        UPDATE
+            ht_tbl_sett_flow
+        SET
+            status       = :vtbl_sett_flow.status,
+            amt_fee      = :vtbl_sett_flow.amt_fee
+        WHERE
+            bank_order_no   = :vtbl_sett_flow.bank_order_no;
+        if(sqlca.sqlcode)
+        {
+            nReturnCode = sqlca.sqlcode;
+            return nReturnCode;
+        }
+        EXEC SQL COMMIT;
+        return 0;       
+    case DBS_UPDATE2:
+        EXEC SQL
+        UPDATE
+            ht_tbl_sett_flow
+        SET
+             acct_statu      = :vtbl_sett_flow.acct_statu,
+             status       = :vtbl_sett_flow.status
+        WHERE
+            plat_key   = :vtbl_sett_flow.plat_key;
+        if(sqlca.sqlcode)
+        {
+            nReturnCode = sqlca.sqlcode;
+            return nReturnCode;
+        }
+        EXEC SQL COMMIT;
+        return 0;
+    case DBS_UPDATE3:
+        EXEC SQL
+        UPDATE
+            ht_tbl_sett_flow
+        SET
+             acct_statu      = :vtbl_sett_flow.acct_statu,
+             status       = :vtbl_sett_flow.status
+        WHERE
+            bank_order_no   = :vtbl_sett_flow.bank_order_no;
+        if(sqlca.sqlcode)
+        {
+            nReturnCode = sqlca.sqlcode;
+            return nReturnCode;
+        }
+        EXEC SQL COMMIT;
+        return 0;              
+    case DBS_CURSOR4:
+        EXEC SQL DECLARE tbl_sett_flow_cur4 CURSOR FOR
+            SELECT
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu  ,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name,
+                    pan1	,
+                    amt_fee,
+                    bank_order_no,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num
+            FROM
+                ht_tbl_sett_flow
+            WHERE
+                sett_date = :vtbl_sett_flow.sett_date
+            AND
+                trans_tp =  :vtbl_sett_flow.trans_tp
+            AND
+               flag_result = :vtbl_sett_flow.flag_result
+            AND 
+               status=  :vtbl_sett_flow.status;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN4:
+        EXEC SQL OPEN
+            tbl_sett_flow_cur4;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH4:
+        EXEC SQL FETCH tbl_sett_flow_cur4
+        INTO
+                :vtbl_sett_flow.inter_brh_code	  :db_ind,
+                :vtbl_sett_flow.sett_date	  :db_ind,
+                :vtbl_sett_flow.trans_date	  :db_ind,
+                :vtbl_sett_flow.trans_time	  :db_ind,
+                :vtbl_sett_flow.flag_result	  :db_ind,
+                :vtbl_sett_flow.acct_statu    :db_ind,
+                :vtbl_sett_flow.status        :db_ind,
+                :vtbl_sett_flow.order_no	  :db_ind,
+                :vtbl_sett_flow.plat_key	  :db_ind,
+                :vtbl_sett_flow.batch_no	  :db_ind,
+                :vtbl_sett_flow.bus_tp	  :db_ind,
+                :vtbl_sett_flow.trans_tp	  :db_ind,
+                :vtbl_sett_flow.acct_type	  :db_ind,
+                :vtbl_sett_flow.trans_state	  :db_ind,
+                :vtbl_sett_flow.revsal_flag	  :db_ind,
+                :vtbl_sett_flow.key_revsal	  :db_ind,
+                :vtbl_sett_flow.cancel_flag	  :db_ind,
+                :vtbl_sett_flow.key_cancel	  :db_ind,
+                :vtbl_sett_flow.pan	  :db_ind,
+                :vtbl_sett_flow.acct_name  :db_ind,
+                :vtbl_sett_flow.pan1	  :db_ind,
+                :vtbl_sett_flow.amt_fee  :db_ind,
+                :vtbl_sett_flow.bank_order_no  :db_ind,               
+                :vtbl_sett_flow.ccy	  :db_ind,
+                :vtbl_sett_flow.trans_at	    :db_ind,
+                :vtbl_sett_flow.trans_at2	    :db_ind,
+                :vtbl_sett_flow.trans_at3	    :db_ind,
+                :vtbl_sett_flow.trans_at4	    :db_ind,
+                :vtbl_sett_flow.trans_at5	    :db_ind,
+                :vtbl_sett_flow.ext_mcht_no	  :db_ind,
+                :vtbl_sett_flow.sett_tp1	  :db_ind,
+                :vtbl_sett_flow.mcht_no1	  :db_ind,
+                :vtbl_sett_flow.mcht_role1	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no1  :db_ind,
+                :vtbl_sett_flow.mcht_rate1  :db_ind,
+                :vtbl_sett_flow.sett_tp2	  :db_ind,
+                :vtbl_sett_flow.mcht_no2	  :db_ind,
+                :vtbl_sett_flow.mcht_role2	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no2  :db_ind,
+                :vtbl_sett_flow.mcht_rate2  :db_ind,
+                :vtbl_sett_flow.sett_tp3	  :db_ind,
+                :vtbl_sett_flow.mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_role3	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_rate3  :db_ind,
+                :vtbl_sett_flow.sett_tp4	  :db_ind,
+                :vtbl_sett_flow.mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_role4	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_rate4  :db_ind,
+                :vtbl_sett_flow.sett_tp5	  :db_ind,
+                :vtbl_sett_flow.mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_role5	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_rate5  :db_ind,
+                :vtbl_sett_flow.sett_tp6	  :db_ind,
+                :vtbl_sett_flow.mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_role6	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_rate6  :db_ind,
+                :vtbl_sett_flow.sett_tp7	  :db_ind,
+                :vtbl_sett_flow.mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_role7	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_rate7  :db_ind,
+                :vtbl_sett_flow.sett_tp8	  :db_ind,
+                :vtbl_sett_flow.mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_role8	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_rate8  :db_ind,
+                :vtbl_sett_flow.sett_tp9	  :db_ind,
+                :vtbl_sett_flow.mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_role9	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_rate9  :db_ind,
+                :vtbl_sett_flow.debt_at_plat	    :db_ind,
+                :vtbl_sett_flow.cret_at_plat	    :db_ind,
+                :vtbl_sett_flow.debt_fee_plat	    :db_ind,
+                :vtbl_sett_flow.cret_fee_plat	    :db_ind,
+                :vtbl_sett_flow.share_profit_plat	    :db_ind,
+                :vtbl_sett_flow.remark	    :db_ind,
+                :vtbl_sett_flow.seq_num	  :db_ind
+        ;
+        memcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE4:
+        EXEC SQL CLOSE
+            tbl_sett_flow_cur4;
+        return sqlca.sqlcode;         
+
+    case DBS_CURSOR5:
+        EXEC SQL DECLARE tbl_sett_flow_cur5 CURSOR FOR
+            SELECT
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu  ,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name,
+                    pan1	,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num
+            FROM
+                ht_tbl_sett_flow
+            WHERE
+                sett_date = :vtbl_sett_flow.sett_date
+            AND
+                trans_tp =  :vtbl_sett_flow.trans_tp
+            AND
+               flag_result = :vtbl_sett_flow.flag_result
+            AND 
+               acct_statu  = :vtbl_sett_flow.acct_statu;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN5:
+        EXEC SQL OPEN
+            tbl_sett_flow_cur5;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH5:
+        EXEC SQL FETCH tbl_sett_flow_cur5
+        INTO
+                :vtbl_sett_flow.inter_brh_code	  :db_ind,
+                :vtbl_sett_flow.sett_date	  :db_ind,
+                :vtbl_sett_flow.trans_date	  :db_ind,
+                :vtbl_sett_flow.trans_time	  :db_ind,
+                :vtbl_sett_flow.flag_result	  :db_ind,
+                :vtbl_sett_flow.acct_statu    :db_ind,
+                :vtbl_sett_flow.status        :db_ind,
+                :vtbl_sett_flow.order_no	  :db_ind,
+                :vtbl_sett_flow.plat_key	  :db_ind,
+                :vtbl_sett_flow.batch_no	  :db_ind,
+                :vtbl_sett_flow.bus_tp	  :db_ind,
+                :vtbl_sett_flow.trans_tp	  :db_ind,
+                :vtbl_sett_flow.acct_type	  :db_ind,
+                :vtbl_sett_flow.trans_state	  :db_ind,
+                :vtbl_sett_flow.revsal_flag	  :db_ind,
+                :vtbl_sett_flow.key_revsal	  :db_ind,
+                :vtbl_sett_flow.cancel_flag	  :db_ind,
+                :vtbl_sett_flow.key_cancel	  :db_ind,
+                :vtbl_sett_flow.pan	  :db_ind,
+                :vtbl_sett_flow.acct_name  :db_ind,
+                :vtbl_sett_flow.pan1	  :db_ind,
+                :vtbl_sett_flow.ccy	  :db_ind,
+                :vtbl_sett_flow.trans_at	    :db_ind,
+                :vtbl_sett_flow.trans_at2	    :db_ind,
+                :vtbl_sett_flow.trans_at3	    :db_ind,
+                :vtbl_sett_flow.trans_at4	    :db_ind,
+                :vtbl_sett_flow.trans_at5	    :db_ind,
+                :vtbl_sett_flow.ext_mcht_no	  :db_ind,
+                :vtbl_sett_flow.sett_tp1	  :db_ind,
+                :vtbl_sett_flow.mcht_no1	  :db_ind,
+                :vtbl_sett_flow.mcht_role1	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no1  :db_ind,
+                :vtbl_sett_flow.mcht_rate1  :db_ind,
+                :vtbl_sett_flow.sett_tp2	  :db_ind,
+                :vtbl_sett_flow.mcht_no2	  :db_ind,
+                :vtbl_sett_flow.mcht_role2	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no2  :db_ind,
+                :vtbl_sett_flow.mcht_rate2  :db_ind,
+                :vtbl_sett_flow.sett_tp3	  :db_ind,
+                :vtbl_sett_flow.mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_role3	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_rate3  :db_ind,
+                :vtbl_sett_flow.sett_tp4	  :db_ind,
+                :vtbl_sett_flow.mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_role4	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_rate4  :db_ind,
+                :vtbl_sett_flow.sett_tp5	  :db_ind,
+                :vtbl_sett_flow.mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_role5	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_rate5  :db_ind,
+                :vtbl_sett_flow.sett_tp6	  :db_ind,
+                :vtbl_sett_flow.mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_role6	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_rate6  :db_ind,
+                :vtbl_sett_flow.sett_tp7	  :db_ind,
+                :vtbl_sett_flow.mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_role7	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_rate7  :db_ind,
+                :vtbl_sett_flow.sett_tp8	  :db_ind,
+                :vtbl_sett_flow.mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_role8	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_rate8  :db_ind,
+                :vtbl_sett_flow.sett_tp9	  :db_ind,
+                :vtbl_sett_flow.mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_role9	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_rate9  :db_ind,
+                :vtbl_sett_flow.debt_at_plat	    :db_ind,
+                :vtbl_sett_flow.cret_at_plat	    :db_ind,
+                :vtbl_sett_flow.debt_fee_plat	    :db_ind,
+                :vtbl_sett_flow.cret_fee_plat	    :db_ind,
+                :vtbl_sett_flow.share_profit_plat	    :db_ind,
+                :vtbl_sett_flow.remark	    :db_ind,
+                :vtbl_sett_flow.seq_num	 :db_ind
+        ;
+        memcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE5:
+        EXEC SQL CLOSE
+            tbl_sett_flow_cur5;
+        return sqlca.sqlcode;        
+
+
+    case DBS_CURSOR6:
+        EXEC SQL DECLARE tbl_sett_flow_cur6 CURSOR FOR
+            SELECT
+                    inter_brh_code	,
+                    sett_date	,
+                    trans_date	,
+                    trans_time	,
+                    flag_result	,
+                    acct_statu,
+                    status,
+                    order_no	,
+                    plat_key	,
+                    batch_no	,
+                    bus_tp	,
+                    trans_tp	,
+                    acct_type	,
+                    trans_state	,
+                    revsal_flag	,
+                    key_revsal	,
+                    cancel_flag	,
+                    key_cancel	,
+                    pan	,
+                    acct_name ,
+                    pan1	,
+                    ccy	,
+                    trans_at	  ,
+                    trans_at2	  ,
+                    trans_at3	  ,
+                    trans_at4	  ,
+                    trans_at5	  ,
+                    ext_mcht_no	,
+                    sett_tp1	,
+                    mcht_no1	,
+                    mcht_role1	,
+                    debt_at_mcht_no1	  ,
+                    cret_at_mcht_no1	  ,
+                    debt_fee_mcht_no1	  ,
+                    cret_fee_mcht_no1	  ,
+                    share_profit_mcht_no1,
+                    mcht_rate1,
+                    sett_tp2	,
+                    mcht_no2	,
+                    mcht_role2	,
+                    debt_at_mcht_no2	  ,
+                    cret_at_mcht_no2	  ,
+                    debt_fee_mcht_no2	  ,
+                    cret_fee_mcht_no2	  ,
+                    share_profit_mcht_no2,
+                    mcht_rate2,
+                    sett_tp3	,
+                    mcht_no3	,
+                    mcht_role3	,
+                    debt_at_mcht_no3	  ,
+                    cret_at_mcht_no3	  ,
+                    debt_fee_mcht_no3	  ,
+                    cret_fee_mcht_no3	  ,
+                    share_profit_mcht_no3	,
+                    mcht_rate3,
+                    sett_tp4	,
+                    mcht_no4	,
+                    mcht_role4	,
+                    debt_at_mcht_no4	  ,
+                    cret_at_mcht_no4	  ,
+                    debt_fee_mcht_no4	  ,
+                    cret_fee_mcht_no4	  ,
+                    share_profit_mcht_no4	,
+                    mcht_rate4,
+                    sett_tp5	,
+                    mcht_no5	,
+                    mcht_role5	,
+                    debt_at_mcht_no5	  ,
+                    cret_at_mcht_no5	  ,
+                    debt_fee_mcht_no5	  ,
+                    cret_fee_mcht_no5	  ,
+                    share_profit_mcht_no5	,
+                    mcht_rate5,
+                    sett_tp6	,
+                    mcht_no6	,
+                    mcht_role6	,
+                    debt_at_mcht_no6	  ,
+                    cret_at_mcht_no6	  ,
+                    debt_fee_mcht_no6	  ,
+                    cret_fee_mcht_no6	  ,
+                    share_profit_mcht_no6	,
+                    mcht_rate6,
+                    sett_tp7	,
+                    mcht_no7	,
+                    mcht_role7	,
+                    debt_at_mcht_no7	  ,
+                    cret_at_mcht_no7	  ,
+                    debt_fee_mcht_no7	  ,
+                    cret_fee_mcht_no7	  ,
+                    share_profit_mcht_no7	,
+                    mcht_rate7,
+                    sett_tp8	,
+                    mcht_no8	,
+                    mcht_role8	,
+                    debt_at_mcht_no8	  ,
+                    cret_at_mcht_no8	  ,
+                    debt_fee_mcht_no8	  ,
+                    cret_fee_mcht_no8	  ,
+                    share_profit_mcht_no8	,
+                    mcht_rate8,
+                    sett_tp9	,
+                    mcht_no9	,
+                    mcht_role9	,
+                    debt_at_mcht_no9	  ,
+                    cret_at_mcht_no9	  ,
+                    debt_fee_mcht_no9	  ,
+                    cret_fee_mcht_no9	  ,
+                    share_profit_mcht_no9	,
+                    mcht_rate9,
+                    debt_at_plat	  ,
+                    cret_at_plat	  ,
+                    debt_fee_plat	  ,
+                    cret_fee_plat	  ,
+                    share_profit_plat	  ,
+                    remark,
+                    seq_num
+            FROM
+                ht_tbl_sett_flow
+            WHERE
+                sett_date = :vtbl_sett_flow.sett_date and
+                trans_tp !='1301' and
+                (
+		    inter_brh_code in ('100003', '100004', '100005', '100006') or 
+		    (
+		        inter_brh_code in ('100001', '100002') and
+		        trans_tp='1201'
+		    )
+		)
+            ORDER by trans_tp;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN6:
+        EXEC SQL OPEN
+            tbl_sett_flow_cur6;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH6:
+        EXEC SQL FETCH tbl_sett_flow_cur6
+        INTO
+                :vtbl_sett_flow.inter_brh_code	  :db_ind,
+                :vtbl_sett_flow.sett_date	  :db_ind,
+                :vtbl_sett_flow.trans_date	  :db_ind,
+                :vtbl_sett_flow.trans_time	  :db_ind,
+                :vtbl_sett_flow.flag_result	  :db_ind,
+                :vtbl_sett_flow.acct_statu    :db_ind,
+                :vtbl_sett_flow.status        :db_ind,
+                :vtbl_sett_flow.order_no	  :db_ind,
+                :vtbl_sett_flow.plat_key	  :db_ind,
+                :vtbl_sett_flow.batch_no	  :db_ind,
+                :vtbl_sett_flow.bus_tp	  :db_ind,
+                :vtbl_sett_flow.trans_tp	  :db_ind,
+                :vtbl_sett_flow.acct_type	  :db_ind,
+                :vtbl_sett_flow.trans_state	  :db_ind,
+                :vtbl_sett_flow.revsal_flag	  :db_ind,
+                :vtbl_sett_flow.key_revsal	  :db_ind,
+                :vtbl_sett_flow.cancel_flag	  :db_ind,
+                :vtbl_sett_flow.key_cancel	  :db_ind,
+                :vtbl_sett_flow.pan	  :db_ind,
+                :vtbl_sett_flow.acct_name	  :db_ind,
+                :vtbl_sett_flow.pan1	  :db_ind,
+                :vtbl_sett_flow.ccy	  :db_ind,
+                :vtbl_sett_flow.trans_at	    :db_ind,
+                :vtbl_sett_flow.trans_at2	    :db_ind,
+                :vtbl_sett_flow.trans_at3	    :db_ind,
+                :vtbl_sett_flow.trans_at4	    :db_ind,
+                :vtbl_sett_flow.trans_at5	    :db_ind,
+                :vtbl_sett_flow.ext_mcht_no	  :db_ind,
+                :vtbl_sett_flow.sett_tp1	  :db_ind,
+                :vtbl_sett_flow.mcht_no1	  :db_ind,
+                :vtbl_sett_flow.mcht_role1	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no1	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no1  :db_ind,
+                :vtbl_sett_flow.mcht_rate1  :db_ind,
+                :vtbl_sett_flow.sett_tp2	  :db_ind,
+                :vtbl_sett_flow.mcht_no2	  :db_ind,
+                :vtbl_sett_flow.mcht_role2	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no2	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no2  :db_ind,
+                :vtbl_sett_flow.mcht_rate2  :db_ind,
+                :vtbl_sett_flow.sett_tp3	  :db_ind,
+                :vtbl_sett_flow.mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_role3	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no3	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no3	  :db_ind,
+                :vtbl_sett_flow.mcht_rate3  :db_ind,
+                :vtbl_sett_flow.sett_tp4	  :db_ind,
+                :vtbl_sett_flow.mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_role4	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no4	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no4	  :db_ind,
+                :vtbl_sett_flow.mcht_rate4  :db_ind,
+                :vtbl_sett_flow.sett_tp5	  :db_ind,
+                :vtbl_sett_flow.mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_role5	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no5	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no5	  :db_ind,
+                :vtbl_sett_flow.mcht_rate5  :db_ind,
+                :vtbl_sett_flow.sett_tp6	  :db_ind,
+                :vtbl_sett_flow.mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_role6	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no6	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no6	  :db_ind,
+                :vtbl_sett_flow.mcht_rate6  :db_ind,
+                :vtbl_sett_flow.sett_tp7	  :db_ind,
+                :vtbl_sett_flow.mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_role7	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no7	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no7	  :db_ind,
+                :vtbl_sett_flow.mcht_rate7  :db_ind,
+                :vtbl_sett_flow.sett_tp8	  :db_ind,
+                :vtbl_sett_flow.mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_role8	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no8	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no8	  :db_ind,
+                :vtbl_sett_flow.mcht_rate8  :db_ind,
+                :vtbl_sett_flow.sett_tp9	  :db_ind,
+                :vtbl_sett_flow.mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_role9	  :db_ind,
+                :vtbl_sett_flow.debt_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_at_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.debt_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.cret_fee_mcht_no9	    :db_ind,
+                :vtbl_sett_flow.share_profit_mcht_no9	  :db_ind,
+                :vtbl_sett_flow.mcht_rate9  :db_ind,
+                :vtbl_sett_flow.debt_at_plat	    :db_ind,
+                :vtbl_sett_flow.cret_at_plat	    :db_ind,
+                :vtbl_sett_flow.debt_fee_plat	    :db_ind,
+                :vtbl_sett_flow.cret_fee_plat	    :db_ind,
+                :vtbl_sett_flow.share_profit_plat	    :db_ind,
+                :vtbl_sett_flow.remark	    :db_ind,
+                :vtbl_sett_flow.seq_num	 :db_ind
+        ;
+        memcpy(ptbl_sett_flow, &vtbl_sett_flow, sizeof(vtbl_sett_flow));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE6:
+        EXEC SQL CLOSE
+            tbl_sett_flow_cur6;
+        return sqlca.sqlcode; 
+                   
+    case DBS_SELECT:
+            share_profit_plat = 0;
+            EXEC SQL
+                select 
+                    NVL(sum(SHARE_PROFIT_PLAT),0)
+                into
+                    :share_profit_plat
+                from 
+                    ht_tbl_sett_flow
+               where
+               trans_tp = :vtbl_sett_flow.trans_tp
+               and sett_date = :vtbl_sett_flow.sett_date;
+        return share_profit_plat;
+        return sqlca.sqlcode;
+
+    case DBS_SELECT2:
+            share_profit_mcht_no = 0;
+            EXEC SQL
+                select 
+                    NVL(sum(SHARE_PROFIT_MCHT_NO2),0) + NVL(sum(SHARE_PROFIT_MCHT_NO3),0) + 
+		    NVL(sum(SHARE_PROFIT_MCHT_NO4),0) + NVL(sum(SHARE_PROFIT_MCHT_NO5),0) 
+                into
+                    :share_profit_mcht_no
+                from 
+                    ht_tbl_sett_flow
+               where
+               trans_tp = :vtbl_sett_flow.trans_tp
+               and sett_date = :vtbl_sett_flow.sett_date;
+        return share_profit_mcht_no;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+}

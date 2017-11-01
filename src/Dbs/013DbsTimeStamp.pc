@@ -1,0 +1,83 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+int DbsSysibmDummy1(int nvtOpr, char *vtdate, char *vtendate, int *intervldate)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char ptdate[8 + 1];
+        char ptendate[8 + 1];
+        int pintervldate;
+    EXEC SQL END DECLARE SECTION;
+    memset(ptdate, 0, sizeof(ptdate));
+    memset(ptendate, 0, sizeof(ptendate));
+    HtMemcpy(ptdate, vtdate, 8);
+    HtMemcpy(ptendate, vtendate, 8);
+    switch(nvtOpr)
+    {
+    case DBS_SELECT:
+        pintervldate = 0;
+        /*   EXEC SQL SELECT days( substr(:ptdate,1,4) concat'-' concat substr(:ptdate,5,2) concat'-' concat substr(:ptdate,7,2)) - days( substr(:ptendate,1,4) concat'-' concat substr(:ptendate,5,2) concat'-' concat substr(:ptendate,7,2))
+        	into :pintervldate from sysibm.sysdummy1 with ur;*/
+        *intervldate = pintervldate;
+        return sqlca.sqlcode;
+    default:
+        return NO_SWITCH;
+    }
+}
+
+
+int DbsTimeStamp(int nvtOpr, char *vtdate, char *vtweek, char *vthour, char *vtminu)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char ptdate_t[8 + 1];
+        char ptweek[1 + 1];
+        char pthour[2 + 1];
+        char ptminu[2 + 1];
+    EXEC SQL END DECLARE SECTION;
+    memset(ptdate_t, 0, sizeof(ptdate_t));
+    memset(ptweek, 0, sizeof(ptweek));
+    memset(pthour, 0, sizeof(pthour));
+    memset(ptminu, 0, sizeof(ptminu));
+    switch(nvtOpr)
+    {
+    case DBS_SELECT:
+        EXEC SQL select to_char(sysdate,'yyyymmdd'),to_char(sysdate,'d'),to_char(sysdate,'hh24'),to_char(sysdate,'mi')
+        INTO
+                    :ptdate_t,
+                    :ptweek,
+                    :pthour,
+                    :ptminu
+                from dual;
+        HtMemcpy(vtdate, ptdate_t, 8);
+        HtMemcpy(vtweek, ptweek, 1);
+        HtMemcpy(vthour, pthour, 2);
+        HtMemcpy(vtminu, ptminu, 2);
+        return sqlca.sqlcode;
+    case DBS_SELECT1:
+        EXEC SQL select to_char(sysdate,'hh24')
+        INTO
+                    :pthour
+                from dual;
+        HtMemcpy(vthour, pthour, 2);
+        return sqlca.sqlcode;
+
+    case DBS_SELECT2:
+        EXEC SQL select to_char(sysdate,'yyyymmdd')
+        INTO
+                    :ptdate_t
+                from dual;
+        HtMemcpy(vtdate, ptdate_t, 8);
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    }
+}
+

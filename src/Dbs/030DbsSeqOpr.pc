@@ -1,0 +1,71 @@
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+EXEC SQL BEGIN DECLARE SECTION;
+    static int nTmp;
+EXEC SQL END DECLARE SECTION;
+
+int nReturnCode;
+
+int OpenCursorSequence(char *sSqlBuf)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char sqlstr[1024];
+    EXEC SQL END DECLARE SECTION;
+
+    memset(sqlstr, 0, sizeof(sqlstr));
+    memcpy(sqlstr, sSqlBuf, 1024);
+
+    EXEC SQL PREPARE select_txn from :sqlstr;
+    if(sqlca.sqlcode != 0)
+    {
+        return sqlca.sqlcode;
+    }
+
+    EXEC SQL DECLARE txn_cur_seq CURSOR FOR select_txn;
+
+    EXEC SQL OPEN txn_cur_seq;
+    if(sqlca.sqlcode != 0)
+    {
+        return sqlca.sqlcode;
+    }
+    return 0;
+}
+
+int FetchCursorSequence(int *nTotalNum)
+{
+    EXEC SQL FETCH txn_cur_seq INTO :nTmp;
+
+    if (sqlca.sqlcode == DBS_NOTFOUND)
+        return sqlca.sqlcode;
+
+    if ((sqlca.sqlcode != 0) && (sqlca.sqlcode != DBS_FETCHNULL))
+    {
+        return sqlca.sqlcode;
+    }
+    *nTotalNum = nTmp;
+    return 0;
+}
+
+int CloseCursorSequence()
+{
+    EXEC SQL CLOSE txn_cur_seq;
+    return sqlca.sqlcode;
+}
+
+int    SelectSequence(char *sSqlBuf, int *nTotalNum)
+{
+    nReturnCode = OpenCursorSequence(sSqlBuf);
+    if( nReturnCode )
+    {
+        return nReturnCode;
+    }
+    nReturnCode = FetchCursorSequence(nTotalNum);
+    if( nReturnCode )
+    {
+        return nReturnCode;
+    }
+    nReturnCode = CloseCursorSequence();
+    return nReturnCode;
+}

@@ -1,0 +1,129 @@
+/*
+ *  Copyright 2006, Shanghai Huateng Software Systems Co., Ltd.
+ *  All right reserved.
+ *
+ *  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+ *  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+ *  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+ *  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+ *  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+ *
+ *  $Id: 194DbsBthComConfig.sqc,v 1.1.1.1 2016/11/04 07:50:31 ctedev Exp $
+ *
+ *  功能: 交易配置表：HT_TBL_COM_CONFIG 操作函数
+ *
+ *  Edit History:
+ *
+ *    2016/09/04 -phb
+ */
+
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+    struct HT_TBL_COM_CONFIG
+    {
+        char     key1[10 + 1];
+        char     key2[10 + 1];
+        char     key3[10 + 1];
+        char     value1[60 + 1];
+        char     value2[60 + 1];
+        char     value3[60 + 1];
+        char     remark1[120 + 1];
+        char     remark2[120 + 1];
+        char     remark3[120 + 1];
+    } htbthComConfig;
+    short ind;
+EXEC SQL END DECLARE SECTION;
+
+int DbsbthComConfig (int nOpr, ht_tbl_com_config_def *ptcomconfig)
+{
+    memset(&htbthComConfig, 0x00, sizeof(htbthComConfig));
+    memcpy ((char *)&htbthComConfig, (char *)ptcomconfig, sizeof (htbthComConfig));
+    switch (nOpr)
+    {
+    case DBS_SELECT:
+        EXEC SQL SELECT
+        KEY1,
+        KEY2,
+        KEY3,
+        VALUE1,
+        VALUE2,
+        VALUE3,
+        remark1,
+        remark2,
+        remark3        
+        into
+        :htbthComConfig.key1      :ind,
+        :htbthComConfig.key2      :ind,
+        :htbthComConfig.key3      :ind,
+        :htbthComConfig.value1    :ind,
+        :htbthComConfig.value2    :ind,
+        :htbthComConfig.value3    :ind,
+        :htbthComConfig.remark1   :ind,
+        :htbthComConfig.remark2   :ind,
+        :htbthComConfig.remark3   :ind
+        from HT_TBL_COM_CONFIG
+        where 
+        key1 = :htbthComConfig.key1 and
+        key2 = :htbthComConfig.key2 and
+        key3 = :htbthComConfig.key3;       
+        if (sqlca.sqlcode)
+            return sqlca.sqlcode;
+        memcpy ((char *)ptcomconfig, (char *)&htbthComConfig, sizeof (htbthComConfig));
+        break;
+    case DBS_UPDATE :
+        EXEC SQL update HT_TBL_COM_CONFIG set
+            value1 = :htbthComConfig.value1,
+            value2 = :htbthComConfig.value2,
+            value3 = :htbthComConfig.value3   
+        where
+            key1 = :htbthComConfig.key1 and
+            key2 = :htbthComConfig.key2 and
+            key3 = :htbthComConfig.key3;       
+        return sqlca.sqlcode;                       
+    case DBS_UPDATE1 :
+        EXEC SQL update HT_TBL_COM_CONFIG set
+            value1 = :htbthComConfig.value1 
+        where
+            key1 = :htbthComConfig.key1 and
+            key2 = :htbthComConfig.key2 and
+            key3 = :htbthComConfig.key3;       
+        return sqlca.sqlcode;
+    case DBS_UPDATE2 :
+        EXEC SQL update HT_TBL_COM_CONFIG set
+            value2 = :htbthComConfig.value2 
+        where
+            key1 = :htbthComConfig.key1 and
+            key2 = :htbthComConfig.key2 and
+            key3 = :htbthComConfig.key3;       
+        return sqlca.sqlcode;  
+    case DBS_UPDATE3 :
+        EXEC SQL update HT_TBL_COM_CONFIG set
+            value3 = :htbthComConfig.value3 
+        where
+            key1 = :htbthComConfig.key1 and
+            key2 = :htbthComConfig.key2 and
+            key3 = :htbthComConfig.key3;       
+        return sqlca.sqlcode;                                                    
+    case DBS_UPDATE4 :
+        EXEC SQL update HT_TBL_COM_CONFIG set
+            remark3 = :htbthComConfig.remark3 
+        where
+            key1 = :htbthComConfig.key1 and
+            key2 = :htbthComConfig.key2 and
+            key3 = :htbthComConfig.key3;
+        return sqlca.sqlcode;
+    default:
+        break;
+    }
+    return 0;
+}

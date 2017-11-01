@@ -1,0 +1,26 @@
+###############################################################################
+#  Copyright 2012, Shanghai Huateng Software Systems Co., Ltd.
+#  All right reserved.
+#
+#  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+#  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+#  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+#  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+#  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+#
+#  脚 本 名: bsee
+#  功    能: 清结算系统进程查看工具
+#  编程人员: 
+#  开发时间: 
+#  备    注:
+###############################################################################
+
+echo " "
+echo " "
+echo "                                  清结算系统进程监控"
+echo "======================================================================================"
+echo " "
+echo "框架进程："
+ps -ef | grep InstMisn       | grep -v grep | grep $LOGNAME
+ps -ef | grep MisnMain       | grep -v grep | grep $LOGNAME
+echo " "

@@ -1,0 +1,841 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsOprInf.pc                                            */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include "DbsDef.h"
+#include "batch.h"
+
+extern    char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_acct_rslt_tab
+{
+    char         inter_brh_code	              [10+ 1]  ;
+    char               sett_date	              [8+ 1] ;
+    char               acct_date	              [8+ 1] ;
+    char               batch_no	              [2+ 1]   ;
+    char                 mcht_rslt_no	              [32+ 1];
+    char                 mcht_no	              [15+ 1];
+    char               mcht_role	              [4+ 1] ;
+    int                trans_num	                     ;
+    double               debt_at	                     ;
+    double               cret_at	                     ;
+    double         debt_net_fee	                       ;
+    double         cret_net_fee	                       ;
+    char                 sett_md	              [2+ 1] ;
+    char         mcht_sett_bank	              [12+ 1]  ;
+    char       mcht_sett_bank_nm	              [80+ 1];
+    char     mcht_sett_acct_type	              [1+ 1] ;
+    char         mcht_sett_acct	              [40+ 1]  ;
+    char       mcht_sett_acct_nm	              [80+ 1];
+    char    mcht_sett_xingmin_acct	[40 + 1];
+    char         plat_sett_bank	              [12+ 1]  ;
+    char       plat_sett_bank_nm	              [80+ 1];
+    char     plat_sett_acct_type	              [1+ 1] ;
+    char         plat_sett_acct	              [40+ 1]  ;
+    char       plat_sett_acct_nm	              [80+ 1];
+    char       plat_sett_xingmin_acct	              [40+ 1];    
+    char         mcht_debit_bank	              [12+ 1];
+    char     mcht_debit_bank_nm	              [80+ 1]  ;
+    char    mcht_debit_acct_type	               [1+ 1];
+    char         mcht_debit_acct	              [40+ 1];
+    char     mcht_debit_acct_nm	              [80+ 1]  ;
+    char         plat_debit_bank	              [12+ 1];
+    char     plat_debit_bank_nm	              [80+ 1]  ;
+    char    plat_debit_acct_type	               [1+ 1];
+    char         plat_debit_acct	              [40+ 1];
+    char     plat_debit_acct_nm	              [80+ 1]  ;
+    char       plat_debit_xingmin_acct	              [40+ 1];    
+    char             acct_statu	              [1+ 1]   ;
+    char             sz_status                [1+1];
+    int              seq_num 	                         ;
+}vtbl_acct_rslt;
+
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblAcctRslt(int vnOprType, struct ht_tbl_acct_rslt_tab *ptbl_acct_rslt, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_acct_rslt, 0x00, sizeof(vtbl_acct_rslt));
+    memcpy(&vtbl_acct_rslt, ptbl_acct_rslt, sizeof(vtbl_acct_rslt));
+
+    switch(vnOprType)
+    {
+    case DBS_INSERT:
+            memset(sSqlBuf, 0, 128);
+            sprintf(sSqlBuf, "select TBL_ACCT_RSLT_SEQ_ID_%s.nextval from dual", vtbl_acct_rslt.inter_brh_code);
+
+            nReturnCode = SelectSequence(sSqlBuf, &nTotalNum);
+            if( nReturnCode )
+            {
+                HtLog (gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "select from TBL_ACCT_RSLT_SEQ_ID_%s error, sqlcode=[%d].", vtbl_acct_rslt.inter_brh_code , nReturnCode);
+                return sqlca.sqlcode;
+            }
+        
+            EXEC SQL 
+                insert into ht_tbl_acct_rslt(
+                    inter_brh_code	    ,
+                    sett_date	          ,
+                    acct_date	          ,                     
+                    batch_no	          ,                    
+                    mcht_rslt_no ,
+                    mcht_no	            ,                   
+                    mcht_role	          ,
+                    trans_num	          ,
+                    debt_at	            ,
+                    cret_at	            ,
+                    debt_net_fee	      ,
+                    cret_net_fee	      ,
+                    sett_md	            ,
+                    mcht_sett_bank	    ,
+                    mcht_sett_bank_nm	  ,
+                    mcht_sett_acct_type	,
+                    mcht_sett_acct	    ,
+                    mcht_sett_acct_nm	  ,                    
+                    mcht_sett_xingmin_acct ,
+                    plat_sett_bank	    ,
+                    plat_sett_bank_nm	  ,
+                    plat_sett_acct_type	,
+                    plat_sett_acct	    ,
+                    plat_sett_acct_nm	  ,
+                    plat_sett_xingmin_acct,
+                    mcht_debit_bank	    ,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type,
+                    mcht_debit_acct	    ,
+                    mcht_debit_acct_nm	,
+                    plat_debit_bank	    ,
+                    plat_debit_bank_nm	,
+                    plat_debit_acct_type,
+                    plat_debit_acct	    ,
+                    plat_debit_acct_nm	,
+                    plat_debit_xingmin_acct,
+                    acct_statu	        ,
+                    sz_status,
+                    seq_num 	          
+               ) values (
+                    :vtbl_acct_rslt.inter_brh_code	      ,
+                    :vtbl_acct_rslt.sett_date	            ,
+                    :vtbl_acct_rslt.acct_date	            ,                    
+                    :vtbl_acct_rslt.batch_no	            ,                    
+                    :vtbl_acct_rslt.mcht_rslt_no	            ,
+                    :vtbl_acct_rslt.mcht_no	              ,                    
+                    :vtbl_acct_rslt.mcht_role	            ,
+                    :vtbl_acct_rslt.trans_num	            ,
+                    :vtbl_acct_rslt.debt_at	              ,
+                    :vtbl_acct_rslt.cret_at	              ,
+                    :vtbl_acct_rslt.debt_net_fee	        ,
+                    :vtbl_acct_rslt.cret_net_fee	        ,
+                    :vtbl_acct_rslt.sett_md	              ,
+                    :vtbl_acct_rslt.mcht_sett_bank	      ,
+                    :vtbl_acct_rslt.mcht_sett_bank_nm	    ,
+                    :vtbl_acct_rslt.mcht_sett_acct_type	  ,
+                    :vtbl_acct_rslt.mcht_sett_acct	      ,
+                    :vtbl_acct_rslt.mcht_sett_acct_nm	    ,                    
+                    :vtbl_acct_rslt.mcht_sett_xingmin_acct	    ,
+                    :vtbl_acct_rslt.plat_sett_bank	      ,
+                    :vtbl_acct_rslt.plat_sett_bank_nm	    ,
+                    :vtbl_acct_rslt.plat_sett_acct_type	  ,
+                    :vtbl_acct_rslt.plat_sett_acct	      ,
+                    :vtbl_acct_rslt.plat_sett_acct_nm	    ,
+                    :vtbl_acct_rslt.plat_sett_xingmin_acct	    ,
+                    :vtbl_acct_rslt.mcht_debit_bank	      ,
+                    :vtbl_acct_rslt.mcht_debit_bank_nm	  ,
+                    :vtbl_acct_rslt.mcht_debit_acct_type  ,
+                    :vtbl_acct_rslt.mcht_debit_acct	      ,
+                    :vtbl_acct_rslt.mcht_debit_acct_nm	  ,
+                    :vtbl_acct_rslt.plat_debit_bank	      ,
+                    :vtbl_acct_rslt.plat_debit_bank_nm	  ,
+                    :vtbl_acct_rslt.plat_debit_acct_type  ,
+                    :vtbl_acct_rslt.plat_debit_acct	      ,
+                    :vtbl_acct_rslt.plat_debit_acct_nm	  ,
+                    :vtbl_acct_rslt.plat_debit_xingmin_acct	  ,
+                    :vtbl_acct_rslt.acct_statu	          , 
+                    :vtbl_acct_rslt.sz_status	          ,
+                    :nTotalNum 
+             );
+           return sqlca.sqlcode;
+
+    case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    NVL(max(seq_num),0)
+                into
+                    :vtbl_acct_rslt.seq_num
+                from 
+                    ht_tbl_acct_rslt
+               where
+               inter_brh_code = :vtbl_acct_rslt.inter_brh_code
+               and sett_date = :vtbl_acct_rslt.sett_date;
+        HtMemcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt));
+        return sqlca.sqlcode;
+           
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_acct_rslt_cur CURSOR FOR
+            SELECT
+                    inter_brh_code	    ,
+                    sett_date	          ,
+                    acct_date	          ,
+                    batch_no	          ,
+                    mcht_rslt_no ,
+                    mcht_no	            ,
+                    mcht_role	          ,
+                    trans_num	          ,
+                    debt_at	            ,
+                    cret_at	            ,
+                    debt_net_fee	      ,
+                    cret_net_fee	      ,
+                    sett_md	            ,
+                    mcht_sett_bank	    ,
+                    mcht_sett_bank_nm	  ,
+                    mcht_sett_acct_type	,
+                    mcht_sett_acct	    ,
+                    mcht_sett_acct_nm	  ,
+                    mcht_sett_xingmin_acct ,
+                    plat_sett_bank	    ,
+                    plat_sett_bank_nm	  ,
+                    plat_sett_acct_type	,
+                    plat_sett_acct	    ,
+                    plat_sett_acct_nm	  ,
+                    plat_sett_xingmin_acct,
+                    mcht_debit_bank	    ,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type,
+                    mcht_debit_acct	    ,
+                    mcht_debit_acct_nm	,
+                    plat_debit_bank	    ,
+                    plat_debit_bank_nm	,
+                    plat_debit_acct_type,
+                    plat_debit_acct	    ,
+                    plat_debit_acct_nm	,
+                    plat_debit_xingmin_acct,
+                    acct_statu	        ,
+                    sz_status,
+                    seq_num 	          
+            FROM
+                ht_tbl_acct_rslt
+            WHERE
+                inter_brh_code = :vtbl_acct_rslt.inter_brh_code and
+                sett_date = :vtbl_acct_rslt.sett_date and
+                seq_num between :ptnBeginOffset and  :ptnEndOffset ;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            tbl_acct_rslt_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH tbl_acct_rslt_cur
+        INTO
+                    :vtbl_acct_rslt.inter_brh_code	      :db_ind,
+                    :vtbl_acct_rslt.sett_date	            :db_ind,
+                    :vtbl_acct_rslt.acct_date	            :db_ind,
+                    :vtbl_acct_rslt.batch_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_rslt_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_no	              :db_ind,
+                    :vtbl_acct_rslt.mcht_role	            :db_ind,
+                    :vtbl_acct_rslt.trans_num	            :db_ind,
+                    :vtbl_acct_rslt.debt_at	              :db_ind,
+                    :vtbl_acct_rslt.cret_at	              :db_ind,
+                    :vtbl_acct_rslt.debt_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.cret_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.sett_md	              :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_xingmin_acct	  :db_ind,
+                    :vtbl_acct_rslt.acct_statu	          :db_ind, 
+                    :vtbl_acct_rslt.sz_status	          :db_ind,      
+                    :vtbl_acct_rslt.seq_num :db_ind
+        ;
+        memcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            tbl_acct_rslt_cur;
+        return sqlca.sqlcode;
+
+    case DBS_CURSOR1:
+        EXEC SQL DECLARE tbl_acct_rslt_cur1 CURSOR FOR
+            SELECT
+                    inter_brh_code	    ,
+                    sett_date	          ,
+                    acct_date	          ,
+                    batch_no	          ,
+                    mcht_rslt_no ,
+                    mcht_no	            ,
+                    mcht_role	          ,
+                    trans_num	          ,
+                    debt_at	            ,
+                    cret_at	            ,
+                    debt_net_fee	      ,
+                    cret_net_fee	      ,
+                    sett_md	            ,
+                    mcht_sett_bank	    ,
+                    mcht_sett_bank_nm	  ,
+                    mcht_sett_acct_type	,
+                    mcht_sett_acct	    ,
+                    mcht_sett_acct_nm	  ,
+                    mcht_sett_xingmin_acct ,
+                    plat_sett_bank	    ,
+                    plat_sett_bank_nm	  ,
+                    plat_sett_acct_type	,
+                    plat_sett_acct	    ,
+                    plat_sett_acct_nm	  ,
+                    plat_sett_xingmin_acct,
+                    mcht_debit_bank	    ,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type,
+                    mcht_debit_acct	    ,
+                    mcht_debit_acct_nm	,
+                    plat_debit_bank	    ,
+                    plat_debit_bank_nm	,
+                    plat_debit_acct_type,
+                    plat_debit_acct	    ,
+                    plat_debit_acct_nm	,
+                    plat_debit_xingmin_acct,
+                    acct_statu	        ,
+                    sz_status           ,
+                    seq_num 	          
+            FROM
+                ht_tbl_acct_rslt
+            WHERE
+                acct_date = :vtbl_acct_rslt.acct_date
+            AND
+                mcht_role in ('1001','1002','2002')
+            AND
+                acct_statu in ('N','R','2');                        
+        return sqlca.sqlcode;
+
+    case DBS_OPEN1:
+        EXEC SQL OPEN
+            tbl_acct_rslt_cur1;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH1:
+        EXEC SQL FETCH tbl_acct_rslt_cur1
+        INTO
+                    :vtbl_acct_rslt.inter_brh_code	      :db_ind,
+                    :vtbl_acct_rslt.sett_date	            :db_ind,
+                    :vtbl_acct_rslt.acct_date	            :db_ind,
+                    :vtbl_acct_rslt.batch_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_rslt_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_no	              :db_ind,
+                    :vtbl_acct_rslt.mcht_role	            :db_ind,
+                    :vtbl_acct_rslt.trans_num	            :db_ind,
+                    :vtbl_acct_rslt.debt_at	              :db_ind,
+                    :vtbl_acct_rslt.cret_at	              :db_ind,
+                    :vtbl_acct_rslt.debt_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.cret_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.sett_md	              :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_xingmin_acct	  :db_ind,
+                    :vtbl_acct_rslt.acct_statu	          :db_ind,
+                    :vtbl_acct_rslt.sz_status             :db_ind,    
+                    :vtbl_acct_rslt.seq_num  :db_ind
+        ;
+        memcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE1:
+        EXEC SQL CLOSE
+            tbl_acct_rslt_cur1;
+        return sqlca.sqlcode;
+    case DBS_UPDATE:
+        EXEC SQL
+        UPDATE
+            ht_tbl_acct_rslt
+        SET
+            acct_statu      = :vtbl_acct_rslt.acct_statu,
+            sz_status       = :vtbl_acct_rslt.sz_status
+        WHERE
+            mcht_rslt_no    = :vtbl_acct_rslt.mcht_rslt_no
+        AND
+            mcht_role = :vtbl_acct_rslt.mcht_role;
+        if(sqlca.sqlcode)
+        {
+            nReturnCode = sqlca.sqlcode;
+            return nReturnCode;
+        }
+        EXEC SQL COMMIT;
+        return 0;                
+    case DBS_SELECT2:
+        EXEC SQL
+        SELECT
+            mcht_rslt_no,
+            mcht_role,
+            sett_md,
+            acct_statu,
+            sz_status
+        INTO
+            :vtbl_acct_rslt.mcht_rslt_no  :db_ind,
+            :vtbl_acct_rslt.mcht_role  :db_ind,
+            :vtbl_acct_rslt.sett_md   :db_ind, 
+            :vtbl_acct_rslt.acct_statu  :db_ind,
+            :vtbl_acct_rslt.sz_status  :db_ind
+        FROM
+            ht_tbl_acct_rslt
+        WHERE
+            mcht_rslt_no = :vtbl_acct_rslt.mcht_rslt_no
+        and 
+            mcht_role = :vtbl_acct_rslt.mcht_role;
+        if(sqlca.sqlcode)
+        {
+            nReturnCode = sqlca.sqlcode;
+            return nReturnCode;
+        }
+        memcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt));
+        return 0;
+    case DBS_SELECT4:
+        EXEC SQL SELECT
+                inter_brh_code,
+                sett_date,
+                trans_num,
+                debt_at,
+                cret_at,
+                debt_net_fee,
+                cret_net_fee,
+                sett_md,
+                mcht_debit_bank,
+                mcht_debit_bank_nm,
+                mcht_debit_acct_type,
+                mcht_debit_acct,
+                mcht_debit_acct_nm,
+                plat_debit_bank,
+                plat_debit_bank_nm,
+                plat_debit_acct_type,
+                plat_debit_acct,
+                plat_debit_acct_nm,
+                seq_num
+            INTO
+                :vtbl_acct_rslt.inter_brh_code  :db_ind,
+                :vtbl_acct_rslt.sett_date  :db_ind,
+                :vtbl_acct_rslt.trans_num  :db_ind,
+                :vtbl_acct_rslt.debt_at  :db_ind,
+                :vtbl_acct_rslt.cret_at  :db_ind,
+                :vtbl_acct_rslt.debt_net_fee  :db_ind,
+                :vtbl_acct_rslt.cret_net_fee  :db_ind,
+                :vtbl_acct_rslt.sett_md  :db_ind,
+                :vtbl_acct_rslt.mcht_debit_bank  :db_ind,
+                :vtbl_acct_rslt.mcht_debit_bank_nm  :db_ind,
+                :vtbl_acct_rslt.mcht_debit_acct_type  :db_ind,
+                :vtbl_acct_rslt.mcht_debit_acct  :db_ind,
+                :vtbl_acct_rslt.mcht_debit_acct_nm  :db_ind,
+                :vtbl_acct_rslt.plat_debit_bank  :db_ind,
+                :vtbl_acct_rslt.plat_debit_bank_nm  :db_ind,
+                :vtbl_acct_rslt.plat_debit_acct_type  :db_ind,
+                :vtbl_acct_rslt.plat_debit_acct  :db_ind,
+                :vtbl_acct_rslt.plat_debit_acct_nm  :db_ind,
+                :vtbl_acct_rslt.seq_num  :db_ind
+            FROM
+                ht_tbl_acct_rslt
+            WHERE
+                mcht_rslt_no = :vtbl_acct_rslt.mcht_rslt_no;
+            if(sqlca.sqlcode)
+            {
+                nReturnCode = sqlca.sqlcode;
+                return nReturnCode;
+            }
+        memcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt)-1);
+        return 0;
+    case DBS_CURSOR2:
+        EXEC SQL DECLARE tbl_acct_rslt_cur2 CURSOR FOR
+            SELECT
+                    inter_brh_code	    ,
+                    sett_date	          ,
+                    acct_date	          ,
+                    batch_no	          ,
+                    mcht_rslt_no ,
+                    mcht_no	            ,
+                    mcht_role	          ,
+                    trans_num	          ,
+                    debt_at	            ,
+                    cret_at	            ,
+                    debt_net_fee	      ,
+                    cret_net_fee	      ,
+                    sett_md	            ,
+                    mcht_sett_bank	    ,
+                    mcht_sett_bank_nm	  ,
+                    mcht_sett_acct_type	,
+                    mcht_sett_acct	    ,
+                    mcht_sett_acct_nm	  ,
+                    mcht_sett_xingmin_acct ,
+                    plat_sett_bank	    ,
+                    plat_sett_bank_nm	  ,
+                    plat_sett_acct_type	,
+                    plat_sett_acct	    ,
+                    plat_sett_acct_nm	  ,
+                    plat_sett_xingmin_acct,
+                    mcht_debit_bank	    ,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type,
+                    mcht_debit_acct	    ,
+                    mcht_debit_acct_nm	,
+                    plat_debit_bank	    ,
+                    plat_debit_bank_nm	,
+                    plat_debit_acct_type,
+                    plat_debit_acct	    ,
+                    plat_debit_acct_nm	,
+                    plat_debit_xingmin_acct,
+                    acct_statu	        ,
+                    sz_status           ,
+                    seq_num 	          
+            FROM
+                ht_tbl_acct_rslt
+            WHERE
+                sett_date = :vtbl_acct_rslt.sett_date
+            AND
+                mcht_role in ('1001','1002','2002')    
+            AND
+                acct_statu = 'N'
+            AND
+                acct_date > sett_date;                     
+        return sqlca.sqlcode;
+
+    case DBS_OPEN2:
+        EXEC SQL OPEN
+            tbl_acct_rslt_cur2;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH2:
+        EXEC SQL FETCH tbl_acct_rslt_cur2
+        INTO
+                    :vtbl_acct_rslt.inter_brh_code	      :db_ind,
+                    :vtbl_acct_rslt.sett_date	            :db_ind,
+                    :vtbl_acct_rslt.acct_date	            :db_ind,
+                    :vtbl_acct_rslt.batch_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_rslt_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_no	              :db_ind,
+                    :vtbl_acct_rslt.mcht_role	            :db_ind,
+                    :vtbl_acct_rslt.trans_num	            :db_ind,
+                    :vtbl_acct_rslt.debt_at	              :db_ind,
+                    :vtbl_acct_rslt.cret_at	              :db_ind,
+                    :vtbl_acct_rslt.debt_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.cret_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.sett_md	              :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_xingmin_acct	  :db_ind,
+                    :vtbl_acct_rslt.acct_statu	          :db_ind,
+                    :vtbl_acct_rslt.sz_status             :db_ind,    
+                    :vtbl_acct_rslt.seq_num  :db_ind
+        ;
+        memcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE2:
+        EXEC SQL CLOSE
+            tbl_acct_rslt_cur2;
+        return sqlca.sqlcode;
+        
+    case DBS_CURSOR3:
+        EXEC SQL DECLARE tbl_acct_rslt_cur3 CURSOR FOR
+            SELECT
+                    inter_brh_code	    ,
+                    sett_date	          ,
+                    acct_date	          ,
+                    batch_no	          ,
+                    mcht_rslt_no ,
+                    mcht_no	            ,
+                    mcht_role	          ,
+                    trans_num	          ,
+                    debt_at	            ,
+                    cret_at	            ,
+                    debt_net_fee	      ,
+                    cret_net_fee	      ,
+                    sett_md	            ,
+                    mcht_sett_bank	    ,
+                    mcht_sett_bank_nm	  ,
+                    mcht_sett_acct_type	,
+                    mcht_sett_acct	    ,
+                    mcht_sett_acct_nm	  ,
+                    mcht_sett_xingmin_acct ,
+                    plat_sett_bank	    ,
+                    plat_sett_bank_nm	  ,
+                    plat_sett_acct_type	,
+                    plat_sett_acct	    ,
+                    plat_sett_acct_nm	  ,
+                    plat_sett_xingmin_acct,
+                    mcht_debit_bank	    ,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type,
+                    mcht_debit_acct	    ,
+                    mcht_debit_acct_nm	,
+                    plat_debit_bank	    ,
+                    plat_debit_bank_nm	,
+                    plat_debit_acct_type,
+                    plat_debit_acct	    ,
+                    plat_debit_acct_nm	,
+                    plat_debit_xingmin_acct,
+                    acct_statu	        ,
+                    sz_status           ,
+                    seq_num 	          
+            FROM
+                ht_tbl_acct_rslt
+            WHERE
+                acct_date = :vtbl_acct_rslt.acct_date;                     
+        return sqlca.sqlcode;
+
+    case DBS_OPEN3:
+        EXEC SQL OPEN
+            tbl_acct_rslt_cur3;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH3:
+        EXEC SQL FETCH tbl_acct_rslt_cur3
+        INTO
+                    :vtbl_acct_rslt.inter_brh_code	      :db_ind,
+                    :vtbl_acct_rslt.sett_date	            :db_ind,
+                    :vtbl_acct_rslt.acct_date	            :db_ind,
+                    :vtbl_acct_rslt.batch_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_rslt_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_no	              :db_ind,
+                    :vtbl_acct_rslt.mcht_role	            :db_ind,
+                    :vtbl_acct_rslt.trans_num	            :db_ind,
+                    :vtbl_acct_rslt.debt_at	              :db_ind,
+                    :vtbl_acct_rslt.cret_at	              :db_ind,
+                    :vtbl_acct_rslt.debt_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.cret_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.sett_md	              :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_xingmin_acct	  :db_ind,
+                    :vtbl_acct_rslt.acct_statu	          :db_ind,
+                    :vtbl_acct_rslt.sz_status             :db_ind,    
+                    :vtbl_acct_rslt.seq_num  :db_ind
+        ;
+        memcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE3:
+        EXEC SQL CLOSE
+            tbl_acct_rslt_cur3;
+        return sqlca.sqlcode;   
+    
+    case DBS_CURSOR4:
+        EXEC SQL DECLARE tbl_acct_rslt_cur4 CURSOR FOR
+            SELECT
+                    inter_brh_code	    ,
+                    sett_date	          ,
+                    acct_date	          ,
+                    batch_no	          ,
+                    mcht_rslt_no ,
+                    mcht_no	            ,
+                    mcht_role	          ,
+                    trans_num	          ,
+                    debt_at	            ,
+                    cret_at	            ,
+                    debt_net_fee	      ,
+                    cret_net_fee	      ,
+                    sett_md	            ,
+                    mcht_sett_bank	    ,
+                    mcht_sett_bank_nm	  ,
+                    mcht_sett_acct_type	,
+                    mcht_sett_acct	    ,
+                    mcht_sett_acct_nm	  ,
+                    mcht_sett_xingmin_acct ,
+                    plat_sett_bank	    ,
+                    plat_sett_bank_nm	  ,
+                    plat_sett_acct_type	,
+                    plat_sett_acct	    ,
+                    plat_sett_acct_nm	  ,
+                    plat_sett_xingmin_acct,
+                    mcht_debit_bank	    ,
+                    mcht_debit_bank_nm	,
+                    mcht_debit_acct_type,
+                    mcht_debit_acct	    ,
+                    mcht_debit_acct_nm	,
+                    plat_debit_bank	    ,
+                    plat_debit_bank_nm	,
+                    plat_debit_acct_type,
+                    plat_debit_acct	    ,
+                    plat_debit_acct_nm	,
+                    plat_debit_xingmin_acct,
+                    acct_statu	        ,
+                    sz_status           ,
+                    seq_num 	          
+            FROM
+                ht_tbl_acct_rslt
+            WHERE
+                acct_statu = :vtbl_acct_rslt.acct_statu;                     
+        return sqlca.sqlcode;
+
+    case DBS_OPEN4:
+        EXEC SQL OPEN
+            tbl_acct_rslt_cur4;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH4:
+        EXEC SQL FETCH tbl_acct_rslt_cur4
+        INTO
+                    :vtbl_acct_rslt.inter_brh_code	      :db_ind,
+                    :vtbl_acct_rslt.sett_date	            :db_ind,
+                    :vtbl_acct_rslt.acct_date	            :db_ind,
+                    :vtbl_acct_rslt.batch_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_rslt_no	            :db_ind,
+                    :vtbl_acct_rslt.mcht_no	              :db_ind,
+                    :vtbl_acct_rslt.mcht_role	            :db_ind,
+                    :vtbl_acct_rslt.trans_num	            :db_ind,
+                    :vtbl_acct_rslt.debt_at	              :db_ind,
+                    :vtbl_acct_rslt.cret_at	              :db_ind,
+                    :vtbl_acct_rslt.debt_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.cret_net_fee	        :db_ind,
+                    :vtbl_acct_rslt.sett_md	              :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.mcht_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_bank_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_type	  :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_sett_acct_nm	    :db_ind,
+                    :vtbl_acct_rslt.plat_sett_xingmin_acct	    :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.mcht_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_bank_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_type  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct	      :db_ind,
+                    :vtbl_acct_rslt.plat_debit_acct_nm	  :db_ind,
+                    :vtbl_acct_rslt.plat_debit_xingmin_acct	  :db_ind,
+                    :vtbl_acct_rslt.acct_statu	          :db_ind,
+                    :vtbl_acct_rslt.sz_status             :db_ind,    
+                    :vtbl_acct_rslt.seq_num  :db_ind
+        ;
+        memcpy(ptbl_acct_rslt, &vtbl_acct_rslt, sizeof(vtbl_acct_rslt));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE4:
+        EXEC SQL CLOSE
+            tbl_acct_rslt_cur4;
+        return sqlca.sqlcode; 
+
+    case DBS_UPDATE1:
+        EXEC SQL
+        UPDATE
+            ht_tbl_acct_rslt
+        SET
+            debt_at      = :vtbl_acct_rslt.debt_at,
+            cret_at      = :vtbl_acct_rslt.cret_at
+        WHERE
+            mcht_rslt_no    = :vtbl_acct_rslt.mcht_rslt_no
+        AND
+            mcht_role = :vtbl_acct_rslt.mcht_role;
+        if(sqlca.sqlcode)
+        {
+            nReturnCode = sqlca.sqlcode;
+            return nReturnCode;
+        }
+        EXEC SQL COMMIT;
+        return 0;    
+    default:
+        return NO_SWITCH;
+    } /* end of switch */
+}

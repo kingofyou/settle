@@ -1,0 +1,97 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <memory.h>
+#include <errno.h>
+#include <sys/utsname.h>
+#include "batch.h"
+
+char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+int DbsConnect ()
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char sConnStr[100];
+    EXEC SQL END DECLARE SECTION;
+    int rc;
+
+    memset(sConnStr, 0, sizeof(sConnStr));
+    sprintf(sConnStr, "%.30s/%.30s@%s",
+            (char *)getenv("DBUSER"),
+            (char *)getenv("DBPWD"), (char *)getenv("DBNAME"));
+    EXEC SQL CONNECT :sConnStr;
+    return sqlca.sqlcode;
+}
+
+int DbsPubConnect ()
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char sConnStr[100];
+    EXEC SQL END DECLARE SECTION;
+    int rc;
+
+    memset(sConnStr, 0, sizeof(sConnStr));
+    sprintf(sConnStr, "%.30s/%.30s@%s",
+            (char *)getenv("DBPUBUSER"),
+            (char *)getenv("DBPUBPWD"), (char *)getenv("DBPUBNAME"));
+    EXEC SQL CONNECT :sConnStr;
+    printf("[%s][%s]", sConnStr, (char *)getenv("DBUSER"));
+    return sqlca.sqlcode;
+}
+
+int DbsBegin ()
+{
+    return 0;
+}
+
+int DbsCommit ()
+{
+    EXEC SQL commit work;
+    return sqlca.sqlcode;
+}
+
+int DbsRollback ()
+{
+    EXEC SQL rollback work;
+    return sqlca.sqlcode;
+}
+
+int DbsDisconnect ()
+{
+    EXEC SQL commit work release;
+    return (sqlca.sqlcode);
+}
+
+char *DbsError( )
+{
+    static char sMsg[100];
+
+    memset(sMsg, 0x00, sizeof(sMsg) );
+    sprintf(sMsg, "SQLCODE=[%d],MSG=[%.*s]",
+            sqlca.sqlcode, sqlca.sqlerrm.sqlerrml, sqlca.sqlerrm.sqlerrmc );
+
+    return sMsg;
+}
+
+int DbsRunSQL(char *pSQL)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char sSQL_Stmp[4096];
+    EXEC SQL END DECLARE SECTION;
+
+    memset(sSQL_Stmp, 0x00, sizeof(sSQL_Stmp));
+    strncpy(sSQL_Stmp, pSQL, sizeof(sSQL_Stmp));
+
+    EXEC SQL PREPARE sql_stmt FROM :sSQL_Stmp;
+
+    EXEC SQL EXECUTE sql_stmt;
+    if( sqlca.sqlcode )
+    {
+        return sqlca.sqlcode;
+    }
+
+    return sqlca.sqlcode;
+}

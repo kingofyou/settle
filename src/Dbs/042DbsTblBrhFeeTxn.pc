@@ -1,0 +1,85 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct vtbl_brh_fee_inf_txn_txn_tab
+{
+        char payway_code         [50 + 1];
+	char ext_mch_no     [15 + 1];
+        char tran_code      [4 + 1];
+        char card_type      [4 + 1];
+        double  floor_amount      ;
+        double  upper_amount     ;
+        char  fee_flag   [1 + 1];
+        double  fee_value         ;
+        double fee_min    ; 
+        double fee_max    ;
+        char  rec_upd_usr_id  [10 + 1];
+        char rec_upd_ts  [14 + 1]; 
+        char rec_crt_ts  [14 + 1];
+}vtbl_brh_fee_inf_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblBrhFeeInfTxn(int nvtOpr, ht_tbl_brh_inf_def * pvtbl_brh_fee_inf_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_brh_fee_inf_txn, 0, sizeof(vtbl_brh_fee_inf_txn));
+    HtMemcpy(&vtbl_brh_fee_inf_txn, pvtbl_brh_fee_inf_txn, sizeof(vtbl_brh_fee_inf_txn));
+    switch(nvtOpr)
+    {
+        case DBS_SELECT:
+            EXEC SQL
+                select 
+                    payway_code,
+                    tran_code,
+                    card_type,
+                    floor_amount,
+                    upper_amount,
+                    fee_flag,
+                    fee_value,
+                    fee_min,
+                    fee_max,
+                    rec_upd_usr_id,
+                    rec_upd_ts,
+                    rec_crt_ts
+                into
+                    :vtbl_brh_fee_inf_txn.payway_code      :db_ind,
+                    :vtbl_brh_fee_inf_txn.tran_code      :db_ind,
+                    :vtbl_brh_fee_inf_txn.card_type      :db_ind,
+                    :vtbl_brh_fee_inf_txn.floor_amount      :db_ind,
+                    :vtbl_brh_fee_inf_txn.upper_amount      :db_ind,
+                    :vtbl_brh_fee_inf_txn.fee_flag      :db_ind,
+                    :vtbl_brh_fee_inf_txn.fee_value      :db_ind,
+                    :vtbl_brh_fee_inf_txn.fee_min      :db_ind,
+                    :vtbl_brh_fee_inf_txn.fee_max      :db_ind,
+                    :vtbl_brh_fee_inf_txn.rec_upd_usr_id      :db_ind,
+                    :vtbl_brh_fee_inf_txn.rec_upd_ts      :db_ind,
+                    :vtbl_brh_fee_inf_txn.rec_crt_ts      :db_ind
+                from 
+                    ht_tbl_brh_fee_inf@PUBLIC_DATA
+               where
+                    payway_code = :vtbl_brh_fee_inf_txn.payway_code and
+                    ext_mch_no = :vtbl_brh_fee_inf_txn.ext_mch_no and
+                    card_type = :vtbl_brh_fee_inf_txn.card_type and
+                    tran_code = :vtbl_brh_fee_inf_txn.tran_code;
+        HtMemcpy(pvtbl_brh_fee_inf_txn, &vtbl_brh_fee_inf_txn, sizeof(vtbl_brh_fee_inf_txn));
+        return sqlca.sqlcode;
+      
+        default:
+            return NO_SWITCH;
+    }
+}

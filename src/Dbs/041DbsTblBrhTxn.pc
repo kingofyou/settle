@@ -1,0 +1,176 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+extern  char    gLogFile[LOG_NAME_LEN_MAX];
+
+EXEC SQL BEGIN DECLARE SECTION;
+struct ht_tbl_brh_inf_txn_tab
+{
+char brh_no   [12 + 1];                     
+char  brh_nm  [30 + 1];                     
+char brh_role [2 + 1];                      
+char pay_brh [2 + 1];                       
+char  brh_acct_type [2 + 1];                
+char   brh_acct_no  [40 + 1];               
+char   brh_acct_nm  [80 + 1];               
+char brh_acct_bank  [12 + 1];               
+char  brh_acct_banknm  [80 + 1];            
+char contact  [30 + 1];                     
+char comm_mobil  [18 + 1];                  
+char   comm_tel  [18 + 1];                  
+char  email   [20 + 1];                     
+char manager  [32 + 1];                     
+char   identity_no  [20 + 1];               
+char   manager_tel  [12 + 1];               
+char   reg_addr  [60 + 1];                  
+char  plat_debit_bank  [12 + 1];            
+char plat_debit_acct_type [2 + 1];          
+char  plat_debit_acct  [40 + 1];            
+char  plat_debit_acct_nm  [80 + 1];         
+char rec_upd_usr_id [10 + 1];               
+char  rec_upd_ts [14 + 1];                  
+char  rec_crt_ts [14 + 1];                    
+}vtbl_brh_inf_txn;
+static int nTotalNum = 0;
+char    sSqlBuf[128];
+static int  nReturnCode;
+short db_ind;
+static int  ptnBeginOffset;
+static int  ptnEndOffset;
+EXEC SQL END DECLARE SECTION;
+
+int DbsTblBrhInfTxn(int nvtOpr, ht_tbl_brh_fee_inf_def * pvtbl_brh_inf_txn, int nBeginOffset, int nEndOffset)
+{
+    ptnBeginOffset = nBeginOffset;
+    ptnEndOffset = nEndOffset;
+    memset(&vtbl_brh_inf_txn, 0, sizeof(vtbl_brh_inf_txn));
+    HtMemcpy(&vtbl_brh_inf_txn, pvtbl_brh_inf_txn, sizeof(vtbl_brh_inf_txn));
+    switch(nvtOpr)
+    {
+        case DBS_SELECT:
+            EXEC SQL
+                select 
+                    brh_no,
+                    brh_nm,
+                    brh_role,
+                    pay_brh,
+                    brh_acct_type,
+                    brh_acct_no,
+                    brh_acct_nm,
+                    brh_acct_bank,
+                    brh_acct_banknm,
+                    contact,
+                    comm_mobil,
+                    comm_tel,
+                    email,
+                    manager,
+                    identity_no,
+                    manager_tel,
+                    reg_addr,
+                    plat_debit_bank,
+                    plat_debit_acct_type,
+                    plat_debit_acct,
+                    plat_debit_acct_nm,
+                    rec_upd_usr_id,
+                    rec_upd_ts,
+                    rec_crt_ts
+                into
+                    :vtbl_brh_inf_txn.brh_no    :db_ind,
+                    :vtbl_brh_inf_txn.brh_nm    :db_ind,
+                    :vtbl_brh_inf_txn.brh_role    :db_ind,
+                    :vtbl_brh_inf_txn.pay_brh    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_type    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_no    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_nm    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_bank    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_banknm    :db_ind,
+                    :vtbl_brh_inf_txn.contact    :db_ind,
+                    :vtbl_brh_inf_txn.comm_mobil    :db_ind,
+                    :vtbl_brh_inf_txn.comm_tel    :db_ind,
+                    :vtbl_brh_inf_txn.email    :db_ind,
+                    :vtbl_brh_inf_txn.manager    :db_ind,
+                    :vtbl_brh_inf_txn.identity_no    :db_ind,
+                    :vtbl_brh_inf_txn.manager_tel    :db_ind,
+                    :vtbl_brh_inf_txn.reg_addr    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_bank    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_acct_type    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_acct    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_acct_nm    :db_ind,
+                    :vtbl_brh_inf_txn.rec_upd_usr_id    :db_ind,
+                    :vtbl_brh_inf_txn.rec_upd_ts    :db_ind,
+                    :vtbl_brh_inf_txn.rec_crt_ts    :db_ind
+                from 
+                    HT_TBL_BRH_INF@PUBLIC_DATA
+               where
+                    pay_brh = :vtbl_brh_inf_txn.pay_brh;
+        HtMemcpy(pvtbl_brh_inf_txn, &vtbl_brh_inf_txn, sizeof(vtbl_brh_inf_txn));
+        return sqlca.sqlcode;
+
+        case DBS_SELECT1:
+            EXEC SQL
+                select 
+                    brh_no,
+                    brh_nm,
+                    brh_role,
+                    pay_brh,
+                    brh_acct_type,
+                    brh_acct_no,
+                    brh_acct_nm,
+                    brh_acct_bank,
+                    brh_acct_banknm,
+                    contact,
+                    comm_mobil,
+                    comm_tel,
+                    email,
+                    manager,
+                    identity_no,
+                    manager_tel,
+                    reg_addr,
+                    plat_debit_bank,
+                    plat_debit_acct_type,
+                    plat_debit_acct,
+                    plat_debit_acct_nm,
+                    rec_upd_usr_id,
+                    rec_upd_ts,
+                    rec_crt_ts
+                into
+                    :vtbl_brh_inf_txn.brh_no    :db_ind,
+                    :vtbl_brh_inf_txn.brh_nm    :db_ind,
+                    :vtbl_brh_inf_txn.brh_role    :db_ind,
+                    :vtbl_brh_inf_txn.pay_brh    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_type    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_no    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_nm    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_bank    :db_ind,
+                    :vtbl_brh_inf_txn.brh_acct_banknm    :db_ind,
+                    :vtbl_brh_inf_txn.contact    :db_ind,
+                    :vtbl_brh_inf_txn.comm_mobil    :db_ind,
+                    :vtbl_brh_inf_txn.comm_tel    :db_ind,
+                    :vtbl_brh_inf_txn.email    :db_ind,
+                    :vtbl_brh_inf_txn.manager    :db_ind,
+                    :vtbl_brh_inf_txn.identity_no    :db_ind,
+                    :vtbl_brh_inf_txn.manager_tel    :db_ind,
+                    :vtbl_brh_inf_txn.reg_addr    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_bank    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_acct_type    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_acct    :db_ind,
+                    :vtbl_brh_inf_txn.plat_debit_acct_nm    :db_ind,
+                    :vtbl_brh_inf_txn.rec_upd_usr_id    :db_ind,
+                    :vtbl_brh_inf_txn.rec_upd_ts    :db_ind,
+                    :vtbl_brh_inf_txn.rec_crt_ts    :db_ind
+                from 
+                    HT_TBL_BRH_INF@PUBLIC_DATA
+               where
+                    brh_no = :vtbl_brh_inf_txn.brh_no;
+        HtMemcpy(pvtbl_brh_inf_txn, &vtbl_brh_inf_txn, sizeof(vtbl_brh_inf_txn));
+        return sqlca.sqlcode;
+                                    
+        default:
+            return NO_SWITCH;
+    }
+}

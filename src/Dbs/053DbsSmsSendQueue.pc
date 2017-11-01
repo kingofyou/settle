@@ -1,0 +1,94 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+int DbsSmsSendQueue(int vnOprType, tb_sms_send_queue_def* ptb_sms_send_queue_inf)
+{  
+    EXEC SQL BEGIN DECLARE SECTION;
+    struct sms_send_queue_inf
+    {
+	char term_no[32 + 1];
+        char term_name[32 + 1];
+        char template_no[10 + 1];
+        char mob_no_country_code[10 + 1];
+	char mobile_no[20 + 1];
+	char sms_content[512 + 1];
+	char batch_no[32 + 1];
+	char status[2 + 1];
+    } tb_sms_send_queue_inf;
+
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&tb_sms_send_queue_inf, 0, sizeof(tb_sms_send_queue_inf));
+    memcpy(&tb_sms_send_queue_inf, ptb_sms_send_queue_inf, sizeof(tb_sms_send_queue_inf));
+    switch(vnOprType)
+    {
+        case DBS_INSERT:
+            EXEC SQL INSERT INTO GMPAY_SMS_QUEUE@PUBLIC_DATA (term_no, term_name, template_no, mob_no_country_code,
+	    mobile_no, sms_content, create_time, batch_no, status) VALUES
+	    (
+	        :tb_sms_send_queue_inf.term_no,
+                :tb_sms_send_queue_inf.term_name,
+                :tb_sms_send_queue_inf.template_no,
+                :tb_sms_send_queue_inf.mob_no_country_code,
+	        :tb_sms_send_queue_inf.mobile_no,
+	        :tb_sms_send_queue_inf.sms_content,
+	         sysdate,
+	        :tb_sms_send_queue_inf.batch_no,
+	        :tb_sms_send_queue_inf.status
+	    );
+	    return sqlca.sqlcode;       
+
+        default:
+            return NO_SWITCH;
+    }
+}
+
+
+int DbsSmsSendcontact(int vnOprType, tb_sms_contact_def* ptb_sms_contact_inf)
+{  
+    EXEC SQL BEGIN DECLARE SECTION;
+    struct sms_contact_inf
+    {
+	char name[32];
+	char mobile[32];
+    } tb_sms_contact_inf;
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&tb_sms_contact_inf, 0, sizeof(tb_sms_contact_inf));
+    memcpy(&tb_sms_contact_inf, ptb_sms_contact_inf, sizeof(tb_sms_contact_inf));
+    switch(vnOprType)
+    {
+        case DBS_CURSOR:
+            EXEC SQL DECLARE tbl_contact_inf_cur CURSOR FOR
+                        SELECT name, mobile 
+                        FROM GMPAY_SMS_CONTACT@PUBLIC_DATA;
+            return LUsrErrNull; 
+
+	case DBS_OPEN:
+            EXEC SQL OPEN tbl_contact_inf_cur;
+            return sqlca.sqlcode;
+
+        case DBS_FETCH:
+            EXEC SQL FETCH
+                tbl_contact_inf_cur
+            INTO
+            :tb_sms_contact_inf.name,
+            :tb_sms_contact_inf.mobile
+        ;
+        memcpy(ptb_sms_contact_inf, &tb_sms_contact_inf, sizeof(tb_sms_contact_inf));
+        return sqlca.sqlcode;
+
+	case DBS_CLOSE:
+            EXEC SQL CLOSE tbl_contact_inf_cur;
+        return sqlca.sqlcode;
+
+        default:
+            return NO_SWITCH;
+    }
+}

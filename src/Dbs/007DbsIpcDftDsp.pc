@@ -1,0 +1,89 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsIpcdftDsp.pc                                             */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+#include "DbsDef.h"
+
+EXEC SQL BEGIN DECLARE SECTION;
+    struct TBL_ipc_dft_dsp_Def
+    {
+        int    usage_key;
+        char    comp_key[11];
+        int    comp_key_len;
+        int    ipc_dft_index;
+        int    buf_dsp_index;
+        char    txn_num[5];
+        char    ipc_dft[257];
+    } ltTblIpcdftDsp;
+EXEC SQL END DECLARE SECTION;
+
+int DbsIPCDFTDSP( int vnOprType, struct TBL_ipc_dft_dsp_Def *vtpTblIpcdftDsp)
+{
+
+    HtMemcpy(
+        &ltTblIpcdftDsp,
+        vtpTblIpcdftDsp,
+        sizeof(ltTblIpcdftDsp));
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE
+            cur_ipc_dft_dsp_1
+        CURSOR FOR SELECT
+            usage_key,
+            comp_key,
+            comp_key_len,
+            ipc_dft_index,
+            buf_dsp_index,
+            txn_num,
+               ipc_dft
+        FROM
+            ht_tbl_ipc_dft_dsp
+        WHERE
+            usage_key = :ltTblIpcdftDsp.usage_key
+        ORDER BY
+            usage_key;
+        return LUsrErrNull;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN
+            cur_ipc_dft_dsp_1;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            cur_ipc_dft_dsp_1
+        INTO
+            :ltTblIpcdftDsp.usage_key,
+            :ltTblIpcdftDsp.comp_key,
+            :ltTblIpcdftDsp.comp_key_len,
+            :ltTblIpcdftDsp.ipc_dft_index,
+            :ltTblIpcdftDsp.buf_dsp_index,
+            :ltTblIpcdftDsp.txn_num,
+            :ltTblIpcdftDsp.ipc_dft;
+        HtMemcpy(
+            vtpTblIpcdftDsp,
+            &ltTblIpcdftDsp,
+            sizeof(*vtpTblIpcdftDsp));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE
+            cur_ipc_dft_dsp_1;
+        return sqlca.sqlcode;
+
+    default:
+       return NO_SWITCH;
+    } /* end of switch */
+} /* end of DbsIPCDFTDSP */
+

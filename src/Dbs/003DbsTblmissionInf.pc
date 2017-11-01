@@ -1,0 +1,788 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+extern  char    gLogFile[32];
+
+int DbsTblbrhInf(int vnOprType, tbl_brh_info_def1 *vtdbtbl_brh_info)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char brh_id[10 + 1];
+            char brh_level[1 + 1];
+        } ptdbtbl_brh_info;
+        char ptsbrhsta[1 + 1];
+        char ptsFileChkFlag[1 + 1];
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptdbtbl_brh_info, 0x00, sizeof(ptdbtbl_brh_info));
+    HtMemcpy(&ptdbtbl_brh_info, vtdbtbl_brh_info, sizeof(ptdbtbl_brh_info));
+    switch(vnOprType)
+    {
+    case DBS_SELECT:
+        memset(ptsbrhsta, 0, sizeof(ptsbrhsta));
+        EXEC SQL SELECT brh_level INTO :ptsbrhsta
+            FROM HT_TBL_BRH_INFO
+            WHERE brh_id = :ptdbtbl_brh_info.brh_id;
+        HtMemcpy(vtdbtbl_brh_info->brh_level, ptsbrhsta, 1);
+        return sqlca.sqlcode;
+    default:
+        return -1;
+    }
+}
+
+int DbsTblbrhMap(int vnOprType, tbl_brh_map_def *vtdbtbl_brh_map)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char bus_tp[8 + 1];
+            char brh_id[10 + 1];
+        } ptdbtbl_brh_map;
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptdbtbl_brh_map, 0x00, sizeof(ptdbtbl_brh_map));
+    HtMemcpy(&ptdbtbl_brh_map, vtdbtbl_brh_map, sizeof(ptdbtbl_brh_map));
+    switch(vnOprType)
+    {
+    case DBS_SELECT:
+        EXEC SQL SELECT brh_id INTO :ptdbtbl_brh_map.brh_id
+            FROM HT_TBL_BRH_map
+            WHERE bus_tp = :ptdbtbl_brh_map.bus_tp;
+        HtMemcpy(vtdbtbl_brh_map->brh_id, ptdbtbl_brh_map.brh_id, 10);
+        return sqlca.sqlcode;
+    default:
+        return -1;
+    }
+}
+
+
+
+int DbsTblprocCtl(int vnOprType, tbl_proc_ctl_def *vtdbtbl_proc_ctl)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char       inter_brh_code[10 + 1];
+            char       settlmt_date[8 + 1];
+            char   tbl_proc_name[60 + 1];
+            int        tbl_proc_flag;
+            int        tbl_proc_para1;
+            int        tbl_proc_para2;
+            int        tbl_proc_para3;
+        } ptdbtbl_proc_ctl;
+        char ptsTblProcName[60 + 1];
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptdbtbl_proc_ctl, 0, sizeof(ptdbtbl_proc_ctl));
+
+    HtMemcpy(&ptdbtbl_proc_ctl, vtdbtbl_proc_ctl, sizeof(ptdbtbl_proc_ctl));
+
+    switch(vnOprType)
+    {
+    case DBS_SELECT:
+        memset(ptsTblProcName, 0, sizeof(ptsTblProcName));
+        EXEC SQL SELECT
+            ht_tbl_proc_name
+        INTO
+            :ptsTblProcName
+        FROM
+            tbl_proc_ctl
+        WHERE
+            tbl_proc_name     = :ptdbtbl_proc_ctl.tbl_proc_name
+            AND   inter_brh_code    = :ptdbtbl_proc_ctl.inter_brh_code
+            AND   SETTLMT_DATE      = :ptdbtbl_proc_ctl.settlmt_date
+            AND   tbl_proc_flag     = :ptdbtbl_proc_ctl.tbl_proc_flag
+        ;
+        HtMemcpy(vtdbtbl_proc_ctl->tbl_proc_name, ptsTblProcName, sizeof(vtdbtbl_proc_ctl->tbl_proc_name));
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE:
+        EXEC SQL UPDATE
+            ht_tbl_proc_ctl
+        SET tbl_proc_flag =:ptdbtbl_proc_ctl.tbl_proc_flag
+        WHERE
+            tbl_proc_name = :ptdbtbl_proc_ctl.tbl_proc_name
+            AND SETTLMT_DATE = :ptdbtbl_proc_ctl.settlmt_date
+            AND    inter_brh_code = :ptdbtbl_proc_ctl.inter_brh_code
+        ;
+        return sqlca.sqlcode;
+
+    }
+}
+
+int DbsTblmissionInf(int vnOprType, tbl_mission_inf_def *vtdbtbl_mission_inf)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char inter_brh_code[10 + 1];
+            char settlmt_date[8 + 1];
+            char mission_index [4 + 1];
+            char mission_name[200 + 1];
+            int mission_level;
+            int mission_status;
+            int data_num;
+            int child_num;
+            int commit_flag;
+            int commit_num;
+            char start_time[40 + 1];
+            char end_time[40 + 1];
+        } ptdbtbl_mission_inf;
+
+        char ptinter_brh_code[10 + 1];
+        int  ptmission_level;
+        int count;
+        int ptchild_num;
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptdbtbl_mission_inf, 0, sizeof(ptdbtbl_mission_inf));
+    HtMemcpy(&ptdbtbl_mission_inf, vtdbtbl_mission_inf, sizeof(ptdbtbl_mission_inf));
+
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE cur_0_ms_inst CURSOR with hold FOR
+        SELECT
+            distinct inter_brh_code
+        FROM
+            ht_tbl_mission_inf
+        ;
+        return LUsrErrNull;
+    case DBS_CURSOR1:
+        EXEC SQL DECLARE cur_1_ms_inst CURSOR with hold for
+        SELECT
+            mission_index,
+            mission_name,
+            mission_level,
+            mission_status,
+            data_num,
+            child_num,
+            commit_flag,
+            commit_num
+        FROM
+            ht_tbl_mission_inf
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_status = :ptdbtbl_mission_inf.mission_status
+            AND mission_level = :ptdbtbl_mission_inf.mission_level
+            ;
+        return LUsrErrNull;
+
+    case DBS_CURSOR2:
+        EXEC SQL DECLARE cur_2_ms_inst CURSOR with hold for
+        SELECT
+            mission_status
+        FROM
+            ht_tbl_mission_inf
+        WHERE
+            settlmt_date = :ptdbtbl_mission_inf.settlmt_date AND
+	    inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+	    ;
+        return LUsrErrNull;
+
+    case DBS_CURSOR3:
+        EXEC SQL DECLARE cur_3_ms_inst CURSOR with hold for
+        SELECT
+	    inter_brh_code,
+	    settlmt_date,
+            mission_index,
+            mission_name,
+            mission_level,
+            mission_status,
+            data_num,
+            child_num,
+            commit_flag,
+            commit_num
+        FROM
+            ht_tbl_mission_inf
+        WHERE
+            SETTLMT_DATE = :ptdbtbl_mission_inf.settlmt_date AND
+	    INTER_BRH_CODE = :ptdbtbl_mission_inf.inter_brh_code AND
+            MISSION_STATUS != :ptdbtbl_mission_inf.mission_status
+	    ORDER BY MISSION_LEVEL ASC;
+        return LUsrErrNull;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN cur_0_ms_inst;
+        return sqlca.sqlcode;
+		
+    case DBS_OPEN1:
+        EXEC SQL OPEN cur_1_ms_inst;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN2:
+        EXEC SQL OPEN cur_2_ms_inst;
+        return sqlca.sqlcode;
+
+    case DBS_OPEN3:
+        EXEC SQL OPEN cur_3_ms_inst;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        memset(ptinter_brh_code, 0x00, sizeof(ptinter_brh_code));
+        EXEC SQL FETCH
+            cur_0_ms_inst
+        INTO
+            :ptinter_brh_code
+        ;
+        HtMemcpy(vtdbtbl_mission_inf->inter_brh_code, ptinter_brh_code, sizeof(ptinter_brh_code));
+        return sqlca.sqlcode;
+
+    case DBS_FETCH1:
+        EXEC SQL FETCH
+            cur_1_ms_inst
+        INTO
+            :ptdbtbl_mission_inf.mission_index,
+            :ptdbtbl_mission_inf.mission_name,
+            :ptdbtbl_mission_inf.mission_level,
+            :ptdbtbl_mission_inf.mission_status,
+            :ptdbtbl_mission_inf.data_num,
+            :ptdbtbl_mission_inf.child_num,
+            :ptdbtbl_mission_inf.commit_flag,
+            :ptdbtbl_mission_inf.commit_num
+        ;
+        HtMemcpy(vtdbtbl_mission_inf->mission_index, ptdbtbl_mission_inf.mission_index, 4);
+        HtMemcpy(vtdbtbl_mission_inf->mission_name, ptdbtbl_mission_inf.mission_name, 200);
+        vtdbtbl_mission_inf->mission_level = ptdbtbl_mission_inf.mission_level;
+        vtdbtbl_mission_inf->data_num = ptdbtbl_mission_inf.data_num;
+        vtdbtbl_mission_inf->child_num = ptdbtbl_mission_inf.child_num;
+        vtdbtbl_mission_inf->commit_flag = ptdbtbl_mission_inf.commit_flag;
+        vtdbtbl_mission_inf->commit_num = ptdbtbl_mission_inf.commit_num;
+        vtdbtbl_mission_inf->mission_status = ptdbtbl_mission_inf.mission_status;
+
+        return sqlca.sqlcode;
+
+    case DBS_FETCH2:
+        EXEC SQL FETCH
+            cur_2_ms_inst
+        INTO
+            :ptdbtbl_mission_inf.mission_status;
+        vtdbtbl_mission_inf->mission_status = ptdbtbl_mission_inf.mission_status;
+
+        return sqlca.sqlcode;
+
+     case DBS_FETCH3:
+        EXEC SQL FETCH
+            cur_3_ms_inst
+        INTO
+	    :ptdbtbl_mission_inf.inter_brh_code,
+	    :ptdbtbl_mission_inf.settlmt_date,
+            :ptdbtbl_mission_inf.mission_index,
+            :ptdbtbl_mission_inf.mission_name,
+            :ptdbtbl_mission_inf.mission_level,
+            :ptdbtbl_mission_inf.mission_status,
+            :ptdbtbl_mission_inf.data_num,
+            :ptdbtbl_mission_inf.child_num,
+            :ptdbtbl_mission_inf.commit_flag,
+            :ptdbtbl_mission_inf.commit_num
+        ;
+	HtMemcpy(vtdbtbl_mission_inf->inter_brh_code, ptdbtbl_mission_inf.inter_brh_code, 6);
+	HtMemcpy(vtdbtbl_mission_inf->settlmt_date, ptdbtbl_mission_inf.settlmt_date, 8);
+        HtMemcpy(vtdbtbl_mission_inf->mission_index, ptdbtbl_mission_inf.mission_index, 4);
+        HtMemcpy(vtdbtbl_mission_inf->mission_name, ptdbtbl_mission_inf.mission_name, 200);
+        vtdbtbl_mission_inf->mission_level = ptdbtbl_mission_inf.mission_level;
+        vtdbtbl_mission_inf->data_num = ptdbtbl_mission_inf.data_num;
+        vtdbtbl_mission_inf->child_num = ptdbtbl_mission_inf.child_num;
+        vtdbtbl_mission_inf->commit_flag = ptdbtbl_mission_inf.commit_flag;
+        vtdbtbl_mission_inf->commit_num = ptdbtbl_mission_inf.commit_num;
+        vtdbtbl_mission_inf->mission_status = ptdbtbl_mission_inf.mission_status;
+
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE cur_0_ms_inst;
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE1:
+        EXEC SQL CLOSE cur_1_ms_inst;
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE2:
+        EXEC SQL CLOSE cur_2_ms_inst;
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE3:
+        EXEC SQL CLOSE cur_3_ms_inst;
+        return sqlca.sqlcode;
+
+    case DBS_DELETE:
+        EXEC SQL DELETE FROM
+            ht_tbl_mission_inf
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND SETTLMT_DATE = :ptdbtbl_mission_inf.settlmt_date
+        ;
+
+        return sqlca.sqlcode;
+
+    case DBS_SELECT:
+        count = 0;
+        EXEC SQL SELECT
+            COUNT(*)
+        INTO
+            :count
+        FROM
+            ht_TBL_MISSION_INF
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date;
+
+        return count;
+
+    case DBS_SELECT1:
+        EXEC SQL SELECT
+            min(mission_level)
+        into
+            :ptmission_level
+        FROM
+            ht_TBL_MISSION_INF
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_status = :ptdbtbl_mission_inf.mission_status
+        ;
+        vtdbtbl_mission_inf->mission_level = ptmission_level;
+        return sqlca.sqlcode;
+
+    case DBS_SELECT2:
+        count = 0;
+        EXEC SQL SELECT
+            count(*)
+        INTO :count
+        FROM
+            ht_TBL_MISSION_INF
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_status <> 3
+            AND mission_level < :ptdbtbl_mission_inf.mission_level
+        ;
+        return count;
+
+    case DBS_SELECT3:
+        ptchild_num = 0;
+        EXEC SQL SELECT child_num
+        into :ptchild_num
+        FROM
+            ht_tbl_mission_inf
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_index = :ptdbtbl_mission_inf.mission_index
+        for update;
+
+        vtdbtbl_mission_inf->child_num = ptchild_num;
+        return sqlca.sqlcode;
+
+    case DBS_SELECT4:
+        EXEC SQL SELECT
+             mission_status
+        into
+             :ptdbtbl_mission_inf.mission_status
+        FROM
+            ht_tbl_mission_inf
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_index = :ptdbtbl_mission_inf.mission_index
+        ;
+        if (sqlca.sqlcode)
+            return sqlca.sqlcode;
+        HtMemcpy(vtdbtbl_mission_inf, &ptdbtbl_mission_inf, sizeof(ptdbtbl_mission_inf));
+        return 0;
+
+    case DBS_SELECT5:
+        EXEC SQL SELECT
+             count( distinct inter_brh_code||mission_index )
+        into
+             :ptdbtbl_mission_inf.data_num
+        FROM
+            ht_tbl_mission_inf
+        WHERE
+            settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_index = :ptdbtbl_mission_inf.mission_index
+        AND mission_status = 3
+        ;
+        if (sqlca.sqlcode)
+            return sqlca.sqlcode;
+        HtMemcpy(vtdbtbl_mission_inf, &ptdbtbl_mission_inf, sizeof(ptdbtbl_mission_inf));
+        return 0;
+
+    case DBS_SELECT6:
+        EXEC SQL SELECT MISSION_INDEX, MISSION_NAME, MISSION_LEVEL, MISSION_STATUS,
+	                DATA_NUM, CHILD_NUM, COMMIT_FLAG, COMMIT_NUM 
+	into 
+            :ptdbtbl_mission_inf.mission_index,
+            :ptdbtbl_mission_inf.mission_name,
+            :ptdbtbl_mission_inf.mission_level,
+            :ptdbtbl_mission_inf.mission_status,
+            :ptdbtbl_mission_inf.data_num,
+            :ptdbtbl_mission_inf.child_num,
+            :ptdbtbl_mission_inf.commit_flag,
+            :ptdbtbl_mission_inf.commit_num
+	FROM HT_TBL_MISSION_INF
+	WHERE SETTLMT_DATE = :ptdbtbl_mission_inf.settlmt_date AND
+	      INTER_BRH_CODE = :ptdbtbl_mission_inf.inter_brh_code AND
+              MISSION_STATUS != :ptdbtbl_mission_inf.mission_status
+	      ORDER BY MISSION_LEVEL ASC;
+	HtMemcpy(vtdbtbl_mission_inf->mission_index, ptdbtbl_mission_inf.mission_index, 4);
+        HtMemcpy(vtdbtbl_mission_inf->mission_name, ptdbtbl_mission_inf.mission_name, 200);
+        vtdbtbl_mission_inf->mission_level = ptdbtbl_mission_inf.mission_level;
+        vtdbtbl_mission_inf->data_num = ptdbtbl_mission_inf.data_num;
+        vtdbtbl_mission_inf->child_num = ptdbtbl_mission_inf.child_num;
+        vtdbtbl_mission_inf->commit_flag = ptdbtbl_mission_inf.commit_flag;
+        vtdbtbl_mission_inf->commit_num = ptdbtbl_mission_inf.commit_num;
+        vtdbtbl_mission_inf->mission_status = ptdbtbl_mission_inf.mission_status;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE:
+        EXEC SQL UPDATE
+            ht_TBL_MISSION_INF
+        SET
+            mission_status = :ptdbtbl_mission_inf.mission_status,
+            start_time     = :ptdbtbl_mission_inf.start_time,
+            end_time       = :ptdbtbl_mission_inf.end_time
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_index = :ptdbtbl_mission_inf.mission_index
+        ;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE2:
+        EXEC SQL UPDATE
+            ht_TBL_MISSION_INF
+        SET
+            mission_status = :ptdbtbl_mission_inf.mission_status,
+            child_num      = :ptdbtbl_mission_inf.child_num ,
+            end_time       = :ptdbtbl_mission_inf.end_time
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_index = :ptdbtbl_mission_inf.mission_index
+        ;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE1:
+        EXEC SQL UPDATE
+            ht_TBL_MISSION_INF
+        SET
+            child_num = :ptdbtbl_mission_inf.child_num
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_index = :ptdbtbl_mission_inf.mission_index
+        ;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE3:
+        EXEC SQL update ht_tbl_mission_inf
+        SET
+            mission_status = :ptdbtbl_mission_inf.mission_status
+        WHERE
+            inter_brh_code = :ptdbtbl_mission_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_mission_inf.settlmt_date
+            AND mission_index = :ptdbtbl_mission_inf.mission_index
+        ;
+        return sqlca.sqlcode;
+
+    default:
+       return NO_SWITCH;
+    }
+}
+
+int DbsTblchildInf(int vnOprType, tbl_child_inf_def *vtdbtbl_child_inf)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char inter_brh_code[10 + 1];
+            char settlmt_date[8 + 1];
+            char mission_index [4 + 1];
+            int child_id;
+            int commit_flag;
+            int commit_num;
+            int child_begin_point;
+            int child_end_point;
+            int child_finish_point;
+            int child_err_point;
+            int child_status;
+        } ptdbtbl_child_inf;
+
+        int nCountNum;
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptdbtbl_child_inf, 0x00, sizeof(ptdbtbl_child_inf));
+    HtMemcpy(&ptdbtbl_child_inf, vtdbtbl_child_inf, sizeof(ptdbtbl_child_inf));
+
+    switch(vnOprType)
+    {
+    case DBS_DELETE:
+        EXEC SQL DELETE FROM
+            ht_tbl_child_inf
+        WHERE
+            inter_brh_code = :ptdbtbl_child_inf.inter_brh_code
+        AND SETTLMT_DATE = :ptdbtbl_child_inf.settlmt_date
+        ;
+        return sqlca.sqlcode;
+
+    case DBS_SELECT:
+        nCountNum = 0;
+        EXEC SQL SELECT
+            count(*)
+        INTO
+            :nCountNum
+        FROM
+            ht_tbl_child_inf
+        WHERE
+            child_status = :ptdbtbl_child_inf.child_status
+        ;
+        return nCountNum;
+
+    case DBS_SELECT1:
+        EXEC SQL SELECT
+            child_status
+        INTO
+            :ptdbtbl_child_inf.child_status
+        FROM
+            ht_tbl_child_inf
+        WHERE
+        inter_brh_code = :ptdbtbl_child_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_child_inf.settlmt_date
+            AND mission_index = :ptdbtbl_child_inf.mission_index;
+        HtMemcpy(vtdbtbl_child_inf, &ptdbtbl_child_inf, sizeof(ptdbtbl_child_inf));
+        return sqlca.sqlcode;
+
+    case DBS_SELECT2:
+        EXEC SQL SELECT
+            child_status
+        INTO
+            :ptdbtbl_child_inf.child_status
+        FROM
+            ht_tbl_child_inf
+        WHERE
+            settlmt_date =:ptdbtbl_child_inf.settlmt_date
+        AND mission_index= :ptdbtbl_child_inf.mission_index;
+        HtMemcpy(vtdbtbl_child_inf, &ptdbtbl_child_inf, sizeof(ptdbtbl_child_inf));
+        return sqlca.sqlcode;
+
+    case DBS_SELECT3:
+        nCountNum = 0;
+        EXEC SQL SELECT
+            count(*)
+        INTO
+            :nCountNum
+        FROM
+            ht_tbl_child_inf
+        WHERE
+            child_status = :ptdbtbl_child_inf.child_status and
+	    inter_brh_code = :ptdbtbl_child_inf.inter_brh_code
+	  
+        ;
+        return nCountNum;
+        
+    case DBS_DELETE1:
+        EXEC SQL DELETE FROM
+            ht_tbl_child_inf
+        WHERE
+            SETTLMT_DATE = :ptdbtbl_child_inf.settlmt_date
+        ;
+        return sqlca.sqlcode;
+
+    case DBS_INSERT:
+        EXEC SQL INSERT INTO
+            ht_TBL_CHILD_INF
+        VALUES
+        (
+            :ptdbtbl_child_inf.inter_brh_code,
+            :ptdbtbl_child_inf.settlmt_date,
+            :ptdbtbl_child_inf.mission_index,
+            :ptdbtbl_child_inf.child_id,
+            :ptdbtbl_child_inf.commit_flag,
+            :ptdbtbl_child_inf.commit_num,
+            :ptdbtbl_child_inf.child_begin_point,
+            :ptdbtbl_child_inf.child_end_point,
+            :ptdbtbl_child_inf.child_finish_point,
+            :ptdbtbl_child_inf.child_err_point,
+            :ptdbtbl_child_inf.child_status
+        );
+        return sqlca.sqlcode;
+
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_child_inf_cur CURSOR for
+        SELECT
+            inter_brh_code,
+            settlmt_date,
+            mission_index,
+            child_id,
+            commit_flag,
+            commit_num,
+            child_begin_point,
+            child_end_point,
+            child_finish_point,
+            child_err_point,
+            child_status
+        FROM
+            ht_tbl_child_inf
+        WHERE
+            child_status = :ptdbtbl_child_inf.child_status
+        ;
+
+        EXEC SQL OPEN tbl_child_inf_cur;
+
+        return sqlca.sqlcode;
+
+    case DBS_CURSOR1:
+        EXEC SQL DECLARE tbl_child_inf_cur1 CURSOR for
+        SELECT
+            inter_brh_code,
+            settlmt_date,
+            mission_index,
+            child_id,
+            commit_flag,
+            commit_num,
+            child_begin_point,
+            child_end_point,
+            child_finish_point,
+            child_err_point,
+            child_status
+        FROM
+            ht_tbl_child_inf
+        WHERE
+            child_status = :ptdbtbl_child_inf.child_status and
+            inter_brh_code = :ptdbtbl_child_inf.inter_brh_code
+        ;
+
+        EXEC SQL OPEN tbl_child_inf_cur1;
+
+        return sqlca.sqlcode;
+    
+    case DBS_OPEN1:
+        EXEC SQL OPEN tbl_child_inf_cur1;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            tbl_child_inf_cur
+        INTO
+            :ptdbtbl_child_inf.inter_brh_code,
+            :ptdbtbl_child_inf.settlmt_date,
+            :ptdbtbl_child_inf.mission_index,
+            :ptdbtbl_child_inf.child_id,
+            :ptdbtbl_child_inf.commit_flag,
+            :ptdbtbl_child_inf.commit_num,
+            :ptdbtbl_child_inf.child_begin_point,
+            :ptdbtbl_child_inf.child_end_point,
+            :ptdbtbl_child_inf.child_finish_point,
+            :ptdbtbl_child_inf.child_err_point,
+            :ptdbtbl_child_inf.child_status
+        ;
+
+        HtMemcpy(vtdbtbl_child_inf, &ptdbtbl_child_inf, sizeof(ptdbtbl_child_inf));
+        return sqlca.sqlcode;
+
+    case DBS_FETCH1:
+        EXEC SQL FETCH
+            tbl_child_inf_cur1
+        INTO
+            :ptdbtbl_child_inf.inter_brh_code,
+            :ptdbtbl_child_inf.settlmt_date,
+            :ptdbtbl_child_inf.mission_index,
+            :ptdbtbl_child_inf.child_id,
+            :ptdbtbl_child_inf.commit_flag,
+            :ptdbtbl_child_inf.commit_num,
+            :ptdbtbl_child_inf.child_begin_point,
+            :ptdbtbl_child_inf.child_end_point,
+            :ptdbtbl_child_inf.child_finish_point,
+            :ptdbtbl_child_inf.child_err_point,
+            :ptdbtbl_child_inf.child_status
+        ;
+
+        HtMemcpy(vtdbtbl_child_inf, &ptdbtbl_child_inf, sizeof(ptdbtbl_child_inf));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE tbl_child_inf_cur;
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE1:
+        EXEC SQL CLOSE tbl_child_inf_cur1;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE:
+        EXEC SQL UPDATE
+            ht_tbl_child_inf
+        SET
+            child_status = :ptdbtbl_child_inf.child_status,
+            child_err_point=:ptdbtbl_child_inf.child_err_point
+        WHERE
+            inter_brh_code = :ptdbtbl_child_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_child_inf.settlmt_date
+            AND mission_index = :ptdbtbl_child_inf.mission_index
+            AND child_id = :ptdbtbl_child_inf.child_id
+        ;
+        return sqlca.sqlcode;
+
+    case DBS_UPDATE1:
+        EXEC SQL UPDATE
+            ht_tbl_child_inf
+        SET
+            child_finish_point = :ptdbtbl_child_inf.child_finish_point
+        WHERE
+            inter_brh_code = :ptdbtbl_child_inf.inter_brh_code
+            AND settlmt_date = :ptdbtbl_child_inf.settlmt_date
+            AND mission_index = :ptdbtbl_child_inf.mission_index
+            AND child_id = :ptdbtbl_child_inf.child_id
+        ;
+        return sqlca.sqlcode;
+
+    default:
+        return NO_SWITCH;
+    }
+}
+int DbsGetSumCompleteBrh(tbl_mission_inf_def *vtdbtbl_mission_inf, int *SumCompleteBrh)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char inter_brh_code[10 + 1];
+            char settlmt_date[8 + 1];
+            char mission_index [4 + 1];
+            char mission_name[200 + 1];
+            int mission_level;
+            int mission_status;
+            int data_num;
+            int child_num;
+            int commit_flag;
+            int commit_num;
+            char start_time[40 + 1];
+            char end_time[40 + 1];
+        } ptbl_mission_inf;
+
+        int iSumCompleteBrh;
+    EXEC SQL END DECLARE SECTION;
+
+    memset(&ptbl_mission_inf, 0, sizeof(ptbl_mission_inf));
+    HtMemcpy(&ptbl_mission_inf, vtdbtbl_mission_inf, sizeof(ptbl_mission_inf));
+
+    EXEC SQL SELECT
+                count(*)
+        INTO
+          :iSumCompleteBrh
+            FROM
+                ht_tbl_mission_inf
+            WHERE
+                settlmt_date = :ptbl_mission_inf.settlmt_date
+                AND mission_index = :ptbl_mission_inf.mission_index
+          AND MISSION_STATUS = 3;
+    *SumCompleteBrh = iSumCompleteBrh;
+    return sqlca.sqlcode;
+}

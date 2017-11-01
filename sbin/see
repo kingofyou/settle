@@ -1,0 +1,139 @@
+###############################################################################
+#  Copyright 2012, Shanghai Huateng Software Systems Co., Ltd.
+#  All right reserved.
+#
+#  THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF SHANGHAI HUATENG
+#  SOFTWARE SYSTEMS CO., LTD.  THE CONTENTS OF THIS FILE MAY NOT
+#  BE DISCLOSED TO THIRD PARTIES, COPIED OR DUPLICATED IN ANY FORM,
+#  IN WHOLE OR IN PART, WITHOUT THE PRIOR WRITTEN PERMISSION OF
+#  SHANGHAI HUATENG SOFTWARE SYSTEMS CO., LTD.
+#
+#  脚 本 名: bsee
+#  功    能: 清结算系统进程查看工具
+#  编程人员: 
+#  开发时间: 
+#  备    注:
+###############################################################################
+
+#!/bin/sh
+
+findproc()
+{
+    cnt=`ps -ef | grep $LOGNAME | grep "$1" | grep -v "grep" | grep -v "vi" | grep -v "view" | grep -v "tail" | wc -l`
+    if [ $cnt != "0" ]
+    then
+        echo $cnt
+    else
+        echo "0"
+    fi
+}
+compare_eq()
+{
+    cnt=`ps -ef | grep $LOGNAME | grep -w "$1" | grep -v "grep" | grep -v "vi" | grep -v "view" | grep -v "tail" | grep -v "defunct" | wc -l`
+    
+    if [ $cnt != "$2" ]
+    then
+        if [ $cnt == "0" ]
+        then
+            echo "inactive"
+        else
+            echo  -e "\033[31;1mabnormal\033[0m"
+        fi
+    else
+        echo  -e "\033[32;1mrunning\033[0m"
+    fi
+}
+compare_ge()
+{
+    cnt=`ps -ef | grep $LOGNAME | grep -w "$1" | grep -v "grep" | grep -v "vi" | grep -v "view" | grep -v "tail" | grep -v "defunct" | wc -l`
+    
+    if [ $cnt == "0" ];then
+        echo "inactive"
+    elif [ $cnt -ge "$2" ]; then
+        echo -e "\033[32;1mrunning\033[0m"
+    else 
+        echo -e "\033[31;1mabnormal\033[0m"
+    fi
+}
+
+clear
+
+echo "================================================================================"
+echo "********************       POSP BAT PROCESS                 ********************" 
+echo "================================================================================"
+echo "name                    need                 actual               status"
+#echo "--------------------------------------------------------------------------------"
+#echo -e  "\033[34;1mclrmisn    \033[0m             >=1                    `findproc "clrmisn"`               \t `compare_ge clrmisn  1`"
+echo "--------------------------------------------------------------------------------"
+echo -e  "\033[34;1mInstMisn    \033[0m            >=1                    `findproc "InstMisn"`              \t `compare_ge InstMisn  1`"
+echo -e  "\033[34;1mMMisnMain   \033[0m            >=1                    `findproc "MMisnMain"`             \t `compare_ge MMisnMain  1`"
+echo -e  "\033[34;1mMSubMisnMain\033[0m            >=1                    `findproc "MSubMisnMain"`          \t `compare_ge MSubMisnMain  1`"
+echo "--------------------------------------------------------------------------------"
+#echo -e  "\033[34;1mTMisnDaemon \033[0m            >=1                    `findproc "TMisnDaemon"`           \t `compare_eq TMisnDaemon  1`"
+echo -e  "\033[34;1mTMisnMain   \033[0m            >=1                    `findproc "TMisnMain"`             \t `compare_eq TMisnMain  1`"
+echo -e  "\033[34;1mTSubMisnMain\033[0m            >=1                    `findproc "TSubMisnMain"`          \t `compare_eq TSubMisnMain  1 `"
+echo "--------------------------------------------------------------------------------"
+echo "================================================================================"
+echo "Please Press Button <Return> ..."
+echo
+read
+
+
+bsee
+echo "Please Press Button <Return> ..."
+echo
+read
+tmpfile="$HOME/batch/sbin/see.tmp"
+
+#系统当前日期
+CURDATE=`date +%Y%m%d`
+echo "系统当前日期: ${CURDATE}"
+
+#取日期参数
+if [ $# -gt 0 ]
+then
+    DATE=$1
+else
+    DATE=`date +%Y%m%d`
+fi
+echo "参数日期: ${DATE}"
+
+
+sqlplus $DBUSER/$DBPWD@$DBNAME << EOF > /dev/null
+    set term off;
+    set echo off;
+    set timing off;
+    set heading off;
+    set feedback off;
+    set pagesize 0;
+    set linesize 1000;
+    set trimspool on;
+    set trimout on;
+	set colsep | ;
+	spool $tmpfile.lst;
+	select '|',inter_brh_code,mission_index,settlmt_date,child_status from ht_tbl_child_inf where settlmt_date>=${DATE} and (child_status='1' or child_status='2');
+	select '|',inter_brh_code,mission_index,mission_date,child_status from ht_tbl_child_time where mission_date>=${DATE} and (child_status='1' or child_status='2');
+    spool off;
+    exit
+EOF
+
+    echo "                               数据库批次监控  "
+    echo " "  
+    echo " " 
+    awk 'BEGIN{printf("%-14.14s|%-14.14s|%-14.14s|%-14.14s|\n", "批次号","任务号","清算日期","状态")}' 
+    echo '--------------------------------------------------------------------------------' 
+
+    while read LINE
+    do
+	    LINEFLAG=`echo $LINE|cut -c 1-1`
+	    if [ $LINEFLAG = '|' ]
+	    then
+	       echo $LINE|awk -F'|' '{printf("%-14.14s|%-14.14s|%-14.14s|%-14.2s|\n", $3,$4,$5,$6)}'
+	    fi
+
+    done <$tmpfile.lst
+    echo '--------------------------------------------------------------------------------' 
+
+
+
+read

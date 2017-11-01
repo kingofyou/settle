@@ -1,0 +1,45 @@
+#!/bin/sh
+. $HOME/.bash_profile
+
+#kill server
+stopbatch >/dev/null  2>&1 
+sleep 1
+#系统当前日期
+CURDATE=`date +%Y%m%d`
+echo "系统当前日期: ${CURDATE}"
+
+#取日期参数
+if [ $# -gt 0 ]
+then
+    DATE=$1
+else
+    DATE=`date +%Y%m%d`
+fi
+echo "参数日期: ${DATE}"
+
+#取日期参数
+if [ $# -gt 0 ]
+then
+    NEXTDATE=$2
+else
+    NEXTDATE=`date +%Y%m%d`
+fi
+echo "参数日期: ${SYSSTERDATE}"
+
+#启动服务前，清理当前日期及以后的tbl_child_inf、tbl_proc_ctl、tbl_mission_inf表数据
+echo "start delete database................."
+sqlplus $DBUSER/$DBPWD@$DBNAME << EOF
+update HT_TBL_DATE_INF set stoday = ${DATE},syesterday = '20170419',snextdate= ${NEXTDATE} where INTER_BRH_CODE like '2%';
+delete from HT_TBL_MISSION_inf where SETTLMT_DATE = ${DATE} and INTER_BRH_CODE like '2%';
+delete from ht_tbl_child_inf where SETTLMT_DATE = ${DATE} and INTER_BRH_CODE like '2%';
+update ht_tbl_child_time t set t.child_status='0',t.child_finish_point='0',t.child_err_point='0' where t.mission_date=${NEXTDATE} and t.INTER_BRH_CODE like '2%';
+
+update HT_TBL_ACCT_RSLT set acct_statu='N' where  ACCT_DATE = ${DATE};
+delete from ht_tbl_sett_list where SETT_DATE = ${DATE};
+commit;
+EOF
+echo "finish delete database................."
+#
+#runbatch
+
+sleep 2

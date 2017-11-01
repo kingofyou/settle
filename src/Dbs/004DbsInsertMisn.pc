@@ -1,0 +1,207 @@
+/*****************************************************************************/
+/*                NCUP -- Shanghai Huateng Software System Inc.              */
+/*****************************************************************************/
+/* PROGRAM NAME: DbsMainMisn.pc                                              */
+/* DESCRIPTIONS:                                                             */
+/*****************************************************************************/
+/*                             MODIFICATION LOG                              */
+/* DATE        PROGRAMMER     DESCRIPTION                                    */
+/*                                                                           */
+/*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include "DbsDef.h"
+#include "batch.h"
+
+extern    char    gLogFile[LOG_NAME_LEN_MAX];
+EXEC SQL include sqlca;
+EXEC SQL include sqlda;
+
+EXEC SQL BEGIN DECLARE SECTION;
+
+    struct sql_tbl_mission_cfg_def
+    {
+        char        mission_type   [1  + 1];
+        char        mission_index  [4  + 1];
+        char        mission_name   [200 + 1];
+        int    mission_level          ;
+        int    data_num               ;
+        int    commit_flag            ;
+        int    commit_num             ;
+    } ptdbTblMissionCfg;
+
+EXEC SQL END DECLARE SECTION;
+
+
+int DbsInsertMisn( char *sInterBrhCode, char *sStlmDate, char *sMisnType)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char      sMissionType[1 + 1];
+        char      sMissionIndex[4 + 1];
+        char      sMissionName[200 + 1];
+        char      ptsinterbrhcode[10 + 1];
+        char      ptstlmdate[8 + 1];
+        int       nMissionLevel;
+        int       nDataNum;
+        int       nCommitFlag;
+        int       nCommitNum;
+    EXEC SQL END DECLARE SECTION;
+
+    /* insert tbl_mission_inf */
+    memset(sMissionType, 0, 2);
+    memset(ptsinterbrhcode, 0, 11);
+    memset(ptstlmdate, 0, 9);
+    memcpy(ptstlmdate, sStlmDate, 8);
+    memcpy(ptsinterbrhcode, sInterBrhCode, 10);
+    memcpy(sMissionType, sMisnType, 1);
+
+    EXEC SQL DECLARE tbl_ms_cfg_cur_1 CURSOR
+        FOR
+        SELECT
+            MISSION_INDEX,
+            MISSION_NAME,
+            MISSION_LEVEL,
+            DATA_NUM,
+            COMMIT_FLAG,
+            COMMIT_NUM
+        FROM ht_TBL_MISSION_CFG
+        WHERE MISSION_TYPE = :sMissionType;
+
+    EXEC SQL OPEN tbl_ms_cfg_cur_1;
+    if( sqlca.sqlcode)
+    {
+        HtLog(gLogFile, HT_LOG_MODE_ERROR, __FILE__, __LINE__, "open tbl_brh_info_cursor error! sqlcode[%d]", sqlca.sqlcode);
+        return -1;
+    }
+
+    while(1)
+    {
+        memset( sMissionIndex, 0, 4 + 1);
+        memset( sMissionName, 0, 200 + 1);
+        nMissionLevel = 0;
+        nDataNum = 0;
+        nCommitFlag = 0;
+        nCommitNum = 0;
+        EXEC SQL FETCH tbl_ms_cfg_cur_1
+            into
+                :sMissionIndex,
+                :sMissionName,
+                :nMissionLevel,
+                :nDataNum,
+                :nCommitFlag,
+                :nCommitNum;
+
+        if( sqlca.sqlcode == DBS_NOTFOUND)
+        {
+            break;
+        }
+        else if(sqlca.sqlcode)
+        {
+            HtLog (gLogFile, HT_LOG_MODE_ERROR,  __FILE__, __LINE__, "SELECT FROM tbl_mission_cfg ERROR [%d]", sqlca.sqlcode);
+            return -1;
+        }
+
+        CommonRTrim(sMissionName);
+
+        EXEC SQL INSERT INTO ht_tbl_mission_inf VALUES
+        (
+            :ptsinterbrhcode,
+            :ptstlmdate,
+            :sMissionIndex,
+            :sMissionName,
+            :nMissionLevel,
+            0,
+            :nDataNum,
+            0,
+            :nCommitFlag,
+            :nCommitNum,
+            '-',
+            '-'
+        );
+        HtLog (gLogFile, HT_LOG_MODE_ERROR,  __FILE__, __LINE__, "INSERT tbl_mission_inf  INTER_BRH_CODE[%s], MISSION_INDEX[%s]", ptsinterbrhcode, sMissionIndex);
+        if(sqlca.sqlcode)
+        {
+            HtLog (gLogFile, HT_LOG_MODE_ERROR,  __FILE__, __LINE__, "insert into tbl_mission_inf error [%d]", sqlca.sqlcode);
+            return -1;
+        }
+
+    }
+
+    EXEC SQL CLOSE tbl_ms_cfg_cur_1;
+    /* insert tbl_mission_inf enc */
+
+    return 0;
+}
+
+/*************************************************
+*函数名称∶  DbsTblMissionCfg
+*函数功能∶  表 tbl_mission_cfg 操作函数
+*输入参数∶
+*输出参数∶
+*函数返回∶
+***************************************************/
+int DbsTblMissionCfg(int vnOprType, tbl_mission_cfg_def *vtdbTblMissionCfg)
+{
+    memset(&ptdbTblMissionCfg, 0x00, sizeof(ptdbTblMissionCfg));
+    memcpy(&ptdbTblMissionCfg, vtdbTblMissionCfg, sizeof(ptdbTblMissionCfg));
+
+    switch(vnOprType)
+    {
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_mission_cfg_cur CURSOR for
+            select
+                mission_type   ,
+                mission_index  ,
+                mission_name   ,
+                mission_level  ,
+                data_num       ,
+                commit_flag    ,
+                commit_num
+            from ht_tbl_mission_cfg
+            where   mission_index = :ptdbTblMissionCfg.mission_index;
+        return 0;
+
+    case DBS_OPEN:
+        EXEC SQL OPEN tbl_mission_cfg_cur;
+        return sqlca.sqlcode;
+
+    case DBS_FETCH:
+        EXEC SQL FETCH tbl_mission_cfg_cur INTO
+            :ptdbTblMissionCfg.mission_type   ,
+            :ptdbTblMissionCfg.mission_index  ,
+            :ptdbTblMissionCfg.mission_name   ,
+            :ptdbTblMissionCfg.mission_level  ,
+            :ptdbTblMissionCfg.data_num       ,
+            :ptdbTblMissionCfg.commit_flag    ,
+            :ptdbTblMissionCfg.commit_num     ;
+
+        memcpy(vtdbTblMissionCfg, &ptdbTblMissionCfg, sizeof(ptdbTblMissionCfg));
+        return sqlca.sqlcode;
+
+    case DBS_CLOSE:
+        EXEC SQL CLOSE tbl_mission_cfg_cur;
+        return sqlca.sqlcode;
+
+    case DBS_SELECT:
+        EXEC SQL SELECT
+        count(*)
+        INTO
+        :ptdbTblMissionCfg.data_num
+        FROM
+        	ht_tbl_mission_cfg
+        WHERE
+        mission_index = :ptdbTblMissionCfg.mission_index;
+
+        if (sqlca.sqlcode)
+        {
+            return sqlca.sqlcode;
+        }
+
+        memcpy(vtdbTblMissionCfg, &ptdbTblMissionCfg, sizeof(ptdbTblMissionCfg));
+        return sqlca.sqlcode;
+
+    default :
+       return NO_SWITCH;
+    }
+}

@@ -1,0 +1,97 @@
+                 ==============
+                   README.TXT
+                 ==============
+
+1. TOPMake¸ÅÊö
+    1.1 Ê²Ã´ÊÇTOPMake£ºTOPMakeÊÇÒ»Ì×makefileµÄ¿ò¼Ü£¬°ïÖú´óÐÍ¹¤³ÌµÄ±àÒë¡£
+    1.2 TOPMakeÖ÷ÒªÌØµã
+        1.2.1 ¹æ·¶»¯makefileµÄÊéÐ´£¬Í³Ò»·ç¸ñ
+        1.2.2 Ö§³Ö¶àÖÖ²Ù×÷ÏµÍ³Æ½Ì¨£¨Ä¿Ç°Ö§³ÖIBM AIX 32bit,64bit/HP-UX 32bit,64bit/HP-UX ia64 32bit,64bit/Sun Solaris/SCO OpenServer/SCO UnixWare/Nonstop-UX/Digital TRU64/Redhat Linux/Turbo Linux£©
+        1.2.3 Ö§³Ö¶àÖÖÊý¾Ý¿â±àÒë(ORACLE/Informix/DB2/Sybase)
+        1.2.4 Ö§³ÖÖÐ¼ä¼þ(BEA Tuxedo)
+        1.2.5 Ö§³Ö C/C++±àÒë
+        1.2.6 ËùÓÐ²Ù×÷ÏµÍ³¡¢Êý¾Ý¿âºÍÆäËûÈ«¾ÖÐÔ¸Ä±äÖ»ÐèÒª×öÈ«¾ÖÉèÖÃ£¬²»ÐèÒªÖð¸öÐÞ¸Ämakefile
+        1.2.7 ¶Ô»·¾³±äÁ¿µÄÒÀÀµÐ¡
+
+2. ¹¤³ÌµÄÄ¿Â¼½á¹¹
+   ---- mak                makfile¿ò¼ÜÄ¿Â¼
+     |
+     |- include            Ö÷includeÄ¿Â¼
+     |      |-- include1   Ä£¿é1 includeÄ¿Â¼
+     |      |-- include2   Ä£¿é2 includeÄ¿Â¼
+     |- src                Ö÷Ô´´úÂëÄ¿Â¼
+     |   |-- module1       Ä£¿é1´úÂëÄ¿Â¼
+     |   |-- module2       Ä£¿é2´úÂëÄ¿Â¼
+     |- lib                Ó¦ÓÃÄ¿±ê¿âÄ¿Â¼
+     |- bin                Ó¦ÓÃÄ¿±êÖ´ÐÐ´úÂëÄ¿Â¼
+         |--tux            Ó¦ÓÃÄ¿±êTuxedo ServerÄ¿Â¼
+
+3. »·¾³±äÁ¿
+    3.1 $BATCHHOME ¹¤³Ì¸ùÂ·¾¶µÄ¾ø¶ÔÄ¿Â¼
+    3.2 ²úÆ·µÄ¸ùÄ¿Â¼ $ORACLE_HOME(ORACLE)¡¢$INFORMIXDIR(Informix)¡¢$DB2_HOME(DB2)¡¢$TUXDIR(Tuxedo)
+
+4. ¸÷Ä£¿éµÄmakefileÊéÐ´
+    Ã¿Ò»¸öÄ£¿éÄ¿Â¼¿ÉÒÔÓÐÒ»¸ö»ò¶à¸ömakefile£¬Ã¿¸ömakefileÉú³ÉÒ»¸öÄ¿±ê
+    
+    4.1 Éú³É¿âµÄmakefile(²Î¿¼Ñù°åsample.dynamiclib.makºÍsample.staticlib.mak)
+        "PRGOBJS" Ä£¿éËùÓÐ³ÌÐòµÄÁÐ±í¡£ËùÓÐÎÄ¼þÓÃÈ«Â·¾¶±íÊ¾£¨Ê¹ÓÃBATCHHOMEµÄÏà¶ÔÂ·¾¶£©£»ÎÄ¼þÃûÊ¹ÓÃÄ¿±êÎÄ¼þÃû(*.o)£¬make»á×Ô¶¯Ñ°ÕÒÍ¬ÃûµÄ*.c,*.cpp³ÌÐò»òÊý¾Ý¿âµÄÇ¶ÈëÊ½*.pc *.ec *.sqcÎÄ¼þ½øÐÐ±àÒë
+        "PRGTARG" Ä¿±ê¿âµÄÃû¡£makefile»á×Ô¶¯¼ÓÉÏlibÇ°×º£¬.a»ò.soºó×º£¬Éú³ÉÔÚ lib/Ä¿Â¼ÏÂ
+        "PRGDEFS" ¶¨ÒåÄ£¿éÐèÒª¶¨ÒåµÄºê£¬¶ÔÄ£¿éÖÐµÄËùÓÐ³ÌÐòÆð×÷ÓÃÈç(PRGDEFS = -DMYMACRO -DMYSWITCH=1)
+        "PRGDBNM" ÈçÄ£¿éÖÐÓÐDB2 *.sqcÔ´´úÂëÐèÒª¶¨Òå£¬ËµÃ÷DB2µÄdbname£¬ÓÃÓÚÁ¬½ÓÊý¾Ý¿â
+    4.2 Éú³ÉÖ´ÐÐ³ÌÐòµÄmakefile(²Î¿¼Ñù°åsample.exec.mak)
+        "PRGOBJS" Í¬ÉÏ
+        "PRGTARG" Ö´ÐÐ´úÂëÄ¿±êÎÄ¼þÃû£¬Éú³ÉÔÚ bin/Ä¿Â¼ÏÂ
+        "PRGLIBS" ³ÌÐòÊ¹ÓÃµÄ¿â±í£¬ÓÃ-lmodule1 -lmodule2 ...±íÊ¾¡£ÎªÁË±£Ö¤¸Ä±ä²Ù×÷ÏµÍ³Êý¾Ý¿âÊ±²»ÐÞ¸Ämakefile£¬·ÇÓ¦ÓÃµÄ¿â²»ÒªÊ¹ÓÃ²Ù×÷ÏµÍ³µÄ¿âÈç-lsocketµÈ£¬Ê¹ÓÃÏµÍ³ÒÑ¶¨ÒåµÄºê£º
+                    $(UXLIBS)±ê×¼Unix¿â£¬ÊýÑ§¿âµÈµ×²ã¿â
+                    $(NETLIBS) socketÍ¨Ñ¶¿â
+                    $(THREADLIBS) Ïß³Ì¿â
+                    $(DLLIBS) ¶¯Ì¬¿âÊ¹ÓÃ¿â(-ldl)
+                    $(CURLIBS) curses¿â
+                    $(XLIBS) X lib
+                    $(DBLIBS) Êý¾Ý¿âÊ¹ÓÃµÄ¿â
+                    $(TUXLIBS) Tuxedo client¿â(Tuxedo Server²»ÐèÒª)
+        "PRGDEFS" Í¬ÉÏ
+        "PRGDBNM" Í¬ÉÏ
+    4.3 Éú³ÉTuxedo ServerµÄmakefile(²Î¿¼Ñù°åsample.tuxexec.mak)
+        "PRGOBJS" Í¬ÉÏ
+        "PRGTARG" Tuxedo ServerÄ¿±êÎÄ¼þÃû£¬Éú³ÉÔÚ bin/tux/Ä¿Â¼ÏÂ
+        "PRGLIBS" Í¬ÉÏ
+        "PRGDEFS" Í¬ÉÏ
+        "PRGDBNM" Í¬ÉÏ
+        "PRGSVCS" Tuxedo ServerÌá¹©µÄServicesÃû(²Î¿¼Tuxedo buildserver -s¿ª¹ØµÄÊ¹ÓÃ·½·¨)
+        "PRGRSMN" Tuxedo×ÊÔ´Ãû(resource manager name)
+
+5. Èë¿ÚÈ«¾ÖmakefileµÄÊéÐ´(²Î¿¼Ñù°åsample.main.mak)
+    Õâ¸ömakefileÎ»ÓÚ$($BATCHHOME)/makÄ¿Â¼£¬ÓÃÓÚÈ«¾ÖµÄ²Ù×÷ÏµÍ³Æ½Ì¨¡¢ÖÐ¼ä¼þ¡¢Êý¾Ý¿âµÄÉèÖÃ£»Õû¸ö¹¤³ÌµÄÈ«±àÒë
+    makefileÁÐ¾ÙËùÓÐÄ£¿éµÄmakefile£¬°´ÕÕÒÀÀµË³Ðò£¬±»ÒÀÀµµÄÄ£¿éÔÚÇ°(ÏÈ±àÒë)£¬ÒÀÀµÄ£¿éÔÚºó(ºó±àÒë)
+
+6. Æ½Ì¨ÉèÖÃ
+    ÔÚµÚÒ»´ÎÊ¹ÓÃ±àÒëÇ°£¬Ê×ÏÈÐèÒªÉèÖÃÄ¿Ç°µÄ²Ù×÷ÏµÍ³¡¢Êý¾Ý¿â¡¢ÖÐ¼ä¼þ¡£
+    ÔÚ$($BATCHHOME)/makÄ¿Â¼ÏÂ£¬¼ÙÉèÈë¿ÚÈ«¾ÖµÄmakefileÎÄ¼þÃûÊÇproject.mak£¬¼üÈë£º
+    make -f project.mak <ostype> <dbtype> <tuxtype>
+    ÆäÖÐostype ¿ÉÒÔÊÇ£ºaix,aix64,hpux,hpux64,nsux,osf,rhlux,scoos,scouw,sunos,tblux
+        dbtype ¿ÉÒÔÊÇ£ºdb2,infx7,infx9,ora7,ora8.0,ora8.1,ora9,mysql3,mysql4
+        tuxtype¿ÉÒÔÊÇ£ºnotux,tux6,tux8
+
+7. make ÃüÁîÊ¹ÓÃ
+    Èç¹ûÒª±àÒëÄ³¸öÄ£¿é¿ÉÒÔµ½Ä£¿éµÄ¶ÔÓ¦Ä¿Â¼ÏÂ£¬¼ÙÉèmakefileµÄÎÄ¼þÃûÊÇmodule1.mak£º
+    make -f module.mak [debug|release] ±àÒëÄ£¿émodule£¬²¢ÇÒÖ»±àÒëÐÞ¸Ä¹ýµÄ³ÌÐò¡£debug ±íÊ¾Éú³Éµ÷ÊÔ°æ±¾£¬releaseÉú³ÉÓÅ»¯±àÒë°æ±¾£¬²»¿Éµ÷ÊÔ(È±Ê¡ÊÇ dubug°æ±¾±àÒë)
+    make -f module.mak clean Çå³ýÄ£¿éÉú³ÉµÄËùÓÐµÄÄ¿±ê*.oÎÄ¼þ£¬¿âÎÄ¼þºÍÖ´ÐÐ³ÌÐò
+    make -f module.mak clean [debug|release] Ä£¿éÈ«ÖØ±àÒë
+    Èç¹ûÒª±àÒëÕû¸öÏµÍ³ÔÚ $(MKHOME)/makÄ¿Â¼ÏÂ
+    make -f project.mak [clean] [debug|release]
+
+8. Ô´´úÂëµÄ×¢ÒâÊÂÏî£º
+    8.1 Í·ÎÄ¼þ°üº¬
+        Ó¦ÓÃÍ·ÎÄ¼þÖ»°üº¬ÁËÒ»¸öÄ¿Â¼¼´$(MKHOME)/include£¬Èôinclude»¹ÓÐ×ÓÄ¿Â¼Èç$(MKHOME)/include/module1Ô´´úÂëÓ¦´øÓÐÏà¶ÔÂ·¾¶£º#include "module/file.h"
+    8.2 ²Ù×÷ÏµÍ³Ïà¹ØµÄºê
+        Èô´úÂëÖÐÊ¹ÓÃÁËÒ»Ð©²»Í¬²Ù×÷ÏµÍ³ÓÐ²îÒìµÄ´úÂë£¬makefileÌá¹©ÁËÒ»Ð©ºê£¬´úÂëÖÐ¿ÉÒÔÊ¹ÓÃÕâÐ©ºê½øÐÐÌõ¼þ±àÒë£º
+        ²Ù×÷ÏµÍ³Æ½Ì¨ºê£ºAIX_UNIX£¬HP_UNIX£¬SUNOS_UNIX£¬NONSTOP_UNIX£¬OSF_UNIX£¬SCO_UNIX£¬SCOUW_UNIX£¬TURBO_LINUX£¬REDHAT_LINUX
+        64Î»±àÒëºê£ºBIT64
+        Êý¾Ý¿âºê£ºDB2£¬INFX7£¬ORA7£¬ORA8
+
+9. ¹ØÓÚ IBM AIX¶¯Ì¬¿â
+    ÓÉÓÚIBM AIXµÄÌØÊâÒªÇó£¬IBM AIXÉú³É¶¯Ì¬¿âÐèÒªÓÐÒ»¸öÊä³ö·ûºÅµÄ¶¨ÒåÎÄ¼þ(expÎÄ¼þ)£¬Èô¶¯Ì¬¿âÃûÎªmodule£¬Éú³ÉµÄ¶¯Ì¬¿âÎªlibmodule.so£¬±ØÐëÔÚ±àÒëÇ°×¼±¸ÎÄ¼þ$(MKHOME)/mak/exp/libmodule.exp¡£´ËÎÄ¼þÖÐÁÐ¾ÙÁË¿âÖÐËùÓÐÍâ²¿¿ÉÒÔÊ¹ÓÃµÄº¯ÊýÃû(Ò»¸öº¯ÊýÃûÕ¼»ÐÐ)
+
+10. ¹ØÓÚmkstand.mak
+    mkstand.makÊÇÖ÷ÒªµÄmakeÂß¼­£¬¶Ô´ËÎÄ¼þµÄÐÞ¸Ä½«Ó°Ïìµ½ËùÓÐµÄ±àÒëµÄ¹ý³Ì£¬¹¤³ÌÖÐç¹ûÓÐ¶Ô±àÒëµÄÌØÊâÒªÇó¿ÉÒÔÐÞ¸ÄÕâ¸öÎÄ¼þ¡£

@@ -1,0 +1,80 @@
+#include <stdlib.h>
+#include <memory.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "DbsDef.h"
+#include "DbsTbl.h"
+#include "batch.h"
+
+EXEC SQL include sqlca;
+
+int DbsKeyCertInf(int vnOprType, tbl_key_cert_def *vtdbtbl_key_cert_inf)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        struct
+        {
+            char    pay_way[32 + 1];
+	    char    merc_type[32 + 1];
+            char    paying_merc_code[32 + 1];
+	    char    key[128 + 1];
+            char    merc_cert[128 + 1];
+        } ptdbtbl_key_cert_inf;
+    EXEC SQL END DECLARE SECTION;
+    memset(&ptdbtbl_key_cert_inf, 0, sizeof(ptdbtbl_key_cert_inf));
+
+    HtMemcpy(&ptdbtbl_key_cert_inf, vtdbtbl_key_cert_inf, sizeof(ptdbtbl_key_cert_inf));
+
+    switch(vnOprType)
+    {
+    case DBS_SELECT:
+        EXEC SQL SELECT
+            distinct nvl(PAYING_MERC_CODE, ' '), nvl(KEY, ' '), nvl(MERC_CERT, ' ')
+        INTO
+            :ptdbtbl_key_cert_inf.paying_merc_code,
+	    :ptdbtbl_key_cert_inf.key,
+            :ptdbtbl_key_cert_inf.merc_cert
+        FROM
+            TBL_KEY_CERT_INF@PUBLIC_DATA
+        WHERE
+            pay_way = :ptdbtbl_key_cert_inf.pay_way and
+	    status = 'ey';
+
+        memcpy(vtdbtbl_key_cert_inf->paying_merc_code, ptdbtbl_key_cert_inf.paying_merc_code, sizeof(ptdbtbl_key_cert_inf.paying_merc_code));
+	memcpy(vtdbtbl_key_cert_inf->key, ptdbtbl_key_cert_inf.key, sizeof(ptdbtbl_key_cert_inf.key));
+	memcpy(vtdbtbl_key_cert_inf->merc_cert, ptdbtbl_key_cert_inf.merc_cert, sizeof(ptdbtbl_key_cert_inf.merc_cert));
+	//HtMemcpy(vtdbtbl_key_cert_inf, &ptdbtbl_key_cert_inf, sizeof(ptdbtbl_key_cert_inf));
+
+        return sqlca.sqlcode;
+
+    case DBS_CURSOR:
+        EXEC SQL DECLARE tbl_key_cert_cur CURSOR FOR
+             SELECT distinct nvl(PAYING_MERC_CODE, ' '), nvl(KEY, ' '), nvl(MERC_CERT, ' ')
+             FROM TBL_KEY_CERT_INF@PUBLIC_DATA
+             WHERE pay_way = :ptdbtbl_key_cert_inf.pay_way and
+	           merc_type = :ptdbtbl_key_cert_inf.merc_type and
+		   status = 'ey';
+        return LUsrErrNull;
+    case DBS_OPEN:
+        EXEC SQL OPEN tbl_key_cert_cur;
+        return sqlca.sqlcode;
+    case DBS_FETCH:
+        EXEC SQL FETCH
+            tbl_key_cert_cur
+        INTO
+            :ptdbtbl_key_cert_inf.paying_merc_code,
+	    :ptdbtbl_key_cert_inf.key,
+            :ptdbtbl_key_cert_inf.merc_cert;
+
+        memcpy(vtdbtbl_key_cert_inf->paying_merc_code, ptdbtbl_key_cert_inf.paying_merc_code, sizeof(ptdbtbl_key_cert_inf.paying_merc_code));
+	memcpy(vtdbtbl_key_cert_inf->key, ptdbtbl_key_cert_inf.key, sizeof(ptdbtbl_key_cert_inf.key));
+	memcpy(vtdbtbl_key_cert_inf->merc_cert, ptdbtbl_key_cert_inf.merc_cert, sizeof(ptdbtbl_key_cert_inf.merc_cert));
+
+        return sqlca.sqlcode;
+    case DBS_CLOSE:
+        EXEC SQL CLOSE tbl_key_cert_cur;
+        return sqlca.sqlcode;
+    default:
+        return NO_SWITCH;
+    }
+}
+
